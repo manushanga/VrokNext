@@ -136,11 +136,9 @@ int main(int argc, char *argv[])
 {
     //Test1 test;
 
-    Vrok::Resource *res1 = new Vrok::Resource;
-    res1->_filename= "/home/madura/Downloads/Hadawatha_Gahena_Mohothak_Pasa.mp4";
 
     Vrok::Resource *res=new Vrok::Resource;
-    res->_filename = "/home/madura/Downloads/Benzino Feat. Mario Winans - Rock The Party (HD  Dirty).mp3";
+    res->_filename = std::string(argv[1]);
     Vrok::Player pl;
     Vrok::DriverAudioOut out;
     Vrok::EffectFIR pre;
@@ -159,7 +157,6 @@ int main(int argc, char *argv[])
     //pre1.Preallocate();
 
     pl.SubmitForPlayback(res);
-    pl.SubmitForPlayback(res1);
 
     pre.CreateThread();
    // pre1.CreateThread();
