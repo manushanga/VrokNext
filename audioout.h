@@ -36,6 +36,31 @@ namespace Vrok {
         virtual ~DriverAudioOut() {}
         bool BufferConfigChange(BufferConfig *config);
         bool DriverRun(Buffer *buffer);
+
+        Vrok::ComponentType ComponentType()
+        {
+            return Vrok::ComponentType::Driver;
+        }
+        Component *CreateSelf()
+        {
+            return new DriverAudioOut();
+        }
+        const char *ComponentName()
+        {
+            return "AudioOut Driver";
+        }
+        const char *Description()
+        {
+            return "libao wrapper";
+        }
+        const char *Author()
+        {
+            return "Madura A.";
+        }
+        const char *License()
+        {
+            return "GPL v2";
+        }
     };
 }
 #endif // AUDIOOUT_H

@@ -20,17 +20,19 @@
 #define COMPONENT_H
 namespace Vrok {
 
+
+enum class ComponentType{Decoder, Effect, Driver, Player, None};
+
 class Component
 {
 public:
-    enum ComponentType{Decoder, Effect, Driver, Player, None};
     Component();
-    virtual ComponentType ComponentType() { return None; }
-    virtual Component *MakeSelf() = 0;
-    virtual char *ComponentName() = 0;
-    virtual char *Description() { return ""; }
-    virtual char *Author() { return ""; }
-    virtual char *License() { return ""; }
+    virtual Vrok::ComponentType ComponentType() { return Vrok::ComponentType::None; }
+    virtual Component *CreateSelf() = 0;
+    virtual const char *ComponentName() = 0;
+    virtual const char *Description() { return ""; }
+    virtual const char *Author() { return ""; }
+    virtual const char *License() { return ""; }
     virtual ~Component();
 };
 

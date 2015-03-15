@@ -35,6 +35,31 @@ public:
     bool EffectRun(Buffer *out_buffer,
                    Buffer **in_buffer_set,
                    int buffer_count);
+
+    Vrok::ComponentType ComponentType()
+    {
+        return Vrok::ComponentType::Effect;
+    }
+    Component *CreateSelf()
+    {
+        return new EffectFIR();
+    }
+    const char *ComponentName()
+    {
+        return "FIR filter";
+    }
+    const char *Description()
+    {
+        return "FIR filter";
+    }
+    const char *Author()
+    {
+        return "Madura A.";
+    }
+    const char *License()
+    {
+        return "GPL v2";
+    }
 };
 }
 

@@ -88,6 +88,30 @@ private:
     int remainder_read;
     int remainder_counter;
 
+    Vrok::ComponentType ComponentType()
+    {
+        return Vrok::ComponentType::Decoder;
+    }
+    Component *CreateSelf()
+    {
+        return new DecoderFFMPEG();
+    }
+    const char *ComponentName()
+    {
+        return "FFmpeg Decoder";
+    }
+    const char *Description()
+    {
+        return "FFmpeg wrapper";
+    }
+    const char *Author()
+    {
+        return "Madura A.";
+    }
+    const char *License()
+    {
+        return "GPL v2";
+    }
 };
 }
 

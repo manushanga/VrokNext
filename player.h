@@ -64,6 +64,31 @@ namespace Vrok {
         bool SubmitForPlayback(Resource* resource);
         bool SubmitForPlaybackNow(Resource* resource);
         void Run();
+
+        Vrok::ComponentType ComponentType()
+        {
+            return Vrok::ComponentType::Player;
+        }
+        Component *CreateSelf()
+        {
+            return new Player();
+        }
+        const char *ComponentName()
+        {
+            return "Player";
+        }
+        const char *Description()
+        {
+            return "Player";
+        }
+        const char *Author()
+        {
+            return "Madura A.";
+        }
+        const char *License()
+        {
+            return "GPL v2";
+        }
     };
 }
 

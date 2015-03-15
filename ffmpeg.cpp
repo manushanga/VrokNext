@@ -65,7 +65,7 @@ bool Vrok::DecoderFFMPEG::Open(Vrok::Resource *resource)
         return false;
     }
 
-    int i;
+    unsigned int i;
     for(i=0;i<container->nb_streams;i++){
         if(container->streams[i]->codec->codec_type==AVMEDIA_TYPE_AUDIO){
             audio_stream_id=i;
@@ -99,7 +99,6 @@ bool Vrok::DecoderFFMPEG::Open(Vrok::Resource *resource)
 
     frameFinished=0;
     packetFinished=0;
-    plane_size;
     vpbuffer_write=0;
     temp_write=0;
     remainder_read=0;
@@ -180,7 +179,7 @@ bool Vrok::DecoderFFMPEG::DecoderRun(Buffer *buffer,  BufferConfig *config)
             switch (sfmt){
 
                 case AV_SAMPLE_FMT_S16P:
-                    for (int nb=0;nb<plane_size/sizeof(uint16_t);nb++){
+                    for (size_t nb=0;nb<plane_size/sizeof(uint16_t);nb++){
                         for (int ch = 0; ch < ctx->channels; ch++) {
                             temp[temp_write] = ((short *) frame->extended_data[ch])[nb] * SHORTTOFL;
                             temp_write++;
@@ -189,7 +188,7 @@ bool Vrok::DecoderFFMPEG::DecoderRun(Buffer *buffer,  BufferConfig *config)
                     break;
                 case AV_SAMPLE_FMT_FLTP:
 
-                    for (int nb=0;nb<plane_size/sizeof(float);nb++){
+                    for (size_t nb=0;nb<plane_size/sizeof(float);nb++){
                         for (int ch = 0; ch < ctx->channels; ch++) {
                             temp[temp_write] = ((float *) frame->extended_data[ch])[nb];
                             temp_write++;
@@ -198,20 +197,20 @@ bool Vrok::DecoderFFMPEG::DecoderRun(Buffer *buffer,  BufferConfig *config)
                     break;
                 case AV_SAMPLE_FMT_S16:
 
-                    for (int nb=0;nb<plane_size/sizeof(short);nb++){
+                    for (size_t nb=0;nb<plane_size/sizeof(short);nb++){
                         temp[temp_write] = ((short *) frame->extended_data[0])[nb] * SHORTTOFL;
                         temp_write++;
                     }
                     break;
                 case AV_SAMPLE_FMT_FLT:
 
-                    for (int nb=0;nb<plane_size/sizeof(float);nb++){
+                    for (size_t nb=0;nb<plane_size/sizeof(float);nb++){
                         temp[temp_write] = ((float *) frame->extended_data[0])[nb];
                         temp_write++;
                     }
                     break;
                 case AV_SAMPLE_FMT_U8P:
-                    for (int nb=0;nb<plane_size/sizeof(uint8_t);nb++){
+                    for (size_t nb=0;nb<plane_size/sizeof(uint8_t);nb++){
                         for (int ch = 0; ch < ctx->channels; ch++) {
                             temp[temp_write] = ( ( ((uint8_t *) frame->extended_data[0])[nb] - 127) * 32768 )/ 127 ;
                             temp_write++;
@@ -219,7 +218,7 @@ bool Vrok::DecoderFFMPEG::DecoderRun(Buffer *buffer,  BufferConfig *config)
                     }
                     break;
                 case AV_SAMPLE_FMT_U8:
-                    for (int nb=0;nb<plane_size/sizeof(uint8_t);nb++){
+                    for (size_t nb=0;nb<plane_size/sizeof(uint8_t);nb++){
                         temp[temp_write] = ( ( ((uint8_t *) frame->extended_data[0])[nb] - 127) * 32768 )/ 127 ;
                         temp_write++;
                     }
