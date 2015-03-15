@@ -10,6 +10,7 @@
 #include "test1.h"
 #include "test2.h"
 
+#include "common.h"
 #include "player.h"
 #include "audioout.h"
 #include "preamp.h"
@@ -157,6 +158,10 @@ int main(int argc, char *argv[])
     //pre1.Preallocate();
 
     pl.SubmitForPlayback(res);
+    float g=7.0;
+    auto c=Vrok::ComponentManager::GetSingleton()->GetComponent("FIR filter_0");
+    DBG(c);
+    Vrok::ComponentManager::GetSingleton()->SetProperty(c,"dist",&g);
 
     pre.CreateThread();
    // pre1.CreateThread();

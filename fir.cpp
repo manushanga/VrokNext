@@ -156,7 +156,10 @@ Vrok::EffectFIR::EffectFIR() :
     }
     dist[0].activate();
     dist[1].activate();
+    ComponentManager *c=ComponentManager::GetSingleton();
 
+    c->RegisterComponent(this);
+    c->RegisterProperty(this,"dist",&dist1);
 
 
     lp[0][0].set_lp_rbj(80.0, 0.707, (float)48000.0);
@@ -243,4 +246,16 @@ bool Vrok::EffectFIR::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int 
 //    }
 
     return true;
+}
+
+void Vrok::EffectFIR::PropertyChanged(PropertyBase *property)
+{
+    float g;
+    dist1.Get(&g);
+    DBG((int)dist1.GetType());
+    dist[0].set_sample_rate(48000.0);
+    dist[0].set_params(g,g);
+    dist[1].set_sample_rate(48000.0);
+    dist[1].set_params(g,g);
+
 }

@@ -18,13 +18,30 @@
  */
 #ifndef COMPONENTMANAGER_H
 #define COMPONENTMANAGER_H
+#include <map>
+#include <sstream>
+#include "component.h"
+
+using namespace std;
 
 namespace Vrok {
 class ComponentManager
 {
+private:
+    map<string, int> _used_names;
+    map<string, Component *> _component_map;
+    map<Component *, map<string, PropertyBase *> > _property_map;
 public:
     ComponentManager();
-    bool RegisterComponent();
+    static ComponentManager *GetSingleton();
+    bool RegisterComponent(Component *component);
+    bool RegisterProperty(Component *component,
+                          string propertyname,
+                          PropertyBase *property);
+    Component *GetComponent(string component);
+    void SetProperty(Component *component, string prop_name, void *data);
+    void GetProperty(Component *component, string prop_name, void *data);
+
     ~ComponentManager();
 };
 }

@@ -26,6 +26,7 @@
 #include "debug.h"
 
 #include "component.h"
+#include "componentmanager.h"
 
 #include <mutex>
 extern std::mutex lockxx;

@@ -18,10 +18,48 @@
  */
 #ifndef COMPONENT_H
 #define COMPONENT_H
+#include <atomic>
+using namespace std;
+
 namespace Vrok {
 
-
 enum class ComponentType{Decoder, Effect, Driver, Player, None};
+enum class PropertyType{INT,FLT,DBL};
+
+
+class PropertyBase
+{
+public:
+    virtual PropertyType GetType()=0;
+    virtual void Get(void *ptr)=0;
+    virtual void Set(void *ptr)=0;
+};
+#include<stdio.h>
+template<typename T>
+class Property : public PropertyBase
+{
+private:
+    PropertyType _type;
+    atomic<T> _data;
+public:
+    Property();
+
+    PropertyType GetType()
+    {
+        return _type;
+    }
+    void Get(void *ptr)
+    {
+        *((T*)ptr)=_data.load(memory_order_relaxed);
+    }
+    void Set(void *ptr)
+    {
+        _data.store(*((T*)ptr), memory_order_relaxed);
+    }
+
+};
+
+
 
 class Component
 {
@@ -33,6 +71,7 @@ public:
     virtual const char *Description() { return ""; }
     virtual const char *Author() { return ""; }
     virtual const char *License() { return ""; }
+    virtual void PropertyChanged(PropertyBase *property) {}
     virtual ~Component();
 };
 

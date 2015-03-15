@@ -26,6 +26,8 @@ class EffectFIR : public Effect
 {
 private:
     float *_buffer;
+    Property<float> dist1;
+    Property<combo> combo1;
     TapDistortion tap;
     biquad_d2 lp[2][4];
     biquad_d2 hp[2][2];
@@ -35,7 +37,7 @@ public:
     bool EffectRun(Buffer *out_buffer,
                    Buffer **in_buffer_set,
                    int buffer_count);
-
+    void PropertyChanged(PropertyBase *property);
     Vrok::ComponentType ComponentType()
     {
         return Vrok::ComponentType::Effect;
