@@ -34,7 +34,7 @@ public:
     virtual void Get(void *ptr)=0;
     virtual void Set(void *ptr)=0;
 };
-#include<stdio.h>
+
 template<typename T>
 class Property : public PropertyBase
 {
@@ -51,6 +51,14 @@ public:
     void Get(void *ptr)
     {
         *((T*)ptr)=_data.load(memory_order_relaxed);
+    }
+    T Get()
+    {
+        return _data.load(memory_order_relaxed);
+    }
+    void Set(T val)
+    {
+        _data.store(val, memory_order_relaxed);
     }
     void Set(void *ptr)
     {

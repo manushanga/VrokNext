@@ -35,7 +35,7 @@ namespace Vrok {
     class Player : public BufferGraph::Point, public Component
     {
     private:
-        enum CommandType {OPEN, SKIP, SEEK};
+        enum CommandType {OPEN, PAUSE, RESUME, STOP, SEEK};
         struct Command
         {
             CommandType type;
@@ -44,6 +44,7 @@ namespace Vrok {
         atomic<bool> _new_resource;
     protected:
         atomic<bool> _work;
+        bool _decoder_work;
 
         // _play_queue: queue tracks needed to be played
         // one after other here
@@ -63,6 +64,9 @@ namespace Vrok {
         // next playable file
         bool SubmitForPlayback(Resource* resource);
         bool SubmitForPlaybackNow(Resource* resource);
+        bool Resume();
+        bool Pause();
+        bool Stop();
         void Run();
 
         Vrok::ComponentType ComponentType()

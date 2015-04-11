@@ -19,6 +19,7 @@
 #ifndef FIR_H
 #define FIR_H
 
+#include "common.h"
 #include "effect.h"
 #include "tapdistortion.h"
 namespace Vrok {
@@ -26,8 +27,9 @@ class EffectFIR : public Effect
 {
 private:
     float *_buffer;
-    Property<float> dist1;
-    Property<combo> combo1;
+    Property<float> blend,drive,dry_vol,wet_vol;
+    Property<float> lp_freq,hp_freq;
+    float _dry_vol,_wet_vol;
     TapDistortion tap;
     biquad_d2 lp[2][4];
     biquad_d2 hp[2][2];

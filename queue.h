@@ -45,6 +45,7 @@ private:
     mutex guard;
     atomic<bool> bpop_,bpush_;
     condition_variable cv_pop_,cv_push_;
+    const int max_tries=50;
 public:
     Queue(int size) :
         size_(size),
@@ -142,13 +143,15 @@ public:
     }
     void PeakBlocking(T& t)
     {
-        while (!Peak(t)) {  this_thread::sleep_for(chrono::microseconds(100000)); }
+        int i=0;
+        while (!Peak(t) && i<max_tries) { i++; this_thread::sleep_for(chrono::microseconds(100000)); }
        // while (!PeakLocked(t)) {}
 
     }
     void PopBlocking(T& t)
     {
-        while (!Pop(t)) {  this_thread::sleep_for(chrono::microseconds(100000));  }
+        int i=0;
+        while (!Pop(t) && i<max_tries) {  i++; this_thread::sleep_for(chrono::microseconds(100000));  }
 
        // while (!PopLocked(t)) {}
 
@@ -157,7 +160,8 @@ public:
 
     void PushBlocking(T t)
     {
-        while (!Push(t)) { this_thread::sleep_for(chrono::microseconds(100000)); }
+        int i=0;
+        while (!Push(t) && i<max_tries) {  i++; this_thread::sleep_for(chrono::microseconds(100000)); }
 
         //while (!PushLocked(t)) {}
 

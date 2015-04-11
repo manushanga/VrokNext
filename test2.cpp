@@ -19,12 +19,7 @@ Test2::Test2()
     b.SetStopWatch(&stop_watch);
     c.SetStopWatch(&stop_watch);
 
-    a.CreateThread();
-    b.CreateThread();
-    c.CreateThread();
-    a.JoinThread();
-    b.JoinThread();
-    c.JoinThread();
+
 }
 
 Test2::~Test2()

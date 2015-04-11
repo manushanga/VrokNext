@@ -26,13 +26,14 @@
 #include "common.h"
 #include "queue.h"
 #include "buffer.h"
+#include "runnable.h"
 #include "bufferconfig.h"
 
 using namespace std;
 #define BUFFERS 50
 namespace BufferGraph {
 
-class Point
+class Point : public Runnable
 {
 private:
     atomic<int> _ref_counter;
@@ -40,10 +41,6 @@ private:
     Queue<Buffer *> *_free_buffers;
     mutex lock;
 
-    static void worker(Point *p)
-    {
-        p->Run();
-    }
 protected:
     vector<Point *> _sinks, _sources;
     int _buffer_refs[BUFFERS];
@@ -51,10 +48,8 @@ protected:
     Buffer **_buffers_on_peak;
     int _buffer_peak_update;
     BufferConfig _config;
-    thread *_self;
 public:
-    Point() :
-        _self(nullptr)
+    Point()
     {
         auto _config=BufferConfig();
 
@@ -70,17 +65,17 @@ public:
         }
 
     }
-    void CreateThread()
-    {
-        assert(_self == nullptr);
-        _self = new thread(worker,this);
-    }
-    void JoinThread()
-    {
-        _self->join();
-        delete _self;
-        _self = nullptr;
-    }
+    //void CreateThread()
+    //{
+        //assert(_self == nullptr);
+        //_self = new thread(worker,this);
+   // }
+    //void JoinThread()
+    //{
+        //_self->join();
+        //delete _self;
+        //_self = nullptr;
+    //}
     void SetBufferConfig(BufferConfig *config)
     {
         _config = *config;
@@ -114,7 +109,7 @@ public:
 
     // do work on the node, this should be called from
     // a thread dedicated to the node
-    virtual void Run() = 0;
+    // Runnable::Run()
 
 protected:
     // non reentrant

@@ -16,6 +16,11 @@ TEMPLATE = app
 
 QMAKE_CXXFLAGS += -O3 -std=c++11 -ffast-math -msse4.2
 
+win32{
+INCLUDEPATH += \
+    ./lib/ffmpeg/include \
+    ./lib/libao/include
+}
 SOURCES += main.cpp \
     threadpool.cpp \
     queue.cpp \
@@ -59,9 +64,20 @@ HEADERS += \
     tapdistortion.h \
     componentmanager.h \
     component.h \
-    common.h
+    common.h \
+    runnable.h
 
-LIBS        += -lavformat -lavcodec -lavutil -lao
+win32 {
+LIBS        += \
+    -L./lib/ffmpeg/lib \
+    ./lib/libao/lib/libao.a \
+    -lavformat -lavcodec -lavutil -lwinmm
+}
+
+unix {
+LIBS    += \
+    -lavformat -lavcodec -lavutil -lao
+}
 
 CONFIG(debug)
 {

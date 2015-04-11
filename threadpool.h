@@ -21,16 +21,25 @@
 
 #include <vector>
 #include <thread>
+#include <atomic>
 #include <functional>
+
+#include "runnable.h"
+
 
 using namespace std;
 class ThreadPool
 {
 private:
-    int threadCount_;
-    vector<thread> threads_;
-    vector<function<void(void *)>> work_;
-
+    struct ThreadData
+    {
+        int thread_id;
+        vector< vector<Runnable*> > *runnables;
+        atomic<bool> work;
+    };
+    vector< thread * > _threads;
+    vector< vector<Runnable*> > _runnables;
+    vector< ThreadData *> _thread_data;
 public:
     // the container type,
     // Dedicated - only work on a dedicated thread
@@ -41,10 +50,13 @@ public:
     // for along time (>5 sec) schedule in to a new
     // thread
     enum WakeUpMode{Best, Lazy};
-    ThreadPool(int threadCount);
-    void ScheduleWork(function<void(void *)> func,
-                      SchedMode schedMode,
-                      WakeUpMode wakeUpMode);
+    ThreadPool(int thread_count);
+    bool RegisterWork(int thread_id, Runnable *runnable);
+    void CreateThreads();
+    void JoinThreads();
+    ~ThreadPool();
+
+    static void Work(ThreadData *th);
 };
 
 #endif // THREADPOOL_H

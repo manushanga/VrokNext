@@ -1,4 +1,4 @@
-
+﻿
 #include <queue.h>
 #include <thread>
 #include <iostream>
@@ -15,6 +15,9 @@
 #include "audioout.h"
 #include "preamp.h"
 #include "fir.h"
+#include "threadpool.h"
+#include <QDir>
+
 #define BUF_SIZE 100
 
 
@@ -23,126 +26,16 @@ using std::chrono::duration_cast;
 using std::chrono::duration;
 using std::chrono::high_resolution_clock;
 
-Queue<int> aa(2);
-float time_diff(high_resolution_clock::time_point& tp1,
-                high_resolution_clock::time_point& tp2)
-{
-    return (duration_cast<duration<float>>(tp1 - tp2)).count();
-}
-void push()
-{
-    float speed,time=0;
-    std::chrono::high_resolution_clock::time_point newTime, oldTime;
-    int i=0,j=0;
-    while (1)
-    {
-
-        oldTime = std::chrono::high_resolution_clock::now();
-
-        while (!aa.Push(i)) {}
-        cout<<i<<endl;
-        newTime = std::chrono::high_resolution_clock::now();
-        if (time>1)
-        {
-            speed=j/time;
-            j=0;
-            time=0;
-            cout<<"PUSH "<<speed<<endl;
-        }
-        else
-        {
-            time+=time_diff(newTime, oldTime);
-            j++;
-        }
-        i++;
-    }
-}
-
-void pop()
-{
-    float speed,time=0;
-    std::chrono::high_resolution_clock::time_point newTime, oldTime;
-    int i=0,j=0,prev=1000;
-
-    while (!aa.Pop(prev)) {}
-    while (1)
-    {
-
-        oldTime = std::chrono::high_resolution_clock::now();
-        while (!aa.Pop(i)) {}
-        newTime = std::chrono::high_resolution_clock::now();
-
-        if (i!=prev+1)
-        {
-            cout<<"ERROR popped "<<i<<" prev is "<<prev<<endl;
-            getchar();
-        }
-        if (time>1)
-        {
-            speed=j/time;
-            j=0;
-            time=0;
-            cout<<"POP "<<speed<<endl;
-        }
-        else
-        {
-            time+=time_diff(newTime, oldTime);
-            j++;
-        }
-        prev=i;
-      //
-    }
-}
-mutex printl,kk;
-Queue<float *> free_buffers(5), used_buffers(10);
-std::chrono::high_resolution_clock::time_point tp_normal;
-class ClassC :public BufferGraph::Point
-{
-public:
-    ClassC() :
-        BufferGraph::Point()
-    {
-
-    }
-    void Run()
-    {
-
-
-        int j=0;
-        while (1)
-        {
-            //atomic_thread_fence(memory_order_acquire);
-
-            auto bb=PeakAllSources();
-            //printl.lock();
-            //std::cout<<i<<" "<<((bb[0])->GetData()[0] + (bb[1])->GetData()[0])<<std::endl;
-            high_resolution_clock::time_point tp=high_resolution_clock::now();
-            //float nowtime=time_diff(tp,tp_normal);
-            //std::cout<<nowtime<<endl;
-
-            //atomic_thread_fence(memory_order_release);
-
-            ReleaseAllSources(bb);
-
-        }
-
-
-
-
-    }
-};
-
 int main(int argc, char *argv[])
 
 {
     //Test1 test;
 
-
-    Vrok::Resource *res=new Vrok::Resource;
-    res->_filename = std::string(argv[1]);
     Vrok::Player pl;
     Vrok::DriverAudioOut out;
     Vrok::EffectFIR pre;
+    ThreadPool pool(2);
+
     //Vrok::EffectFIR pre1;
 
     out.RegisterSource(&pre);
@@ -156,22 +49,119 @@ int main(int argc, char *argv[])
     pl.Preallocate();
     pre.Preallocate();
     //pre1.Preallocate();
+    pool.RegisterWork(0,&pl);
+    pool.RegisterWork(0,&pre);
+    pool.RegisterWork(1,&out);
 
-    pl.SubmitForPlayback(res);
-    float g=7.0;
-    auto c=Vrok::ComponentManager::GetSingleton()->GetComponent("FIR filter_0");
-    DBG(c);
-    Vrok::ComponentManager::GetSingleton()->SetProperty(c,"dist",&g);
+    pool.CreateThreads();
 
-    pre.CreateThread();
+    float g=10.0,lp_freq=60.0f;
+    Vrok::Component *current_comp=nullptr;
+
    // pre1.CreateThread();
-    out.CreateThread();
 
-    pl.CreateThread();
-    pl.JoinThread();
-    pre.JoinThread();
-   // pre1.JoinThread();
-    out.JoinThread();
+
+    QString path="./";
+    QFileInfoList filelist;
+
+    while (true)
+    {
+
+        string line;
+        getline(cin,line);
+
+        QString query(line.c_str());
+        QString command=query.section(' ',0,0);
+        if (command.compare("openi")==0)
+        {
+            Vrok::Resource *res=new Vrok::Resource;
+            res->_filename = filelist[query.section(' ',1,1).toInt()].absoluteFilePath().toStdString();
+            pl.SubmitForPlaybackNow(res);
+        }
+        if (command.compare("open")==0)
+        {
+            Vrok::Resource *res=new Vrok::Resource;
+            res->_filename = query.section(' ',1).toStdString();
+            pl.SubmitForPlaybackNow(res);
+        } else if (command.compare("setc")==0)
+        {
+            current_comp = Vrok::ComponentManager::GetSingleton()->GetComponent(
+                               query.section(' ', 1).toStdString());
+            if (current_comp)
+            {
+                DBG("component found");
+            }
+        } else if (command.compare("setp")==0)
+        {
+            string prop=query.section(' ',1,1).toStdString();
+            Vrok::PropertyBase *p= Vrok::ComponentManager::GetSingleton()->GetProperty(current_comp,
+                                                                prop);
+            if (p)
+            {
+
+                Vrok::PropertyType ct= p->GetType();
+                switch(ct)
+                {
+                case Vrok::PropertyType::FLT:
+                {
+                    float pp=query.section(' ',2,2).toFloat();
+                    Vrok::ComponentManager::GetSingleton()->SetProperty(current_comp,p,&pp);
+                    DBG("set"<<pp);
+                    break;
+                }
+                }
+            } else
+            {
+                DBG("no property found");
+            }
+
+        } else if (command.compare("ls")==0)
+        {
+            QDir dir;
+            dir.setPath(path);
+            filelist = dir.entryInfoList();
+            int i=0;
+            foreach (QFileInfo file,filelist)
+            {
+                cout<<i<<". "<<file.fileName().toStdString()<<endl;
+                i++;
+            }
+
+        } else if (command.compare("cd")==0)
+        {
+            QString dir=query.section(' ',1);
+
+            if (dir.compare("..")==0) {
+                QDir dir(path);
+                dir.cdUp();
+                path = dir.absolutePath();
+                filelist = dir.entryInfoList();
+            }
+            else if (dir.startsWith("/"))
+            {
+                path=dir;
+            }
+            else
+            {
+                bool ok=false;
+                int index=dir.toInt(&ok);
+
+                if (ok)
+                {
+                    path+="/"+filelist[index].fileName();
+                }
+                else
+                {
+                    path+=dir;
+                }
+            }
+        }
+
+
+       //cout<<res->_filename<<endl;
+
+    }
+    pool.JoinThreads();
 
     return 0;
 }

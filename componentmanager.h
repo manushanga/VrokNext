@@ -39,8 +39,8 @@ public:
                           string propertyname,
                           PropertyBase *property);
     Component *GetComponent(string component);
-    void SetProperty(Component *component, string prop_name, void *data);
-    void GetProperty(Component *component, string prop_name, void *data);
+    void SetProperty(Component *component, PropertyBase *property, void *data);
+    PropertyBase *GetProperty(Component *component, string prop_name);
 
     ~ComponentManager();
 };

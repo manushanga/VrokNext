@@ -5,7 +5,7 @@ bool Vrok::ComponentManager::RegisterComponent(Component *component)
     stringstream name;
     name<<component->ComponentName();
 
-    name<<"_";
+    name<<":";
     auto it=_used_names.find(component->ComponentName());
     if (it != _used_names.end())
     {
@@ -50,23 +50,16 @@ Vrok::Component *Vrok::ComponentManager::GetComponent(string component)
     }
 }
 
-void Vrok::ComponentManager::SetProperty(Vrok::Component *component, string prop_name, void *data)
+void Vrok::ComponentManager::SetProperty(Vrok::Component *component, PropertyBase *property, void *data)
 {
-    auto it=_property_map.find(component);
-    if (it != _property_map.end())
-    {
-        auto it1=it->second.find(prop_name);
-        if (it1 != it->second.end())
-        {
-            PropertyBase *p=it1->second;
-            p->Set(data);
 
-            component->PropertyChanged(p);
-        }
-    }
+    property->Set(data);
+
+    component->PropertyChanged(property);
+
 }
 
-void Vrok::ComponentManager::GetProperty(Vrok::Component *component, string prop_name, void *data)
+Vrok::PropertyBase *Vrok::ComponentManager::GetProperty(Vrok::Component *component, string prop_name)
 {
     auto it=_property_map.find(component);
     if (it != _property_map.end())
@@ -75,7 +68,7 @@ void Vrok::ComponentManager::GetProperty(Vrok::Component *component, string prop
         if (it1 != it->second.end())
         {
             PropertyBase *p=it1->second;
-            p->Get(data);
+            return p;
         }
     }
 }

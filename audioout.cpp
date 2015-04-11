@@ -3,6 +3,7 @@
 Vrok::DriverAudioOut::DriverAudioOut()
 {
     ao_initialize();
+
     ao_sample_format sformat;
 
     sformat.channels=GetBufferConfig()->channels;

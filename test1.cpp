@@ -8,10 +8,7 @@ Test1::Test1()
     a.Preallocate();
     b.Preallocate();
 
-    a.CreateThread();
-    b.CreateThread();
-    a.JoinThread();
-    b.JoinThread();
+
 }
 
 Test1::~Test1()

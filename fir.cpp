@@ -159,10 +159,27 @@ Vrok::EffectFIR::EffectFIR() :
     ComponentManager *c=ComponentManager::GetSingleton();
 
     c->RegisterComponent(this);
-    c->RegisterProperty(this,"dist",&dist1);
+    c->RegisterProperty(this,"blend",&blend);
+    c->RegisterProperty(this,"drive",&drive);
 
+    c->RegisterProperty(this,"lp_freq",&lp_freq);
+    c->RegisterProperty(this,"hp_freq",&hp_freq);
+    c->RegisterProperty(this,"dry_vol",&dry_vol);
+    c->RegisterProperty(this,"wet_vol",&wet_vol);
 
-    lp[0][0].set_lp_rbj(80.0, 0.707, (float)48000.0);
+    blend.Set(7);
+    drive.Set(7);
+
+    lp_freq.Set(80.0f);
+    hp_freq.Set(40.0f);
+
+    wet_vol.Set(0.7);
+    dry_vol.Set(0.3);
+
+    _dry_vol = dry_vol.Get();
+    _wet_vol = wet_vol.Get();
+
+    lp[0][0].set_lp_rbj(lp_freq.Get(), 0.707, (float)48000.0);
     lp[0][1].copy_coeffs(lp[0][0]);
     lp[0][2].copy_coeffs(lp[0][0]);
     lp[0][3].copy_coeffs(lp[0][0]);
@@ -170,17 +187,14 @@ Vrok::EffectFIR::EffectFIR() :
     lp[1][1].copy_coeffs(lp[0][0]);
     lp[1][2].copy_coeffs(lp[0][0]);
     lp[1][3].copy_coeffs(lp[0][0]);
-
-
-    hp[0][0].set_hp_rbj(40.0, 0.707, (float)48000.0);
+    hp[0][0].set_hp_rbj(hp_freq.Get(), 0.707, (float)48000.0);
     hp[0][1].copy_coeffs(hp[0][0]);
     hp[1][0].copy_coeffs(hp[0][0]);
     hp[1][1].copy_coeffs(hp[0][0]);
-
     dist[0].set_sample_rate(48000.0);
-    dist[0].set_params(7,7);
+    dist[0].set_params(blend.Get(),drive.Get());
     dist[1].set_sample_rate(48000.0);
-    dist[1].set_params(7,7);
+    dist[1].set_params(blend.Get(),drive.Get());
 
 
 }
@@ -207,7 +221,7 @@ bool Vrok::EffectFIR::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int 
 
             proc_out[i] = hp[i][0].process(hp[i][1].process(proc_out[i]));
 
-            proc_out[i] = CLIP((proc_out[i]*0.7 + 0.3*proc[i])*1.5);
+            proc_out[i] = CLIP((proc_out[i]*_wet_vol + _dry_vol*proc[i])*1.5);
         }
         proc+=bc->channels;
         proc_out+=bc->channels;
@@ -250,12 +264,30 @@ bool Vrok::EffectFIR::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int 
 
 void Vrok::EffectFIR::PropertyChanged(PropertyBase *property)
 {
-    float g;
-    dist1.Get(&g);
-    DBG((int)dist1.GetType());
+    DBG("lp"<<lp_freq.Get());
+
+    lp[0][0].set_lp_rbj(lp_freq.Get(), 0.707, (float)48000.0);
+    lp[0][1].copy_coeffs(lp[0][0]);
+    lp[0][2].copy_coeffs(lp[0][0]);
+    lp[0][3].copy_coeffs(lp[0][0]);
+    lp[1][0].copy_coeffs(lp[0][0]);
+    lp[1][1].copy_coeffs(lp[0][0]);
+    lp[1][2].copy_coeffs(lp[0][0]);
+    lp[1][3].copy_coeffs(lp[0][0]);
+
+
+    hp[0][0].set_hp_rbj(hp_freq.Get(), 0.707, (float)48000.0);
+    hp[0][1].copy_coeffs(hp[0][0]);
+    hp[1][0].copy_coeffs(hp[0][0]);
+    hp[1][1].copy_coeffs(hp[0][0]);
+
     dist[0].set_sample_rate(48000.0);
-    dist[0].set_params(g,g);
+    dist[0].set_params(blend.Get(),drive.Get());
     dist[1].set_sample_rate(48000.0);
-    dist[1].set_params(g,g);
+    dist[1].set_params(blend.Get(),drive.Get());
+
+    _dry_vol = dry_vol.Get();
+    _wet_vol = wet_vol.Get();
+
 
 }

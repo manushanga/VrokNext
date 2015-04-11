@@ -3,6 +3,7 @@
 #include <mutex>
 extern std::mutex __global_console_lock;
 #ifdef DEBUG
+#include <iostream>
 #define DBG(...) \
     {\
         __global_console_lock.lock(); \

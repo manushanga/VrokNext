@@ -21,7 +21,7 @@
 
 #include "driver.h"
 
-#include "ao/ao.h"
+#include <ao/ao.h>
 
 namespace Vrok {
 
