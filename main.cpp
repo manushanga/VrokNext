@@ -25,11 +25,29 @@ using namespace std;
 using std::chrono::duration_cast;
 using std::chrono::duration;
 using std::chrono::high_resolution_clock;
+struct CBData
+{
+    Vrok::Player *player;
+    QFileInfoList *list;
+};
+void NextTrack(void *user)
+{
+    CBData *data= (CBData *) user;
+    Vrok::Resource *res=new Vrok::Resource;
+    if (data->list->size())
+    {
+        res->_filename = (*data->list)[rand() % data->list->size()].absoluteFilePath().toStdString();
 
+        data->player->SubmitForPlaybackNow(res);
+    }
+}
 int main(int argc, char *argv[])
 
 {
     //Test1 test;
+    srand(time(NULL));
+    QString path="./";
+    QFileInfoList filelist;
 
     Vrok::Player pl;
     Vrok::DriverAudioOut out;
@@ -42,6 +60,18 @@ int main(int argc, char *argv[])
     pre.RegisterSource(&pl);
     pre.RegisterSink(&out);
     pl.RegisterSink(&pre);
+    CBData data;
+    data.player = &pl;
+    data.list = &filelist;
+
+    if (argc > 1)
+    {
+        path = QString(argv[1]);
+        QDir dir(path);
+        filelist = dir.entryInfoList();
+    }
+
+    pl.SetNextTrackCallback(NextTrack, &data);
     //pre1.RegisterSource(&pre);
    // pre1.RegisterSink(&out);
 
@@ -59,16 +89,8 @@ int main(int argc, char *argv[])
    // pre1.CreateThread();
 
 
-    QString path="./";
-    QFileInfoList filelist;
 
 
-    if (argc > 1)
-    {
-        path = QString(argv[1]);
-        QDir dir(path);
-        filelist = dir.entryInfoList();
-    }
     while (true)
     {
 
@@ -93,6 +115,12 @@ int main(int argc, char *argv[])
             {
                 WARN("invalid index");
             }
+        } else if (command.compare("pause")==0 || command.compare("pp")==0)
+        {
+            pl.Pause();
+        } else if (command.compare("resume")==0 || command.compare("rr")==0)
+        {
+            pl.Resume();
         } else if (command.compare("openi")==0)
         {
             track_id=query.section(' ',1,1).toInt();

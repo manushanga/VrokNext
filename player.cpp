@@ -7,7 +7,9 @@ Vrok::Player::Player() :
     _work(true),
     _command_queue(new Queue<Command>(5)),
     _command_now_queue(new Queue<Command>(5)),
-    _decoder_work(false)
+    _decoder_work(false),
+    _callback(nullptr),
+    _paused(false)
 {
     _decoder = new DecoderFFMPEG();
 }
@@ -56,6 +58,13 @@ bool Vrok::Player::Stop()
     return true;
 }
 
+void Vrok::Player::SetNextTrackCallback(Vrok::Player::NextTrackCallback callback, void *user)
+{
+
+    _callback = callback;
+    _callback_user = user;
+}
+
 void Vrok::Player::Run()
 {
     Command cmd;
@@ -80,6 +89,8 @@ void Vrok::Player::Run()
                 }
             }
         } else {
+            if (_callback)
+                _callback(_callback_user);
 
             _decoder_work = _command_now_queue->Peak(cmd);
             if (!_decoder_work)
@@ -111,21 +122,26 @@ void Vrok::Player::Run()
                 }
             } else if (cmd.type == PAUSE)
             {
-
+                _paused=true;
+            } else if (cmd.type == RESUME)
+            {
+                _paused=false;
             }
         }
-        auto b=AcquireBuffer();
-        if (b)
+        if ( !_paused)
         {
-            if (*b->GetBufferConfig() != *GetBufferConfig())
+            auto b=AcquireBuffer();
+            if (b )
             {
-                b->Reset(GetBufferConfig());
-            }
-            _decoder_work = _decoder->DecoderRun(b, GetBufferConfig());
-            DBG(_decoder_work);
-            atomic_thread_fence(memory_order_seq_cst);
+                if (*b->GetBufferConfig() != *GetBufferConfig())
+                {
+                    b->Reset(GetBufferConfig());
+                }
+                _decoder_work = _decoder->DecoderRun(b, GetBufferConfig());
+                atomic_thread_fence(memory_order_seq_cst);
 
-            PushBuffer(b);
+                PushBuffer(b);
+            }
         }
     }
 }

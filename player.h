@@ -34,6 +34,8 @@ namespace Vrok {
 
     class Player : public BufferGraph::Point, public Component
     {
+    public:
+        typedef void (*NextTrackCallback)(void *user);
     private:
         enum CommandType {OPEN, PAUSE, RESUME, STOP, SEEK};
         struct Command
@@ -42,10 +44,12 @@ namespace Vrok {
             void *data;
         };
         atomic<bool> _new_resource;
+        bool _paused;
     protected:
         atomic<bool> _work;
         bool _decoder_work;
-
+        NextTrackCallback _callback;
+        void *_callback_user;
         // _play_queue: queue tracks needed to be played
         // one after other here
         // _play_now_queue: queue tracks will interrupt
@@ -67,6 +71,8 @@ namespace Vrok {
         bool Resume();
         bool Pause();
         bool Stop();
+        void SetNextTrackCallback(NextTrackCallback callback, void *user);
+
         void Run();
 
         Vrok::ComponentType ComponentType()

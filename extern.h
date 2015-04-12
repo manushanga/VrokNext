@@ -1,23 +1,32 @@
 #include "player.h"
 #include "audioout.h"
 #include "preamp.h"
+#include "threadpool.h"
 #include "fir.h"
 
-Vrok::Player pl;
-Vrok::DriverAudioOut out;
-Vrok::EffectFIR pre;
-Vrok::EffectFIR pre1;
+Vrok::Player *pl;
+Vrok::DriverAudioOut *out;
+Vrok::EffectFIR *pre;
+Vrok::EffectFIR *pre1;
+ThreadPool *pool;
+static Vrok::Player *plx=NULL;
 
-
-
+void nextTrackCallback();
 
 extern "C"
 {
-    Vrok::Resource *CreateResource(char *filename)
+    void CreateContext()
+    {
+        pl = new Vrok::Player;
+        out = new Vrok::DriverAudioTrack;
+        pre = new Vrok::EffectFIR;
+        pre1 = new Vrok::EffectFIR;
+        pool = new ThreadPool(1);
+    }
+    Vrok::Resource *CreateResource(const char *filename)
     {
         Vrok::Resource *res=new Vrok::Resource();
         res->_filename = std::string(filename);
-        DBG(res);
         return res;
     }
     void DestroyResource(Vrok::Resource *resource)
@@ -35,39 +44,50 @@ extern "C"
 
     Vrok::Player *CreatePlayer()
     {
-        out.RegisterSource(&pre1);
-        pre.RegisterSource(&pl);
-        pre.RegisterSink(&pre1);
-        pl.RegisterSink(&pre);
-        pre1.RegisterSource(&pre);
-        pre1.RegisterSink(&out);
+        pre->RegisterSource(pl);
+        pre->RegisterSink(out);
+        pl->RegisterSink(pre);
+    	out->RegisterSource(pre);
 
-        out.Preallocate();
-        pl.Preallocate();
-        pre.Preallocate();
-        pre1.Preallocate();
+    	out->Preallocate();
+        pl->Preallocate();
+        pre->Preallocate();
+//        pre1->Preallocate();
 
-        pre.CreateThread();
-        pre1.CreateThread();
-        out.CreateThread();
-        pl.CreateThread();
-
-
-        return &pl;
+        pool->RegisterWork(0,pl);
+        pool->RegisterWork(0,pre);
+        pool->RegisterWork(0,out);
+        
+        pl->SetNextTrackCallback(nextTrackCallback);
+        
+        pool->CreateThreads();
+        
+        return pl;
     }
     void JoinPlayer()
     {
-        pl.JoinThread();
-        pre.JoinThread();
-        pre1.JoinThread();
-        out.JoinThread();
+        pool->JoinThreads();
     }
     void SubmitForPlayback(Vrok::Resource *resource)
     {
-        pl.SubmitForPlayback(resource);
+        pl->SubmitForPlayback(resource);
     }
     void SubmitForPlaybackNow(Vrok::Resource *resource)
     {
-        pl.SubmitForPlaybackNow(resource);
+        pl->SubmitForPlaybackNow(resource);
+    }
+    void DeleteContext()
+    {
+        delete pl;
+        delete out;
+        delete pre;
+        delete pool;
+        delete pre1;
     }
 }
+
+void nextTrackCallback() 
+{
+
+}
+
