@@ -169,7 +169,7 @@ int main(int argc, char *argv[])
                 path = dir.absolutePath();
                 filelist = dir.entryInfoList();
             }
-            else if (dir_name.startsWith("/"))
+            else if (dir_name.startsWith("/") || dir_name[1] == ':')
             {
                 path=dir_name;
                 QDir dir(path);
