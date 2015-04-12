@@ -122,6 +122,7 @@ void Vrok::Player::Run()
                 b->Reset(GetBufferConfig());
             }
             _decoder_work = _decoder->DecoderRun(b, GetBufferConfig());
+            DBG(_decoder_work);
             atomic_thread_fence(memory_order_seq_cst);
 
             PushBuffer(b);

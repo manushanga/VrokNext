@@ -10,26 +10,31 @@ void Vrok::Effect::Run()
 {
     int len=GetBufferConfig()->channels * GetBufferConfig()->frames;
 
-    auto buffer=AcquireBuffer();
+
     auto buffers=PeakAllSources();
-    if (buffers && buffer)
+    if (buffers)
     {
-        BufferConfig *c=buffers[0]->GetBufferConfig();
-
-        if ((*c) != *buffer->GetBufferConfig())
+        auto buffer=AcquireBuffer();
+        if (buffer)
         {
-           // DBG("xx");
-            SetBufferConfig(c);
+            BufferConfig *c=buffers[0]->GetBufferConfig();
 
-            //GetBufferConfig()->Print();
-            buffer->Reset(c);
-            len=c->channels * c->frames;
+            if ((*c) != *buffer->GetBufferConfig())
+            {
+               // DBG("xx");
+                SetBufferConfig(c);
+
+                //GetBufferConfig()->Print();
+                buffer->Reset(c);
+                len=c->channels * c->frames;
+            }
+            memset(buffer->GetData(),0,len*sizeof(float));
+
+            _work=EffectRun(buffer, buffers, _sources.size());
+
+            PushBuffer(buffer);
         }
-        memset(buffer->GetData(),0,len*sizeof(float));
-
-        _work=EffectRun(buffer, buffers, _sources.size());
 
         ReleaseAllSources(buffers);
-        PushBuffer(buffer);
     }
 }
