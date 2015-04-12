@@ -12,7 +12,7 @@ void Vrok::Effect::Run()
 
     auto buffer=AcquireBuffer();
     auto buffers=PeakAllSources();
-    if (buffers)
+    if (buffer && buffers)
     {
         BufferConfig *c=buffers[0]->GetBufferConfig();
 

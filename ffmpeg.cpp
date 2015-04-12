@@ -56,6 +56,7 @@ bool Vrok::DecoderFFMPEG::Open(Vrok::Resource *resource)
 {
 
     if(avformat_open_input(&container,resource->_filename.c_str(),NULL,NULL)<0){
+        DBG(resource->_filename);
         DBG("Can't open file");
         return false;
     }

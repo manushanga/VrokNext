@@ -170,11 +170,11 @@ Vrok::EffectFIR::EffectFIR() :
     blend.Set(7);
     drive.Set(7);
 
-    lp_freq.Set(80.0f);
-    hp_freq.Set(40.0f);
+    lp_freq.Set(100.0f);
+    hp_freq.Set(50.0f);
 
-    wet_vol.Set(0.7);
-    dry_vol.Set(0.3);
+    wet_vol.Set(0.9);
+    dry_vol.Set(0.6);
 
     _dry_vol = dry_vol.Get();
     _wet_vol = wet_vol.Get();

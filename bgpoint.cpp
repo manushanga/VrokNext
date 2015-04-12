@@ -6,8 +6,6 @@ Buffer *BufferGraph::Point::AcquireBuffer()
 
     Buffer *b=nullptr;
     _free_buffers->PopBlocking(b);
-    assert(b);
-
 
     return b;
 }

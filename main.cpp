@@ -78,22 +78,33 @@ int main(int argc, char *argv[])
 
         if (got_track)
         {
-            Vrok::Resource *res=new Vrok::Resource;
-            res->_filename = filelist[track_id].absoluteFilePath().toStdString();
-            pl.SubmitForPlaybackNow(res);
-        } else if (command.compare("openi")==0)
-        {
-            Vrok::Resource *res=new Vrok::Resource;
-            track_id=query.section(' ',1,1).toInt();
             if (track_id < filelist.size())
             {
-                res->_filename = filelist[query.section(' ',1,1).toInt()].absoluteFilePath().toStdString();
+                Vrok::Resource *res=new Vrok::Resource;
+                res->_filename = filelist[track_id].absoluteFilePath().toStdString();
+
+                pl.SubmitForPlaybackNow(res);
             } else
             {
                 WARN("invalid index");
             }
+        } else if (command.compare("openi")==0)
+        {
+            track_id=query.section(' ',1,1).toInt();
+            if (track_id < filelist.size())
+            {
 
-            pl.SubmitForPlaybackNow(res);
+                Vrok::Resource *res=new Vrok::Resource;
+                res->_filename = filelist[track_id].absoluteFilePath().toStdString();
+
+                pl.SubmitForPlaybackNow(res);
+
+            } else
+            {
+
+                WARN("invalid index");
+            }
+
         } else if (command.compare("open")==0)
         {
             Vrok::Resource *res=new Vrok::Resource;
@@ -170,8 +181,9 @@ int main(int argc, char *argv[])
                 }
                 else
                 {
-                    path+=dir_name;
+                    path+="/"+dir_name;
                 }
+                DBG(path.toStdString());
                 QDir dir(path);
                 filelist = dir.entryInfoList();
             }

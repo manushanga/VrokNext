@@ -70,6 +70,9 @@ Vrok::PropertyBase *Vrok::ComponentManager::GetProperty(Vrok::Component *compone
             PropertyBase *p=it1->second;
             return p;
         }
+    } else
+    {
+        return nullptr;
     }
 }
 Vrok::ComponentManager::ComponentManager()

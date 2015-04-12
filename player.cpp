@@ -85,9 +85,7 @@ void Vrok::Player::Run()
             if (!_decoder_work)
                 this_thread::sleep_for(chrono::seconds(1));
         }
-    }
-
-    if (_decoder_work)
+    } else
     {
         got = _command_now_queue->Pop(cmd);
         if (got)
@@ -108,6 +106,7 @@ void Vrok::Player::Run()
                 }
                 else
                 {
+                    DBG("decoder fail");
                     return;
                 }
             } else if (cmd.type == PAUSE)
@@ -116,14 +115,17 @@ void Vrok::Player::Run()
             }
         }
         auto b=AcquireBuffer();
-        if (*b->GetBufferConfig() != *GetBufferConfig())
+        if (b)
         {
-            b->Reset(GetBufferConfig());
-        }
-        _decoder_work = _decoder->DecoderRun(b, GetBufferConfig());
-        atomic_thread_fence(memory_order_seq_cst);
+            if (*b->GetBufferConfig() != *GetBufferConfig())
+            {
+                b->Reset(GetBufferConfig());
+            }
+            _decoder_work = _decoder->DecoderRun(b, GetBufferConfig());
+            atomic_thread_fence(memory_order_seq_cst);
 
-        PushBuffer(b);
+            PushBuffer(b);
+        }
     }
 }
 
