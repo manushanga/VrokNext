@@ -1,4 +1,6 @@
 #include <thread>
+#include <cstring>
+
 #include "bgpoint.h"
 
 Buffer *BufferGraph::Point::AcquireBuffer()
@@ -57,21 +59,26 @@ Buffer **BufferGraph::Point::PeakAllSources()
 {
     //cout<<this_thread::get_id()<<" "<<this<<"peak"<<endl;
     //_buffer_peak_update = 0;
-    int j=0;
-    while (_buffer_peak_update < _sources.size() && j < _max_retries){
-        for (int i=0;i<_sources.size();i++)
-        {
 
+    Buffer* buffers_on_peak[_sources.size()];
+    size_t buffer_peak_update=0;
+
+    memcpy(&buffers_on_peak[0],_buffers_on_peak,sizeof(Buffer*)*_sources.size());
+
+    int j=0;
+    while (buffer_peak_update < _sources.size() && j < _max_retries){
+        for (size_t i=0;i<_sources.size();i++)
+        {
             auto b=_sources[i]->PeakBuffer();
             //DBG(b);
             if (b == nullptr)
             {
                 j=_max_retries;
                 break;
-            } else if (_buffers_on_peak[i] != b)
+            } else if (buffers_on_peak[i] != b)
             {
-                _buffer_peak_update++;
-                _buffers_on_peak[i]=b;
+                buffer_peak_update++;
+                buffers_on_peak[i]=b;
             } else {
                 // we got the same buffer back
                 // give the readers another turn
@@ -82,14 +89,20 @@ Buffer **BufferGraph::Point::PeakAllSources()
         }
         j++;
     }
-    _buffer_peak_update = 0;
-    return (j < _max_retries) ? _buffers_on_peak : NULL;
+    if (j < _max_retries)
+    {
+        memcpy(_buffers_on_peak,&buffers_on_peak[0],sizeof(Buffer*)*_sources.size());
+        return _buffers_on_peak;
+    } else
+    {
+        return nullptr;
+    }
 
 }
 
 void BufferGraph::Point::ReleaseAllSources(Buffer **buffers_on_peak)
 {
-    for (int i=0;i<_sources.size();i++)
+    for (size_t i=0;i<_sources.size();i++)
     {
         _sources[i]->ReleaseBuffer(buffers_on_peak[i]);
     }
@@ -112,9 +125,8 @@ void BufferGraph::Point::Preallocate()
 {
     _buffers_on_peak = new Buffer*[_sources.size()];
 
-    for (int i=0;i<_sources.size();i++)
+    for (size_t i=0;i<_sources.size();i++)
     {
         _buffers_on_peak[i]=nullptr;
     }
-    _buffer_peak_update=0;
 }

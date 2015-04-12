@@ -50,8 +50,8 @@ public:
     // for along time (>5 sec) schedule in to a new
     // thread
     enum WakeUpMode{Best, Lazy};
-    ThreadPool(int thread_count);
-    bool RegisterWork(int thread_id, Runnable *runnable);
+    ThreadPool(size_t thread_count);
+    bool RegisterWork(size_t thread_id, Runnable *runnable);
     void CreateThreads();
     void JoinThreads();
     ~ThreadPool();

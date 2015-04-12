@@ -1,6 +1,6 @@
 #include "threadpool.h"
 #include "debug.h"
-ThreadPool::ThreadPool(int thread_count)
+ThreadPool::ThreadPool(size_t thread_count)
 {
 
     _runnables.resize(thread_count);
@@ -8,7 +8,7 @@ ThreadPool::ThreadPool(int thread_count)
     _thread_data.resize(thread_count);
 }
 
-bool ThreadPool::RegisterWork(int thread_id, Runnable *runnable)
+bool ThreadPool::RegisterWork(size_t thread_id, Runnable *runnable)
 {
     if (thread_id < _runnables.size())
     {
@@ -22,7 +22,7 @@ bool ThreadPool::RegisterWork(int thread_id, Runnable *runnable)
 
 void ThreadPool::CreateThreads()
 {
-    for (int i=0;
+    for (size_t i=0;
          i<_threads.size();
          i++)
     {
@@ -39,7 +39,7 @@ void ThreadPool::CreateThreads()
 
 void ThreadPool::JoinThreads()
 {
-    for (int i=0;
+    for (size_t i=0;
          i<_threads.size();
          i++)
     {
@@ -50,7 +50,7 @@ void ThreadPool::JoinThreads()
 
 ThreadPool::~ThreadPool()
 {
-    for (int i=0;i<_threads.size();i++)
+    for (size_t i=0;i<_threads.size();i++)
     {
         delete _threads[i];
         delete _thread_data[i];
@@ -62,7 +62,7 @@ void ThreadPool::Work(ThreadData *th)
 
     while (th->work)
     {
-        for (int i=0;i<(*th->runnables)[th->thread_id].size();i++)
+        for (size_t i=0;i<(*th->runnables)[th->thread_id].size();i++)
         {
             //DBG(th->thread_id<<" "<<i);
             (*th->runnables)[th->thread_id][i]->Run();

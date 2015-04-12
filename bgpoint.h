@@ -44,15 +44,13 @@ private:
     const int _max_retries=50;
 protected:
     vector<Point *> _sinks, _sources;
-    int _buffer_refs[BUFFERS];
+    size_t _buffer_refs[BUFFERS];
     Queue<Buffer *> *_used_buffers;
     Buffer **_buffers_on_peak;
-    int _buffer_peak_update;
     BufferConfig _config;
 
 public:
-    Point() :
-        _buffer_peak_update(0)
+    Point()
     {
         auto _config=BufferConfig();
 

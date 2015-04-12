@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     Vrok::Player pl;
     Vrok::DriverAudioOut out;
     Vrok::EffectFIR pre;
-    ThreadPool pool(2);
+    ThreadPool pool(1);
 
     //Vrok::EffectFIR pre1;
 
@@ -51,11 +51,9 @@ int main(int argc, char *argv[])
     //pre1.Preallocate();
     pool.RegisterWork(0,&pl);
     pool.RegisterWork(0,&pre);
-    pool.RegisterWork(1,&out);
+    pool.RegisterWork(0,&out);
 
     pool.CreateThreads();
-
-    float g=10.0,lp_freq=60.0f;
     Vrok::Component *current_comp=nullptr;
 
    // pre1.CreateThread();
@@ -64,6 +62,13 @@ int main(int argc, char *argv[])
     QString path="./";
     QFileInfoList filelist;
 
+
+    if (argc > 1)
+    {
+        path = QString(argv[1]);
+        QDir dir(path);
+        filelist = dir.entryInfoList();
+    }
     while (true)
     {
 
