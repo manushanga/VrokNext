@@ -19,7 +19,6 @@ bool ThreadPool::RegisterWork(size_t thread_id, Runnable *runnable)
         return false;
     }
 }
-
 void ThreadPool::CreateThreads()
 {
     for (size_t i=0;
@@ -34,6 +33,15 @@ void ThreadPool::CreateThreads()
         _thread_data[i] = th;
 
         _threads[i] =new thread(ThreadPool::Work, th);
+    }
+}
+void ThreadPool::StopThreads()
+{
+    for (size_t i=0;
+         i<_threads.size();
+         i++)
+    {
+        _thread_data[i]->work = false;
     }
 }
 

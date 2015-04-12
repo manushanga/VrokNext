@@ -52,6 +52,7 @@ public:
     enum WakeUpMode{Best, Lazy};
     ThreadPool(size_t thread_count);
     bool RegisterWork(size_t thread_id, Runnable *runnable);
+    void StopThreads();
     void CreateThreads();
     void JoinThreads();
     ~ThreadPool();

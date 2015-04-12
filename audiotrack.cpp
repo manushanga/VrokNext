@@ -28,6 +28,7 @@ static JNIEnv* jenv;
 
 static JNIEnv* GetEnv()
 {
+    DBG("getev");
 	JNIEnv* jenv = NULL;
 	int err = javaVM->GetEnv((void**)&jenv, JNI_VERSION_1_6);
 	if (err ==  JNI_EDETACHED)

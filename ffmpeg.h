@@ -30,6 +30,13 @@ extern "C" {
 #ifndef __STDC_CONSTANT_MACROS
 #define __STDC_CONSTANT_MACROS
 #endif
+    
+#ifdef __cplusplus
+ #ifdef _STDINT_H
+  #undef _STDINT_H
+ #endif
+ #include <stdint.h>
+#endif
 
 #include <libavutil/mathematics.h>
 #include <libavutil/samplefmt.h>
@@ -44,7 +51,6 @@ extern "C" {
 #include "decoder.h"
 #include "ringbuffer.h"
 
-#include "ao/ao.h"
 
 namespace Vrok
 {
@@ -64,8 +70,6 @@ public:
 private:
     static int ff_avio_interrupt(void *user);
     Ringbuffer<float> *_ringbuffer;
-    // AO here for testing this should be removed
-    ao_device *_ao_device;
     time_t last_read;
     AVFormatContext* container;
     int audio_stream_id;

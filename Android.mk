@@ -2,7 +2,7 @@
 LOCAL_PATH := $(call my-dir)
 LOCAL_MODULE_FILENAME := libvrok
 LOCAL_MODULE    := vrok
-LOCAL_CFLAGS := -std=c++11 -ffast-math -O3 -mfpu=neon -funsafe-math-optimizations
+LOCAL_CFLAGS := -ggdb -std=c++11 -ffast-math -O3 -mfpu=neon -funsafe-math-optimizations
 LOCAL_SRC_FILES := extern-jni.cpp \
 		threadpool.cpp \
 		queue.cpp \
