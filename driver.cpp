@@ -9,15 +9,18 @@ Vrok::Driver::Driver() :
 void Vrok::Driver::Run()
 {
     auto buffers=PeakAllSources();
-    BufferConfig *c=buffers[0]->GetBufferConfig();
-    //c->Print();
-    //GetBufferConfig()->Print();
-    if (*c!= *GetBufferConfig())
+    if (buffers)
     {
-       BufferConfigChange(c);
+        BufferConfig *c=buffers[0]->GetBufferConfig();
+        //c->Print();
+        //GetBufferConfig()->Print();
+        if (*c!= *GetBufferConfig())
+        {
+           BufferConfigChange(c);
 
-       SetBufferConfig(c);
+           SetBufferConfig(c);
+        }
+        _work=DriverRun(buffers[0]);
+        ReleaseAllSources(buffers);
     }
-    _work=DriverRun(buffers[0]);
-    ReleaseAllSources(buffers);
 }

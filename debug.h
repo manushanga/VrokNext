@@ -1,9 +1,10 @@
 #ifndef DEBUG_H
 #define DEBUG_
 #include <mutex>
+#include <iostream>
 extern std::mutex __global_console_lock;
 #ifdef DEBUG
-#include <iostream>
+
 #define DBG(...) \
     {\
         __global_console_lock.lock(); \
@@ -14,6 +15,13 @@ extern std::mutex __global_console_lock;
 #else
 #define DBG(...)
 #endif
+
+#define WARN(...) \
+    {\
+        __global_console_lock.lock(); \
+        std::cerr<<__VA_ARGS__<<std::endl; \
+        __global_console_lock.unlock(); \
+    }
 
 #endif // DEBUG_H
 

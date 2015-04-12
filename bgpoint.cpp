@@ -58,16 +58,19 @@ Buffer *BufferGraph::Point::PeakBuffer()
 Buffer **BufferGraph::Point::PeakAllSources()
 {
     //cout<<this_thread::get_id()<<" "<<this<<"peak"<<endl;
-    _buffer_peak_update = 0;
-
-    while (_buffer_peak_update < _sources.size()){
+    //_buffer_peak_update = 0;
+    int j=0;
+    while (_buffer_peak_update < _sources.size() && j < _max_retries){
         for (int i=0;i<_sources.size();i++)
         {
 
             auto b=_sources[i]->PeakBuffer();
-
-
-            if (_buffers_on_peak[i] != b)
+            //DBG(b);
+            if (b == nullptr)
+            {
+                j=_max_retries;
+                break;
+            } else if (_buffers_on_peak[i] != b)
             {
                 _buffer_peak_update++;
                 _buffers_on_peak[i]=b;
@@ -79,10 +82,10 @@ Buffer **BufferGraph::Point::PeakAllSources()
                 this_thread::yield();
             }
         }
-
+        j++;
     }
     _buffer_peak_update = 0;
-    return _buffers_on_peak;
+    return (j < _max_retries) ? _buffers_on_peak : NULL;
 
 }
 

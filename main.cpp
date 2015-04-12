@@ -72,13 +72,29 @@ int main(int argc, char *argv[])
 
         QString query(line.c_str());
         QString command=query.section(' ',0,0);
-        if (command.compare("openi")==0)
+        bool got_track=false;
+        int track_id=query.toInt(&got_track);
+
+
+        if (got_track)
         {
             Vrok::Resource *res=new Vrok::Resource;
-            res->_filename = filelist[query.section(' ',1,1).toInt()].absoluteFilePath().toStdString();
+            res->_filename = filelist[track_id].absoluteFilePath().toStdString();
             pl.SubmitForPlaybackNow(res);
-        }
-        if (command.compare("open")==0)
+        } else if (command.compare("openi")==0)
+        {
+            Vrok::Resource *res=new Vrok::Resource;
+            track_id=query.section(' ',1,1).toInt();
+            if (track_id < filelist.size())
+            {
+                res->_filename = filelist[query.section(' ',1,1).toInt()].absoluteFilePath().toStdString();
+            } else
+            {
+                WARN("invalid index");
+            }
+
+            pl.SubmitForPlaybackNow(res);
+        } else if (command.compare("open")==0)
         {
             Vrok::Resource *res=new Vrok::Resource;
             res->_filename = query.section(' ',1).toStdString();
@@ -129,22 +145,24 @@ int main(int argc, char *argv[])
 
         } else if (command.compare("cd")==0)
         {
-            QString dir=query.section(' ',1);
+            QString dir_name=query.section(' ',1);
 
-            if (dir.compare("..")==0) {
+            if (dir_name.compare("..")==0) {
                 QDir dir(path);
                 dir.cdUp();
                 path = dir.absolutePath();
                 filelist = dir.entryInfoList();
             }
-            else if (dir.startsWith("/"))
+            else if (dir_name.startsWith("/"))
             {
-                path=dir;
+                path=dir_name;
+                QDir dir(path);
+                filelist = dir.entryInfoList();
             }
             else
             {
                 bool ok=false;
-                int index=dir.toInt(&ok);
+                int index=dir_name.toInt(&ok);
 
                 if (ok)
                 {
@@ -152,8 +170,10 @@ int main(int argc, char *argv[])
                 }
                 else
                 {
-                    path+=dir;
+                    path+=dir_name;
                 }
+                QDir dir(path);
+                filelist = dir.entryInfoList();
             }
         }
 

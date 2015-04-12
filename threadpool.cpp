@@ -64,7 +64,7 @@ void ThreadPool::Work(ThreadData *th)
     {
         for (int i=0;i<(*th->runnables)[th->thread_id].size();i++)
         {
-            DBG(th->thread_id<<" "<<i);
+            //DBG(th->thread_id<<" "<<i);
             (*th->runnables)[th->thread_id][i]->Run();
         }
     }
