@@ -167,14 +167,14 @@ Vrok::EffectFIR::EffectFIR() :
     c->RegisterProperty(this,"dry_vol",&dry_vol);
     c->RegisterProperty(this,"wet_vol",&wet_vol);
 
-    blend.Set(9);
-    drive.Set(4);
+    blend.Set(6);
+    drive.Set(7);
 
     lp_freq.Set(150.0f);
-    hp_freq.Set(40.0f);
+    hp_freq.Set(50.0f);
 
-    wet_vol.Set(1.1);
-    dry_vol.Set(0.7);
+    wet_vol.Set(0.6);
+    dry_vol.Set(1.0);
 
     _dry_vol = dry_vol.Get();
     _wet_vol = wet_vol.Get();

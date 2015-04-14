@@ -2,6 +2,7 @@
 #include "audiotrack.h"
 #include "preamp.h"
 #include "fir.h"
+#include "eq.h"
 #include "threadpool.h"
 #include "componentmanager.h"
 #include <jni.h>
@@ -10,8 +11,8 @@ extern JavaVM* javaVM;
 
 Vrok::Player *pl;
 Vrok::DriverAudioTrack *out;
-Vrok::EffectFIR *pre;
-Vrok::EffectFIR *pre1;
+Vrok::EffectSSEQ *pSSEQ;
+Vrok::EffectFIR *pFIR;
 Vrok::Component *current=nullptr;
 
 ThreadPool *pool;
@@ -31,9 +32,9 @@ extern "C"
         
         pl = new Vrok::Player;
         out = new Vrok::DriverAudioTrack;
-        pre = new Vrok::EffectFIR;
-        pre1 = new Vrok::EffectFIR;
-        pool = new ThreadPool(1);
+        pSSEQ = new Vrok::EffectSSEQ;
+        pFIR = new Vrok::EffectFIR;
+        pool = new ThreadPool(2);
   
     }
     
@@ -48,7 +49,9 @@ extern "C"
             current,
             std::string(name)
         );
+        
         Vrok::ComponentManager::GetSingleton()->SetProperty(current, p, &val);
+        
     }
     
     Vrok::Resource *CreateResource(const char *filename)
@@ -73,19 +76,29 @@ extern "C"
     Vrok::Player *CreatePlayer()
     {
         DBG("player");
-        pre->RegisterSource(pl);
-        pre->RegisterSink(out);
-        pl->RegisterSink(pre);
-    	out->RegisterSource(pre);
+        pSSEQ->RegisterSource(pl);
+        pSSEQ->RegisterSink(pFIR);
+        
+        pFIR->RegisterSource(pSSEQ);
+        pFIR->RegisterSink(out);
+        
+        pl->RegisterSink(pSSEQ);
+        
+        out->RegisterSource(pFIR);
+        
         DBG("Reg");
+
         out->Preallocate();
         pl->Preallocate();
-        pre->Preallocate();
-//        pre1->Preallocate();
+        pSSEQ->Preallocate();
+        pFIR->Preallocate();
+        
+
         DBG("pre");
         pool->RegisterWork(0,pl);
-        pool->RegisterWork(0,pre);
-        pool->RegisterWork(0,out);
+        pool->RegisterWork(1,pSSEQ);
+        pool->RegisterWork(0,pFIR);
+        pool->RegisterWork(1,out);
         DBG("reg");
         pl->SetNextTrackCallback(NextTrackCallback,nullptr);
         DBG("regxx");
@@ -117,14 +130,66 @@ extern "C"
     {
         delete pl;
         delete out;
-        delete pre;
+        delete pSSEQ;
         delete pool;
-        delete pre1;
+        delete pFIR;
     }
     void StopThreads()
     {
         pool->StopThreads();
     }
+    float GetSSEQPreamp()
+    {
+        float val=0;
+        Vrok::PropertyBase *p = Vrok::ComponentManager::GetSingleton()->GetProperty(
+            pSSEQ,
+            "preamp"
+        );
+        
+        p->Get(&val);
+        return val;
+    }
+    float GetSSEQBand(int band)
+    {
+        char bandname[32];
+        snprintf(bandname,32,"band_%d",band);
+        std::string sband=std::string(bandname);
+        float val=0;
+        DBG(bandname);
+        Vrok::PropertyBase *p = Vrok::ComponentManager::GetSingleton()->GetProperty(
+            pSSEQ,
+            sband
+        );
+        p->Get(&val);
+        return val;
+    }
+    void SetSSEQPreamp(float val)
+    {
+        
+        Vrok::PropertyBase *p = Vrok::ComponentManager::GetSingleton()->GetProperty(
+            pSSEQ,
+            "preamp"
+        );
+        Vrok::ComponentManager::GetSingleton()->SetProperty(pSSEQ, p, &val);
+        
+    }
+    void SetSSEQBand(int band, float val)
+    {
+        char bandname[32];
+        snprintf(bandname,32,"band_%d",band);
+        std::string sband=std::string(bandname);
+        
+        Vrok::PropertyBase *p = Vrok::ComponentManager::GetSingleton()->GetProperty(
+            pSSEQ,
+            sband
+        );
+        
+        Vrok::ComponentManager::GetSingleton()->SetProperty(pSSEQ, p, &val);
+        
+        
+        
+    }
+    
     
 }
 
@@ -138,6 +203,7 @@ void NextTrackCallback(void *user) {
         if (getEnvStat == JNI_EDETACHED) {
             if (javaVM->AttachCurrentThread(&g_env, NULL) != 0) {
                 DBG("Failed to attach");
+                return;
             }
         } else if (getEnvStat == JNI_OK) {
             //
@@ -146,7 +212,7 @@ void NextTrackCallback(void *user) {
         }
         jstring str = (jstring) g_env->CallNonvirtualObjectMethod(hookObject, hookClass, hookMethod );
         //strcpy(url, g_env->GetStringUTFChars( str , NULL ) );
-
+        DBG(g_env->GetStringUTFChars( str , NULL ));
         plx->SubmitForPlaybackNow(CreateResource(g_env->GetStringUTFChars( str , NULL )));
 
         if (g_env->ExceptionCheck()) {
@@ -179,6 +245,7 @@ JNIEXPORT void JNICALL
 Java_com_mx_vrok_VrokService_hookCallback( JNIEnv* env,
                                              jobject thiz)
 {
+    DBG("hook called");
    
     hookObject = env->NewGlobalRef(thiz);
 
@@ -303,7 +370,7 @@ Java_com_mx_vrok_VrokService_getEqualizerPreamp( JNIEnv* env,
                                                        jobject thiz
                                                      )
 {
-    return 0;
+    return GetSSEQPreamp();
 }
 
 JNIEXPORT void JNICALL
@@ -312,7 +379,7 @@ Java_com_mx_vrok_VrokService_setEqualizerPreamp( JNIEnv* env,
                                                        float value
                                                      )
 {
-    
+    SetSSEQPreamp(value);
 }
 
 JNIEXPORT void JNICALL
@@ -322,7 +389,7 @@ Java_com_mx_vrok_VrokService_setEqualizerBand( JNIEnv* env,
                                                      float value
                                                    )
 {
-    
+    SetSSEQBand(band, value);
 }
 
 JNIEXPORT float JNICALL
@@ -331,7 +398,7 @@ Java_com_mx_vrok_VrokService_getEqualizerBand( JNIEnv* env,
                                                      int band
                                                    )
 {
-    return 0;
+    return GetSSEQBand(band);
 }
 
 JNIEXPORT void JNICALL
@@ -340,6 +407,7 @@ Java_com_mx_vrok_VrokService_shutdown( JNIEnv* env,
                                                    )
 {
     StopThreads();
+    exit(0);
 }
 
 }

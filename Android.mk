@@ -2,7 +2,8 @@
 LOCAL_PATH := $(call my-dir)
 LOCAL_MODULE_FILENAME := libvrok
 LOCAL_MODULE    := vrok
-LOCAL_CFLAGS := -ggdb -std=c++11 -ffast-math -O3 -mfpu=neon -funsafe-math-optimizations
+LOCAL_CPPFLAGS :=  -std=c++11 -ffast-math -O3 -mfpu=neon -funsafe-math-optimizations -DUSE_OOURA
+LOCAL_CFLAGS := -ffast-math -O3 -mfpu=neon -funsafe-math-optimizations -DUSE_OOURA
 LOCAL_SRC_FILES := extern-jni.cpp \
 		threadpool.cpp \
 		queue.cpp \
@@ -20,8 +21,11 @@ LOCAL_SRC_FILES := extern-jni.cpp \
 		fir.cpp \
 		tapdistortion.cpp \
 		componentmanager.cpp \
-		component.cpp
-
+		component.cpp \
+		eq.cpp \
+		shibatch/ooura_fft.c \
+		shibatch/equ.cpp
+		
 LOCAL_LDLIBS := -llog -ljnigraphics -lz -landroid 
 
 LOCAL_SHARED_LIBRARIES := libavformat libavcodec libswscale libavutil libswresample
