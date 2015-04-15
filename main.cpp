@@ -14,6 +14,7 @@
 #include "player.h"
 #include "audioout.h"
 #include "preamp.h"
+#include "eq.h"
 #include "fir.h"
 #include "threadpool.h"
 #include <QDir>
@@ -44,24 +45,48 @@ void NextTrack(void *user)
 int main(int argc, char *argv[])
 
 {
+    Vrok::Player *pl=new Vrok::Player;
+    Vrok::DriverAudioOut *out= new Vrok::DriverAudioOut;
+    Vrok::EffectSSEQ *pSSEQ = new Vrok::EffectSSEQ;
+    Vrok::EffectFIR *pFIR= new Vrok::EffectFIR;
+
+
     //Test1 test;
     srand(time(NULL));
     QString path="./";
     QFileInfoList filelist;
 
-    Vrok::Player pl;
-    Vrok::DriverAudioOut out;
-    Vrok::EffectFIR pre;
-    ThreadPool pool(1);
+    ThreadPool pool(2);
 
     //Vrok::EffectFIR pre1;
+    DBG("player");
+    pFIR->RegisterSource(pl);
+    pFIR->RegisterSink(pSSEQ);
 
-    out.RegisterSource(&pre);
-    pre.RegisterSource(&pl);
-    pre.RegisterSink(&out);
-    pl.RegisterSink(&pre);
+    pSSEQ->RegisterSource(pFIR);
+    pSSEQ->RegisterSink(out);
+
+    pl->RegisterSink(pFIR);
+
+    out->RegisterSource(pSSEQ);
+
+    DBG("Reg");
+
+    out->Preallocate();
+    pl->Preallocate();
+    pSSEQ->Preallocate();
+    pFIR->Preallocate();
+
+
+    DBG("pre");
+    pool.RegisterWork(0,pl);
+    pool.RegisterWork(1,pSSEQ);
+    pool.RegisterWork(0,pFIR);
+    pool.RegisterWork(1,out);
+
+
     CBData data;
-    data.player = &pl;
+    data.player = pl;
     data.list = &filelist;
 
     if (argc > 1)
@@ -71,24 +96,11 @@ int main(int argc, char *argv[])
         filelist = dir.entryInfoList();
     }
 
-    pl.SetNextTrackCallback(NextTrack, &data);
-    //pre1.RegisterSource(&pre);
-   // pre1.RegisterSink(&out);
+    pl->SetNextTrackCallback(NextTrack, &data);
 
-    out.Preallocate();
-    pl.Preallocate();
-    pre.Preallocate();
-    //pre1.Preallocate();
-    pool.RegisterWork(0,&pl);
-    pool.RegisterWork(0,&pre);
-    pool.RegisterWork(0,&out);
 
     pool.CreateThreads();
     Vrok::Component *current_comp=nullptr;
-
-   // pre1.CreateThread();
-
-
 
 
     while (true)
@@ -110,17 +122,17 @@ int main(int argc, char *argv[])
                 Vrok::Resource *res=new Vrok::Resource;
                 res->_filename = filelist[track_id].absoluteFilePath().toStdString();
 
-                pl.SubmitForPlaybackNow(res);
+                pl->SubmitForPlaybackNow(res);
             } else
             {
                 WARN("invalid index");
             }
-        } else if (command.compare("pause")==0 || command.compare("pp")==0)
+        } else if (command.compare("pause")==0 || command.compare("p")==0)
         {
-            pl.Pause();
-        } else if (command.compare("resume")==0 || command.compare("rr")==0)
+            pl->Pause();
+        } else if (command.compare("resume")==0 || command.compare("r")==0)
         {
-            pl.Resume();
+            pl->Resume();
         } else if (command.compare("openi")==0)
         {
             track_id=query.section(' ',1,1).toInt();
@@ -130,7 +142,7 @@ int main(int argc, char *argv[])
                 Vrok::Resource *res=new Vrok::Resource;
                 res->_filename = filelist[track_id].absoluteFilePath().toStdString();
 
-                pl.SubmitForPlaybackNow(res);
+                pl->SubmitForPlaybackNow(res);
 
             } else
             {
@@ -142,7 +154,7 @@ int main(int argc, char *argv[])
         {
             Vrok::Resource *res=new Vrok::Resource;
             res->_filename = query.section(' ',1).toStdString();
-            pl.SubmitForPlaybackNow(res);
+            pl->SubmitForPlaybackNow(res);
         } else if (command.compare("setc")==0)
         {
             current_comp = Vrok::ComponentManager::GetSingleton()->GetComponent(

@@ -27,12 +27,14 @@ using namespace std;
 namespace Vrok {
 class ComponentManager
 {
-private:
-    map<string, int> _used_names;
-    map<string, Component *> _component_map;
-    map<Component *, map<string, PropertyBase *> > _property_map;
 public:
-    ComponentManager();
+    class ComponentConfig
+    {
+    public:
+        virtual bool Read(void **data, size_t *size)=0;
+        virtual bool Write(void *data, size_t size)=0;
+    };
+    ComponentManager(ComponentConfig *comp_config = nullptr);
     static ComponentManager *GetSingleton();
     bool RegisterComponent(Component *component);
     bool RegisterProperty(Component *component,
@@ -43,6 +45,15 @@ public:
     PropertyBase *GetProperty(Component *component, string prop_name);
 
     ~ComponentManager();
+private:
+    map<string, int> _used_names;
+    map<string, Component *> _component_map;
+    map<Component *, map<string, PropertyBase *> > _property_map;
+    ComponentConfig *_component_config;
+
+    bool Load();
+    bool Save();
+
 };
 }
 

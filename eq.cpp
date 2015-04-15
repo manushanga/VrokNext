@@ -3,7 +3,8 @@
 #define CLIP(x) ((x>1.0f)?1.0f:(x<-1.0f?-1.0f:x))
 
 
-Vrok::EffectSSEQ::EffectSSEQ() 
+Vrok::EffectSSEQ::EffectSSEQ() :
+    _sb_paramsroot(nullptr)
 {
     
     ComponentManager *c=ComponentManager::GetSingleton();
@@ -31,7 +32,7 @@ Vrok::EffectSSEQ::EffectSSEQ()
     memset(&_sb_state, 0, sizeof(SuperEqState));
     
     c->RegisterProperty(this,"preamp",&_preamp);
-    DBG("init");
+
     for (int i=0;i<BAR_COUNT;i++)
     {
         _bands[i].Set(1.0);
@@ -48,12 +49,14 @@ Vrok::EffectSSEQ::EffectSSEQ()
         DBG(sb_bands_copy[i]);
     }
 
+
+    equ_init (&_sb_state, 14, bc->channels);
+
     equ_makeTable (&_sb_state, sb_bands_copy, params, bc->samplerate);
     if (_sb_paramsroot)
         paramlist_free (_sb_paramsroot);
     _sb_paramsroot = params;
-    
-    equ_init (&_sb_state, 14, bc->channels);
+
     
 }
 

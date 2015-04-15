@@ -45,7 +45,7 @@ private:
     mutex guard;
     atomic<bool> bpop_,bpush_;
     condition_variable cv_pop_,cv_push_;
-    const int max_tries=50;
+    const int max_tries=100;
 public:
     Queue(int size) :
         size_(size),
@@ -145,6 +145,8 @@ public:
     {
         int i=0;
         while (!Peak(t) && i<max_tries) { i++; this_thread::sleep_for(chrono::microseconds(1000)); }
+        if (i==max_tries)
+            DBG("drop");
 
         return i<max_tries;
     }
@@ -152,6 +154,8 @@ public:
     {
         int i=0;
         while (!Pop(t) && i<max_tries) {  i++; this_thread::sleep_for(chrono::microseconds(1000));  }
+        if (i==max_tries)
+            DBG("drop");
 
         return i<max_tries;
 
@@ -162,6 +166,8 @@ public:
     {
         int i=0;
         while (!Push(t) && i<max_tries) {  i++; this_thread::sleep_for(chrono::microseconds(1000)); }
+        if (i==max_tries)
+            DBG("drop");
 
         return i<max_tries;
     }

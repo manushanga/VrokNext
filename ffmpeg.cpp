@@ -17,8 +17,8 @@
 #define SEEK_MAX 0xFFFFFFFFFFFFFFFFL
 
 Vrok::DecoderFFMPEG::DecoderFFMPEG() :
-    container(NULL),
-    ctx(NULL)
+    ctx(nullptr),
+    container(nullptr)
 {
     static long s=0;
     if (s==0) {
@@ -54,10 +54,14 @@ Vrok::DecoderFFMPEG::~DecoderFFMPEG()
 
 bool Vrok::DecoderFFMPEG::Open(Vrok::Resource *resource)
 {
+    container=nullptr;
+    ctx=nullptr;
 
+    audio_stream_id = -1;
     if(avformat_open_input(&container,resource->_filename.c_str(),NULL,NULL)<0){
         DBG(resource->_filename);
         DBG("Can't open file");
+        Close();
         return false;
     }
 
@@ -75,6 +79,7 @@ bool Vrok::DecoderFFMPEG::Open(Vrok::Resource *resource)
     }
     if(audio_stream_id==-1){
         DBG("No audio stream");
+        Close();
         return false;
     }
 
@@ -85,11 +90,13 @@ bool Vrok::DecoderFFMPEG::Open(Vrok::Resource *resource)
     DBG("codec: "<<codec->long_name);
     if(codec==NULL){
         DBG("Cannot find codec");
+        Close();
         return false;
     }
 
     if(avcodec_open2(ctx,codec,NULL)<0){
         DBG("Codec cannot be opened");
+        Close();
         return false;
     }
 
@@ -128,10 +135,13 @@ bool Vrok::DecoderFFMPEG::Close()
 {
     if (ctx)
         avcodec_close(ctx);
+    ctx = nullptr;
+
     if (container) {
         avformat_close_input(&container);
         avformat_free_context(container);
     }
+    container = nullptr;
 
     return true;
 }

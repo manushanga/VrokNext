@@ -30,7 +30,7 @@
 #include "bufferconfig.h"
 
 using namespace std;
-#define BUFFERS 50
+#define BUFFERS 10
 namespace BufferGraph {
 
 class Point : public Runnable
@@ -54,8 +54,8 @@ public:
     {
         auto _config=BufferConfig();
 
-        _free_buffers = new Queue<Buffer *>(60);
-        _used_buffers = new Queue<Buffer *>(100);
+        _free_buffers = new Queue<Buffer *>(12);
+        _used_buffers = new Queue<Buffer *>(12);
 
         for (int i=0;i<BUFFERS;i++)
         {

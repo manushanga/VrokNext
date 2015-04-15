@@ -114,6 +114,7 @@ void Vrok::Player::Run()
                     _decoder->SetBufferConfig(&bufc_new);
                     SetBufferConfig(&bufc_new);
                     delete (Resource *)cmd.data;
+                    return;
                 }
                 else
                 {
@@ -128,7 +129,7 @@ void Vrok::Player::Run()
                 _paused=false;
             }
         }
-        if ( !_paused)
+        if (!_paused)
         {
             auto b=AcquireBuffer();
             if (b )

@@ -173,8 +173,8 @@ Vrok::EffectFIR::EffectFIR() :
     lp_freq.Set(150.0f);
     hp_freq.Set(50.0f);
 
-    wet_vol.Set(0.6);
-    dry_vol.Set(1.0);
+    wet_vol.Set(1);
+    dry_vol.Set(1);
 
     _dry_vol = dry_vol.Get();
     _wet_vol = wet_vol.Get();
@@ -221,7 +221,7 @@ bool Vrok::EffectFIR::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int 
 
             proc_out[i] = hp[i][0].process(hp[i][1].process(proc_out[i]));
 
-            proc_out[i] = CLIP((proc_out[i]*_wet_vol + _dry_vol*proc[i])*1.5);
+            proc_out[i] = CLIP((proc_out[i]*_wet_vol + _dry_vol*proc[i])*0.5);
         }
         proc+=bc->channels;
         proc_out+=bc->channels;

@@ -38,7 +38,10 @@ SOURCES += main.cpp \
     fir.cpp \
     tapdistortion.cpp \
     componentmanager.cpp \
-    component.cpp
+    component.cpp \
+    eq.cpp \
+    shibatch/equ.cpp \
+    shibatch/ooura_fft.c
 
 HEADERS += \
     threadpool.h \
@@ -65,7 +68,8 @@ HEADERS += \
     componentmanager.h \
     component.h \
     common.h \
-    runnable.h
+    runnable.h \
+    eq.h
 
 win32 {
 LIBS        += \
@@ -81,5 +85,7 @@ LIBS    += \
 
 CONFIG(debug)
 {
-    DEFINES += DEBUG
+    DEFINES += \
+        DEBUG \
+        USE_OOURA
 }

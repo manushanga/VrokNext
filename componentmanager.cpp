@@ -78,9 +78,31 @@ Vrok::PropertyBase *Vrok::ComponentManager::GetProperty(Vrok::Component *compone
         return nullptr;
     }
 }
-Vrok::ComponentManager::ComponentManager()
+bool Vrok::ComponentManager::Load()
 {
+    void *data;
+    size_t size;
+    _component_config->Read(&data,&size);
+    return true;
+}
 
+bool Vrok::ComponentManager::Save()
+{
+    void *data;
+    size_t size;
+    _component_config->Read(&data,&size);
+
+    auto it = _component_map.begin();
+    for (;it!=_component_map.end();it++)
+    {
+
+    }
+    return true;
+}
+
+Vrok::ComponentManager::ComponentManager(ComponentConfig *comp_config) :
+    _component_config(comp_config)
+{
 }
 
 Vrok::ComponentManager *Vrok::ComponentManager::GetSingleton()
