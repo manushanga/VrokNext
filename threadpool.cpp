@@ -68,6 +68,12 @@ ThreadPool::~ThreadPool()
 void ThreadPool::Work(ThreadData *th)
 {
 
+    for (size_t i=0;i<(*th->runnables)[th->thread_id].size();i++)
+    {
+        //DBG(th->thread_id<<" "<<i);
+        (*th->runnables)[th->thread_id][i]->ThreadStart();
+    }
+    
     while (th->work)
     {
         for (size_t i=0;i<(*th->runnables)[th->thread_id].size();i++)
@@ -75,6 +81,12 @@ void ThreadPool::Work(ThreadData *th)
             //DBG(th->thread_id<<" "<<i);
             (*th->runnables)[th->thread_id][i]->Run();
         }
+    }
+    
+    for (size_t i=0;i<(*th->runnables)[th->thread_id].size();i++)
+    {
+        //DBG(th->thread_id<<" "<<i);
+        (*th->runnables)[th->thread_id][i]->ThreadEnd();
     }
 }
 

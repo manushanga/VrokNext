@@ -34,7 +34,7 @@ extern "C"
         out = new Vrok::DriverAudioTrack;
         pSSEQ = new Vrok::EffectSSEQ;
         pFIR = new Vrok::EffectFIR;
-        pool = new ThreadPool(2);
+        pool = new ThreadPool(4);
   
     }
     
@@ -76,15 +76,15 @@ extern "C"
     Vrok::Player *CreatePlayer()
     {
         DBG("player");
-        pSSEQ->RegisterSource(pl);
-        pSSEQ->RegisterSink(pFIR);
-        
-        pFIR->RegisterSource(pSSEQ);
-        pFIR->RegisterSink(out);
-        
-        pl->RegisterSink(pSSEQ);
-        
-        out->RegisterSource(pFIR);
+        pFIR->RegisterSource(pl);
+        pFIR->RegisterSink(pSSEQ);
+
+        pSSEQ->RegisterSource(pFIR);
+        pSSEQ->RegisterSink(out);
+
+        pl->RegisterSink(pFIR);
+
+        out->RegisterSource(pSSEQ);
         
         DBG("Reg");
 
@@ -97,8 +97,8 @@ extern "C"
         DBG("pre");
         pool->RegisterWork(0,pl);
         pool->RegisterWork(1,pSSEQ);
-        pool->RegisterWork(0,pFIR);
-        pool->RegisterWork(1,out);
+        pool->RegisterWork(2,pFIR);
+        pool->RegisterWork(3,out);
         DBG("reg");
         pl->SetNextTrackCallback(NextTrackCallback,nullptr);
         DBG("regxx");

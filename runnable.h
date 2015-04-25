@@ -3,9 +3,9 @@
 class Runnable
 {
 public:
-    virtual void Init() {}
+    virtual void ThreadStart() {}
     virtual void Run() = 0;
-    virtual void Fini() {}
+    virtual void ThreadEnd() {}
 };
 #endif // RUNNABLE
 

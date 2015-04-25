@@ -27,8 +27,7 @@ static jobject jtrack;
 static JNIEnv* jenv;
 
 static JNIEnv* GetEnv()
-{
-    DBG("getev");
+{   
 	JNIEnv* jenv = NULL;
 	int err = javaVM->GetEnv((void**)&jenv, JNI_VERSION_1_6);
 	if (err ==  JNI_EDETACHED)
@@ -48,6 +47,8 @@ static JNIEnv* GetEnv()
 
 void Vrok::DriverAudioTrack::initAudioTrack(BufferConfig *config)
 {
+    jenv=GetEnv();
+     
     if (!cAudioTrack)
     {
         /* Cache AudioTrack class and it's method id's
@@ -57,8 +58,8 @@ void Vrok::DriverAudioTrack::initAudioTrack(BufferConfig *config)
         cAudioTrack = jenv->FindClass("android/media/AudioTrack");
         if (!cAudioTrack)
         {
-                DBG("can't get AudioTrack class");
-                return ;
+            DBG("can't get AudioTrack class");
+            return ;
         }
         
         cAudioTrack = (jclass) jenv->NewGlobalRef(cAudioTrack);
@@ -77,7 +78,6 @@ void Vrok::DriverAudioTrack::initAudioTrack(BufferConfig *config)
     int channelConfig=(config->channels == 1) ? AT_CHANNEL_CONFIGURATION_MONO : AT_CHANNEL_CONFIGURATION_STEREO;
     int bufferSize = config->frames*sizeof(short)*config->channels;
     
-    javaVM->AttachCurrentThread(&jenv, NULL);
     
     int bufferSizeInBytes = jenv->CallStaticIntMethod( cAudioTrack, 
             mGetMinBufferSize, config->samplerate, channelConfig, AT_ENCODING_PCM_16BIT);
@@ -102,31 +102,38 @@ void Vrok::DriverAudioTrack::initAudioTrack(BufferConfig *config)
     
     jbuffer = (jarray) jenv->NewGlobalRef((jobject)jbuffer );
 
-
-    //javaVM->DetachCurrentThread();
+    _init=true;
+    javaVM->DetachCurrentThread();
+}
+Vrok::DriverAudioTrack::~DriverAudioTrack()
+{
 }
 void Vrok::DriverAudioTrack::finiAudioTrack(BufferConfig *config)
 {
-    javaVM->AttachCurrentThread(&jenv, NULL);
+    jenv=GetEnv();
+    if (_init)
+    {
 	
-    jenv->CallNonvirtualVoidMethod( jtrack, cAudioTrack, mPause);
-    
-    jenv->CallNonvirtualVoidMethod( jtrack, cAudioTrack, mFlush);
-    jenv->CallNonvirtualVoidMethod( jtrack, cAudioTrack, mRelease);
-    
-    jenv->DeleteGlobalRef(jtrack);
-    jenv->DeleteGlobalRef((jobject)jbuffer);
-    
+        jenv->CallNonvirtualVoidMethod( jtrack, cAudioTrack, mPause);
+        
+        jenv->CallNonvirtualVoidMethod( jtrack, cAudioTrack, mFlush);
+        jenv->CallNonvirtualVoidMethod( jtrack, cAudioTrack, mRelease);
+        
+        jenv->DeleteGlobalRef(jtrack);
+        jenv->DeleteGlobalRef((jobject)jbuffer);
+        
+    }
     javaVM->DetachCurrentThread();
 }
-Vrok::DriverAudioTrack::DriverAudioTrack()
+Vrok::DriverAudioTrack::DriverAudioTrack() :
+    _init(false)
 {
-    jenv = GetEnv();
-    initAudioTrack(GetBufferConfig());
+    
     /*ao_initialize();
 
-    ao_sample_format sformat;
-
+    ao_sample_format sformat;jenv = GetEnv();
+    initAudioTrack(GetBufferConfig());
+atteempt to use stale local reference
     sformat.channels=GetBufferConfig()->channels;
     sformat.rate=GetBufferConfig()->samplerate;
     sformat.bits=16;
@@ -135,10 +142,23 @@ Vrok::DriverAudioTrack::DriverAudioTrack()
 
     _ao_device=ao_open_live(ao_default_driver_id(),&sformat,NULL);*/
 }
+
+void Vrok::DriverAudioTrack::ThreadStart()
+{
+    DBG("attaching");
+    //javaVM->AttachCurrentThread(&jenv, NULL);
+}
+
+void Vrok::DriverAudioTrack::ThreadEnd()
+{
+    //javaVM->DetachCurrentThread();
+    DBG("detaching");
+    
+    //javaVM->DetachCurrentThread();
+    
+}
 bool Vrok::DriverAudioTrack::BufferConfigChange(BufferConfig *config)
 {
-
-    
     if (*GetBufferConfig() != *config) {
         finiAudioTrack(config);
         initAudioTrack(config);
@@ -151,32 +171,20 @@ bool Vrok::DriverAudioTrack::BufferConfigChange(BufferConfig *config)
 bool Vrok::DriverAudioTrack::DriverRun(Buffer *buffer)
 {
     int samples=GetBufferConfig()->channels * GetBufferConfig()->frames;
-   // javaVM->AttachCurrentThread(&jenv, NULL);
+    
+    jenv = GetEnv();
+    
     short* pBuffer = (short*) jenv->GetPrimitiveArrayCritical( jbuffer, NULL);
     if (pBuffer) {
-            for (int i=0;i< samples  ;i++){
-                    pBuffer[i]=(short)(buffer->GetData()[i]*32765.0f);
-            }
-            jenv->ReleasePrimitiveArrayCritical(jbuffer, pBuffer, 0);
-            jenv->CallNonvirtualIntMethod(jtrack, cAudioTrack, mWrite, jbuffer, 0, samples * sizeof(short));
+        for (int i=0;i< samples  ;i++){
+            pBuffer[i]=(short)(buffer->GetData()[i]*32765.0f);
+        }
+        jenv->ReleasePrimitiveArrayCritical(jbuffer, pBuffer, 0);
+        jenv->CallNonvirtualIntMethod(jtrack, cAudioTrack, mWrite, jbuffer, 0, samples * sizeof(short));
     } else {
             DBG("Can't get buffer pointer");
     }
 
-   // javaVM->DetachCurrentThread();
-	
-    /*
-    uint16_t cbuf[8192*4];
-
-    int samples=GetBufferConfig()->channels * GetBufferConfig()->frames;
-
-    for (int i=0;i<samples;i++)
-    {
-        cbuf[i]=(uint16_t)(buffer->GetData()[i]*32767.0f);
-    }
-
-    ao_play(_ao_device,(char *) &cbuf[0],samples*sizeof(uint16_t));
-
-*/
+    javaVM->DetachCurrentThread();
     return true;
 }

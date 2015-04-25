@@ -29,10 +29,13 @@ namespace Vrok {
         atomic<bool> _new_resource;
         void initAudioTrack(BufferConfig *config);
         void finiAudioTrack(BufferConfig *config);
+        bool _init;
     protected:
     public:
         DriverAudioTrack();
-        virtual ~DriverAudioTrack() {}
+        void ThreadStart();
+        void ThreadEnd();
+        virtual ~DriverAudioTrack();
         bool BufferConfigChange(BufferConfig *config);
         bool DriverRun(Buffer *buffer);
         
