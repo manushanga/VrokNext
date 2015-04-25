@@ -42,7 +42,7 @@ Windows & Linux
 
 `setp <property name> <property value>` sets current component's properties
 
-### Currently implemented componets and their properties
+### Currently implemented components and their properties
 
 1. SSEQ (Shibatch Super EQ by Naoki Shibata)
     18 band equalizer that has following properties
