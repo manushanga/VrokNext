@@ -162,7 +162,7 @@ bool Vrok::DecoderFFMPEG::Close()
 bool Vrok::DecoderFFMPEG::DecoderRun(Buffer *buffer,  BufferConfig *config)
 {
     packetFinished = 0;
-    if (!_ringbuffer->Read(buffer->GetData(),config->channels*config->frames))
+    while (!_ringbuffer->Read(buffer->GetData(),config->channels*config->frames))
     {
         packetFinished = av_read_frame(container,&packet);
 
@@ -190,6 +190,7 @@ bool Vrok::DecoderFFMPEG::DecoderRun(Buffer *buffer,  BufferConfig *config)
             switch (sfmt){
 
                 case AV_SAMPLE_FMT_S16P:
+
                     for (size_t nb=0;nb<plane_size/sizeof(uint16_t);nb++){
                         for (int ch = 0; ch < ctx->channels; ch++) {
                             temp[temp_write] = ((short *) frame->extended_data[ch])[nb] * SHORTTOFL;
@@ -245,8 +246,6 @@ bool Vrok::DecoderFFMPEG::DecoderRun(Buffer *buffer,  BufferConfig *config)
         {
             DBG("Write buffer not enough!");
         }
-
-        _ringbuffer->Read(buffer->GetData(),config->channels*config->frames);
 
         av_free_packet(&packet);
 
