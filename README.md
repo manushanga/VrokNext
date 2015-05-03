@@ -30,3 +30,31 @@ Windows & Linux
 * To change properties of plugins use below commands,
     1. setc - sets the current component that you want to make changes to (e.g. setc FIR filter:0)
     2. setp - sets properties of the current component (e.g. setp lp_freq 100, sets lp_freq to 100)
+
+### Supported Commands
+
+`<index>` play the file with the given index  
+`open <filename>` play given file  
+`openi i` play file with the given index  
+`p` pause  
+`r` resume  
+`ls` similar to Unix ls, lists current directory's contents  
+`cd <dir>|<dir index>` similar to Unix cd, changes directory
+ through text and index (shown in ls output)  
+`setc <component name>` sets current component  
+`setp <property name> <property value>` sets current component's properties
+
+### Currently implemented components and their properties
+
+1. SSEQ (Shibatch Super EQ by Naoki Shibata)  
+    18 band equalizer that has following properties  
+    preamp = [0.0..inf), default: 1.0  
+    band_0 through band_17 = [0.0..inf), default: 1.0  
+2. FIR filter 
+    Despite the name, currently implements the a bass enhancer  
+    dry_vol = [0.0..inf), default: 1.0, dry signal mix level  
+    wet_vol = [0.0..inf), default: 1.0, wet signal mix level  
+    blend = [-10.0..10.0), default: 9.0  
+    drive = [0.0..10.0), default: 1.0  
+    lp_freq = [0.0..20000.0], default: 150.0, low pass frequency  
+    lp_freq = [0.0..20000.0], default: 50.0, high pass frequency  
