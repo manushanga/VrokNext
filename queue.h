@@ -144,23 +144,29 @@ public:
     bool PeakBlocking(T& t)
     {
         int i=0;
-        while (!Peak(t) && i<max_tries) { i++; this_thread::sleep_for(chrono::microseconds(501)); }
-        
+        while (!Peak(t) && i<max_tries) { i++; this_thread::sleep_for(chrono::microseconds(1001)); }
+#ifdef DEBUG
+        if (i==max_tries) DBG("drop");
+#endif
         return i<max_tries;
     }
     bool PopBlocking(T& t)
     {
         int i=0;
-        while (!Pop(t) && i<max_tries) {  i++; this_thread::sleep_for(chrono::microseconds(500));  }
-        
+        while (!Pop(t) && i<max_tries) {  i++; this_thread::sleep_for(chrono::microseconds(1000));  }
+#ifdef DEBUG
+        if (i==max_tries) DBG("drop");
+#endif
         return i<max_tries;
-
+ 
     }
     bool PushBlocking(T t)
     {
         int i=0;
-        while (!Push(t) && i<max_tries) {  i++; this_thread::sleep_for(chrono::microseconds(499)); }
-        
+        while (!Push(t) && i<max_tries) {  i++; this_thread::sleep_for(chrono::microseconds(999)); }
+#ifdef DEBUG
+        if (i==max_tries) DBG("drop");
+#endif
         return i<max_tries;
     }
 
