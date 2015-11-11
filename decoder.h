@@ -17,8 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef DECODER
-#define DECODER
+#pragma once
 
 #include "common.h"
 #include "buffer.h"
@@ -29,7 +28,7 @@ namespace Vrok {
 class Decoder : public Component {
 public:
     virtual bool Open(Resource* resource)=0;
-    virtual bool SetBufferConfig(BufferConfig *config)=0;
+    virtual bool GetBufferConfig(BufferConfig *config)=0;
     virtual bool Close()=0;
     virtual bool Play()=0;
     virtual bool Pause()=0;
@@ -37,5 +36,4 @@ public:
     virtual bool DecoderRun(Buffer *buffer, BufferConfig *config)=0;
 };
 }
-#endif // DECODER
 

@@ -16,20 +16,24 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef COMPONENT_H
-#define COMPONENT_H
+
+#pragma once
+
 #include <atomic>
-using namespace std;
+#include <string>
 
 namespace Vrok {
 
 enum class ComponentType{Decoder, Effect, Driver, Player, None};
 enum class PropertyType{INT,FLT,DBL};
 
-
 class PropertyBase
 {
+protected:
+    std::string _name;
 public:
+    void SetName(std::string name);
+    std::string GetName();
     virtual PropertyType GetType()=0;
     virtual void Get(void *ptr)=0;
     virtual void Set(void *ptr)=0;
@@ -40,7 +44,7 @@ class Property : public PropertyBase
 {
 private:
     PropertyType _type;
-    atomic<T> _data;
+    std::atomic<T> _data;
 public:
     Property();
 
@@ -50,19 +54,19 @@ public:
     }
     void Get(void *ptr)
     {
-        *((T*)ptr)=_data.load(memory_order_relaxed);
+        *((T*)ptr)=_data.load(std::memory_order_relaxed);
     }
     T Get()
     {
-        return _data.load(memory_order_relaxed);
+        return _data.load(std::memory_order_relaxed);
     }
     void Set(T val)
     {
-        _data.store(val, memory_order_relaxed);
+        _data.store(val,std::memory_order_relaxed);
     }
     void Set(void *ptr)
     {
-        _data.store(*((T*)ptr), memory_order_relaxed);
+        _data.store(*((T*)ptr),std::memory_order_relaxed);
     }
 
 };
@@ -73,7 +77,7 @@ class Component
 {
 public:
     Component();
-    virtual Vrok::ComponentType ComponentType() { return Vrok::ComponentType::None; }
+    virtual Vrok::ComponentType ComponentType() = 0;
     virtual Component *CreateSelf() = 0;
     virtual const char *ComponentName() = 0;
     virtual const char *Description() { return ""; }
@@ -85,5 +89,3 @@ public:
 
 }
 
-
-#endif // COMPONENT_H

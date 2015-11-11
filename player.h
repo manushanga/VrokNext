@@ -16,8 +16,7 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef PLAYER
-#define PLAYER
+#pragma once
 
 #include "common.h"
 #include "bgpoint.h"
@@ -101,6 +100,3 @@ namespace Vrok {
         }
     };
 }
-
-#endif // PLAYER
-

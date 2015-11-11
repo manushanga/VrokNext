@@ -66,11 +66,11 @@ bool Vrok::EffectSSEQ::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int
     int len=bc->frames*bc->channels;
 
     
-    float *proc=in_buffer_set[0]->GetData();
-    float *proc_out=out_buffer->GetData();
+    double *proc=in_buffer_set[0]->GetData();
+    double *proc_out=out_buffer->GetData();
     
-    memcpy(proc_out, proc, sizeof(float) * len);
-    equ_modifySamples_float(&_sb_state, (char *)proc_out, bc->frames, bc->channels);
+    memcpy(proc_out, proc, sizeof(double) * len);
+    equ_modifySamples_double(&_sb_state, (char *)proc_out, bc->frames, bc->channels);
 
     return true;
 }

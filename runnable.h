@@ -1,5 +1,5 @@
-#ifndef RUNNABLE
-#define RUNNABLE
+#pragma once
+
 class Runnable
 {
 public:
@@ -7,5 +7,5 @@ public:
     virtual void Run() = 0;
     virtual void ThreadEnd() {}
 };
-#endif // RUNNABLE
+
 

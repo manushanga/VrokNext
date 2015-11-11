@@ -2,6 +2,7 @@
 
 Vrok::DriverAudioOut::DriverAudioOut()
 {
+    ao_shutdown();
     ao_initialize();
 
     ao_sample_format sformat;
@@ -18,8 +19,12 @@ bool Vrok::DriverAudioOut::BufferConfigChange(BufferConfig *config)
 {
     if (*GetBufferConfig() != *config) {
         if (_ao_device)
+        {
             ao_close(_ao_device);
+            ao_shutdown();
+            ao_initialize();
 
+        }
         ao_sample_format sformat;
 
         sformat.channels=config->channels;
@@ -38,13 +43,16 @@ bool Vrok::DriverAudioOut::BufferConfigChange(BufferConfig *config)
 }
 bool Vrok::DriverAudioOut::DriverRun(Buffer *buffer)
 {
+    //DBG(buffer);
+    DBG("arrival: "<<buffer->GetWatch().Stop());
+
     uint16_t cbuf[8192*4];
 
     int samples=GetBufferConfig()->channels * GetBufferConfig()->frames;
 
     for (int i=0;i<samples;i++)
     {
-        cbuf[i]=(uint16_t)(buffer->GetData()[i]*32767.0f);
+        cbuf[i]=(uint16_t)(buffer->GetData()[i]*32767.0);
     }
 
     ao_play(_ao_device,(char *) &cbuf[0],samples*sizeof(uint16_t));

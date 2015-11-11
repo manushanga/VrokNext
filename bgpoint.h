@@ -17,8 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef BGPOINT_H
-#define BGPOINT_H
+#pragma once
 
 #include <atomic>
 #include <thread>
@@ -29,29 +28,32 @@
 #include "runnable.h"
 #include "bufferconfig.h"
 
-using namespace std;
 #define BUFFERS 10
+
 namespace BufferGraph {
 
 class Point : public Runnable
 {
 private:
-    atomic<int> _ref_counter;
-    vector<Buffer *> _buffers;
+    std::atomic<int> _ref_counter;
+    std::vector<Buffer *> _buffers;
     Queue<Buffer *> *_free_buffers;
-    mutex lock;
-
+    std::mutex lock;
     const int _max_retries=50;
 protected:
-    vector<Point *> _sinks, _sources;
+    std::vector<Point *> _sinks, _sources;
     size_t _buffer_refs[BUFFERS];
     Queue<Buffer *> *_used_buffers;
     Buffer **_buffers_on_peak;
     BufferConfig _config;
-
+    std::atomic<uint64_t> _cur_stream_id;
 public:
     Point()
     {
+        _cur_stream_id=0UL;
+        std::cout<<"xx"<<_cur_stream_id<<std::endl;
+
+
         auto _config=BufferConfig();
 
         _free_buffers = new Queue<Buffer *>(12);
@@ -112,6 +114,7 @@ public:
     // a thread dedicated to the node
     // Runnable::Run()
 
+    void Flush();
 protected:
     // non reentrant
     // retrieves a buffer from the released buffer
@@ -134,4 +137,5 @@ protected:
 };
 
 }
-#endif // BGPOINT_H
+
+

@@ -1,6 +1,7 @@
 #include "effect.h"
 #include <cstring>
 Vrok::Effect::Effect() :
+    BufferGraph::Point(),
     _work(true)
 {
 
@@ -28,7 +29,8 @@ void Vrok::Effect::Run()
                 buffer->Reset(c);
                 len=c->channels * c->frames;
             }
-            memset(buffer->GetData(),0,len*sizeof(float));
+            memset(buffer->GetData(),0,len*sizeof(double));
+            buffer->GetWatch() = buffers[0]->GetWatch();
 
             _work=EffectRun(buffer, buffers, _sources.size());
 

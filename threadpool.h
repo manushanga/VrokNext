@@ -16,8 +16,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef THREADPOOL_H
-#define THREADPOOL_H
+#pragma once
 
 #include <vector>
 #include <thread>
@@ -59,5 +58,3 @@ public:
 
     static void Work(ThreadData *th);
 };
-
-#endif // THREADPOOL_H

@@ -11,14 +11,18 @@ Vrok::EffectFIR *pre1;
 ThreadPool *pool;
 static Vrok::Player *plx=NULL;
 
-void nextTrackCallback();
+
+void NextTrackCallback(void *user) 
+{
+
+}
 
 extern "C"
 {
     void CreateContext()
     {
         pl = new Vrok::Player;
-        out = new Vrok::DriverAudioTrack;
+        out = new Vrok::DriverAudioOut;
         pre = new Vrok::EffectFIR;
         pre1 = new Vrok::EffectFIR;
         pool = new ThreadPool(1);
@@ -58,7 +62,7 @@ extern "C"
         pool->RegisterWork(0,pre);
         pool->RegisterWork(0,out);
         
-        pl->SetNextTrackCallback(nextTrackCallback);
+        pl->SetNextTrackCallback(NextTrackCallback,nullptr);
         
         pool->CreateThreads();
         
@@ -84,10 +88,5 @@ extern "C"
         delete pool;
         delete pre1;
     }
-}
-
-void nextTrackCallback() 
-{
-
 }
 

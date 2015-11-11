@@ -1,10 +1,9 @@
-#ifndef DEBUG_H
-#define DEBUG_
+#pragma once
+
 #include <mutex>
 #include <iostream>
 extern std::mutex __global_console_lock;
 
-#define DEBUG
 
 #ifdef __ANDROID_API__
 #ifdef DEBUG
@@ -57,7 +56,3 @@ extern std::mutex __global_console_lock;
 
     
 #endif
-
-
-#endif // DEBUG_H
-

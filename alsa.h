@@ -1,4 +1,4 @@
-/** AudioOut (libao wrapper)
+/** ALSA driver
  * Copyright (C) Madura A.
  *
  * This program is free software; you can redistribute it and/or
@@ -18,21 +18,25 @@
  */
 #pragma once
 
-#include "driver.h"
+#include <unistd.h>
+#include <alsa/asoundlib.h>
+#include <sys/inotify.h>
+#include <samplerate.h>
 
-#include <ao/ao.h>
+#include "driver.h"
 
 namespace Vrok {
 
-    class DriverAudioOut : public Driver
+    class DriverAlsa : public Driver
     {
     private:
-        atomic<bool> _new_resource;
-        ao_device *_ao_device;
+        uint32_t _multiplier;
+        snd_pcm_t *_handle;
+        snd_pcm_hw_params_t *_params;
     protected:
     public:
-        DriverAudioOut();
-        virtual ~DriverAudioOut() {}
+        DriverAlsa();
+        virtual ~DriverAlsa() {}
         bool BufferConfigChange(BufferConfig *config);
         bool DriverRun(Buffer *buffer);
 
@@ -42,15 +46,15 @@ namespace Vrok {
         }
         Component *CreateSelf()
         {
-            return new DriverAudioOut();
+            return new DriverAlsa();
         }
         const char *ComponentName()
         {
-            return "AudioOut Driver";
+            return "ALSA Driver";
         }
         const char *Description()
         {
-            return "libao wrapper";
+            return "ALSA wrapper";
         }
         const char *Author()
         {

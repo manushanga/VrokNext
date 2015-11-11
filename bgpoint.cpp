@@ -7,8 +7,16 @@ Buffer *BufferGraph::Point::AcquireBuffer()
 {
 
     Buffer *b=nullptr;
-    _free_buffers->PopBlocking(b);
 
+    _free_buffers->PopBlocking(b);
+    if (b)
+    {
+        std::cout<<"set sid"<<_cur_stream_id<<std::endl;
+        b->SetStreamId(_cur_stream_id);
+    } else
+    {
+        std::cout<<"null buff"<<std::endl;
+    }
     return b;
 }
 
@@ -19,7 +27,9 @@ void BufferGraph::Point::ReleaseBuffer(Buffer *buffer)
     _buffer_refs[buffer->GetId()]++;
     if (_buffer_refs[buffer->GetId()] == _sinks.size())
     {
-        _used_buffers->PopBlocking(buffer);
+        Buffer *xbuffer=nullptr;
+        _used_buffers->PopBlocking(xbuffer);
+        assert(xbuffer == buffer);
         //atomic_thread_fence(memory_order_seq_cst);
         _free_buffers->PushBlocking(buffer);
 
@@ -70,11 +80,15 @@ Buffer **BufferGraph::Point::PeakAllSources()
         for (size_t i=0;i<_sources.size();i++)
         {
             auto b=_sources[i]->PeakBuffer();
-            //DBG(b);
+
             if (b == nullptr)
             {
                 j=_max_retries;
                 break;
+            } else if ((b && b->GetStreamId() < _cur_stream_id))
+            {
+                std::cout<<"drop"<<b->GetStreamId() <<" "<<_cur_stream_id<<std::endl;
+                _sources[i]->ReleaseBuffer(b);
             } else if (buffers_on_peak[i] != b)
             {
                 buffer_peak_update++;
@@ -129,4 +143,9 @@ void BufferGraph::Point::Preallocate()
     {
         _buffers_on_peak[i]=nullptr;
     }
+}
+
+void BufferGraph::Point::Flush()
+{
+    _cur_stream_id++;
 }

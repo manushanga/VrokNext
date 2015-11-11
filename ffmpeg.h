@@ -18,8 +18,7 @@
  *
  */
 
-#ifndef FFMPEGPLAYER_H
-#define FFMPEGPLAYER_H
+#pragma once
 
 #include <ctime>
 
@@ -60,7 +59,7 @@ public:
     DecoderFFMPEG();
     ~DecoderFFMPEG();
     bool Open(Resource *resource);
-    bool SetBufferConfig(BufferConfig *config);
+    bool GetBufferConfig(BufferConfig *config);
     bool Close();
     bool DecoderRun(Buffer *buffer, BufferConfig *config);
     bool Play() { return true; }
@@ -69,7 +68,7 @@ public:
 
 private:
     static int ff_avio_interrupt(void *user);
-    Ringbuffer<float> *_ringbuffer;
+    Ringbuffer<double> *_ringbuffer;
     time_t last_read;
     AVFormatContext* container;
     int audio_stream_id;
@@ -79,7 +78,7 @@ private:
     AVFrame *frame;
     AVPacket packet;
     AVStream *audio_st;
-    float temp[2*FFMPEG_MAX_BUF_SIZE + FF_INPUT_BUFFER_PADDING_SIZE];
+    double temp[2*FFMPEG_MAX_BUF_SIZE + FF_INPUT_BUFFER_PADDING_SIZE];
     uint64_t current_in_seconds;
     uint64_t seek_to;
     uint64_t duration_in_seconds;
@@ -118,5 +117,3 @@ private:
     }
 };
 }
-
-#endif // FFMPEGPLAYER_H

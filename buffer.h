@@ -16,26 +16,28 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef BUFFER_H
-#define BUFFER_H
+#pragma once
+
 #include "bufferconfig.h"
+#include "stopwatch.h"
 
 class Buffer
 {
 private:
     BufferConfig _config;
-    float *_buffer;
+    double *_buffer;
     int _size;
     int _id;
-
+    StopWatch _watch;
+    uint64_t _stream_id;
 public:
     Buffer(BufferConfig& config, int id) :
-        _id(id)
+        _id(id),
+        _stream_id(0UL)
     {
         _config= config;
         _size=config.channels*config.frames;
-        _buffer = new float[_size];
-
+        _buffer = new double[_size];
     }
 
     BufferConfig *GetBufferConfig()
@@ -50,18 +52,28 @@ public:
         {
             _size=_config.channels*_config.frames;
             delete[] _buffer;
-            _buffer = new float[_size];
+            _buffer = new double[_size];
         }
     }
     int GetId()
     {
         return _id;
     }
-    float *GetData()
+    double *GetData()
     {
         return _buffer;
     }
+    StopWatch& GetWatch()
+    {
+        return _watch;
+    }
 
+    void SetStreamId(uint64_t stream_id)
+    {
+        _stream_id = stream_id;
+    }
+    uint64_t GetStreamId()
+    {
+        return _stream_id;
+    }
 };
-
-#endif // BUFFER_H

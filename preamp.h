@@ -26,7 +26,7 @@ namespace Vrok {
 class EffectPreamp : public Effect
 {
 private:
-    DelayBuffer<float> delay,delay1;
+    DelayBuffer<double> delay,delay1;
 
 protected:
     atomic<bool> _work;

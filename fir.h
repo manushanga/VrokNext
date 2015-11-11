@@ -16,8 +16,7 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef FIR_H
-#define FIR_H
+#pragma once
 
 #include "common.h"
 #include "effect.h"
@@ -27,13 +26,13 @@ class EffectFIR : public Effect
 {
 private:
     float *_buffer;
-    Property<float> blend,drive,dry_vol,wet_vol;
-    Property<float> lp_freq,hp_freq;
-    float _dry_vol,_wet_vol;
+    Property<float> _blend,_drive,_dry_vol,_wet_vol;
+    Property<float> _lp_freq,_hp_freq;
+    float _f32_dry_vol,_f32_wet_vol;
     TapDistortion tap;
-    biquad_d2 lp[2][4];
-    biquad_d2 hp[2][2];
-    TapDistortion dist[2];
+    biquad_d2 _lp[2][4];
+    biquad_d2 _hp[2][2];
+    TapDistortion _dist[2];
 public:
     EffectFIR();
     bool EffectRun(Buffer *out_buffer,
@@ -66,5 +65,3 @@ public:
     }
 };
 }
-
-#endif // FIR_H

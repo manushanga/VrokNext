@@ -16,8 +16,7 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef DRIVER_H
-#define DRIVER_H
+#pragma once
 
 #include "bgpoint.h"
 
@@ -38,4 +37,3 @@ namespace Vrok {
     };
 }
 
-#endif // DRIVER_H

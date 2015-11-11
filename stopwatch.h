@@ -16,12 +16,11 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef STOPWATCH
-#define STOPWATCH
+#pragma once
 
 #include <chrono>
 #include <mutex>
-using namespace std;
+
 using std::chrono::duration_cast;
 using std::chrono::duration;
 using std::chrono::high_resolution_clock;
@@ -29,7 +28,6 @@ using std::chrono::high_resolution_clock;
 class StopWatch
 {
 private:
-    mutex _tlock;
     high_resolution_clock::time_point _time,_end_time;
     float TimeDiff(high_resolution_clock::time_point& tp1,
                     high_resolution_clock::time_point& tp2)
@@ -43,17 +41,12 @@ public:
     }
     void Reset()
     {
-        _tlock.lock();
         _time = std::chrono::high_resolution_clock::now();
-        _tlock.unlock();
     }
     float Stop()
     {
-        _tlock.lock();
-        _end_time=high_resolution_clock::now();
-        _tlock.unlock();
+        _end_time=std::chrono::high_resolution_clock::now();
         return TimeDiff(_end_time,_time);
     }
 };
-#endif // STOPWATCH
 

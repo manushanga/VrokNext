@@ -13,6 +13,7 @@
 #include "common.h"
 #include "player.h"
 #include "audioout.h"
+#include "alsa.h"
 #include "preamp.h"
 #include "eq.h"
 #include "fir.h"
@@ -29,6 +30,9 @@ using std::chrono::high_resolution_clock;
 struct CBData
 {
     Vrok::Player *player;
+    Vrok::DriverAlsa *pOut;
+    Vrok::EffectSSEQ *pSSEQ;
+    Vrok::EffectFIR *pFIR;
     QFileInfoList *list;
 };
 void NextTrack(void *user)
@@ -38,7 +42,10 @@ void NextTrack(void *user)
     if (data->list->size())
     {
         res->_filename = (*data->list)[rand() % data->list->size()].absoluteFilePath().toStdString();
-
+        data->player->Flush();
+        data->pFIR->Flush();
+        data->pOut->Flush();
+        data->pSSEQ->Flush();
         data->player->SubmitForPlaybackNow(res);
     }
 }
@@ -46,7 +53,7 @@ int main(int argc, char *argv[])
 
 {
     Vrok::Player *pl=new Vrok::Player;
-    Vrok::DriverAudioOut *out= new Vrok::DriverAudioOut;
+    Vrok::DriverAlsa *out= new Vrok::DriverAlsa;
     Vrok::EffectSSEQ *pSSEQ = new Vrok::EffectSSEQ;
     Vrok::EffectFIR *pFIR= new Vrok::EffectFIR;
 
@@ -87,6 +94,9 @@ int main(int argc, char *argv[])
 
     CBData data;
     data.player = pl;
+    data.pFIR = pFIR;
+    data.pOut = out;
+    data.pSSEQ = pSSEQ;
     data.list = &filelist;
 
     if (argc > 1)
@@ -121,7 +131,10 @@ int main(int argc, char *argv[])
             {
                 Vrok::Resource *res=new Vrok::Resource;
                 res->_filename = filelist[track_id].absoluteFilePath().toStdString();
-
+                pl->Flush();
+                out->Flush();
+                pSSEQ->Flush();
+                pFIR->Flush();
                 pl->SubmitForPlaybackNow(res);
             } else
             {
@@ -159,9 +172,9 @@ int main(int argc, char *argv[])
         {
             current_comp = Vrok::ComponentManager::GetSingleton()->GetComponent(
                                query.section(' ', 1).toStdString());
-            if (current_comp)
+            if (!current_comp)
             {
-                DBG("component found");
+                WARN("component not found!");
             }
         } else if (command.compare("setp")==0)
         {
@@ -178,13 +191,16 @@ int main(int argc, char *argv[])
                 {
                     float pp=query.section(' ',2,2).toFloat();
                     Vrok::ComponentManager::GetSingleton()->SetProperty(current_comp,p,&pp);
-                    DBG("set"<<pp);
                     break;
+                }
+                default:
+                {
+                    WARN("Invalid type");
                 }
                 }
             } else
             {
-                DBG("no property found");
+                WARN("no property found");
             }
 
         } else if (command.compare("ls")==0)

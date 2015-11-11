@@ -476,6 +476,105 @@ extern "C" int equ_modifySamples_float (SuperEqState *state, char *buf,int nsamp
   return p;
 }
 
+extern "C" int equ_modifySamples_double (SuperEqState *state, char *buf,int nsamples,int nch)
+{
+  int i,p,ch;
+  REAL *ires;
+  double amax = 1.0f;
+  double amin = -1.0f;
+  static double hm1 = 0, hm2 = 0;
+
+  if (state->chg_ires) {
+      state->cur_ires = state->chg_ires;
+      state->lires = state->cur_ires == 1 ? state->lires1 : state->lires2;
+      state->chg_ires = 0;
+  }
+
+  p = 0;
+
+  while(state->nbufsamples+nsamples >= state->winlen)
+    {
+        for(i=0;i<(state->winlen-state->nbufsamples)*nch;i++)
+            {
+                state->finbuf[state->nbufsamples*nch+i] = ((double *)buf)[i+p*nch];
+                double s = state->outbuf[state->nbufsamples*nch+i];
+                //if (dither) s += ditherbuf[(ditherptr++) & (DITHERLEN-1)];
+                if (s < amin) s = amin;
+                if (amax < s) s = amax;
+                ((double *)buf)[i+p*nch] = s;
+            }
+        for(i=state->winlen*nch;i<state->tabsize*nch;i++)
+            state->outbuf[i-state->winlen*nch] = state->outbuf[i];
+
+
+      p += state->winlen-state->nbufsamples;
+      nsamples -= state->winlen-state->nbufsamples;
+      state->nbufsamples = 0;
+
+      for(ch=0;ch<nch;ch++)
+        {
+            ires = state->lires + ch * state->tabsize;
+
+            for(i=0;i<state->winlen;i++)
+                state->fsamples[i] = state->finbuf[nch*i+ch];
+
+            for(i=state->winlen;i<state->tabsize;i++)
+                state->fsamples[i] = 0;
+
+            if (state->enable) {
+                rfft(state->fft_bits,1,state->fsamples);
+
+                state->fsamples[0] = ires[0]*state->fsamples[0];
+                state->fsamples[1] = ires[1]*state->fsamples[1];
+
+                for(i=1;i<state->tabsize/2;i++)
+                    {
+                        REAL re,im;
+
+                        re = ires[i*2  ]*state->fsamples[i*2] - ires[i*2+1]*state->fsamples[i*2+1];
+                        im = ires[i*2+1]*state->fsamples[i*2] + ires[i*2  ]*state->fsamples[i*2+1];
+
+                        state->fsamples[i*2  ] = re;
+                        state->fsamples[i*2+1] = im;
+                    }
+
+                rfft(state->fft_bits,-1,state->fsamples);
+            } else {
+                for(i=state->winlen-1+state->winlen/2;i>=state->winlen/2;i--) state->fsamples[i] = state->fsamples[i-state->winlen/2]*state->tabsize/2;
+                for(;i>=0;i--) state->fsamples[i] = 0;
+            }
+
+            for(i=0;i<state->winlen;i++) state->outbuf[i*nch+ch] += state->fsamples[i]/state->tabsize*2;
+
+            for(i=state->winlen;i<state->tabsize;i++) state->outbuf[i*nch+ch] = state->fsamples[i]/state->tabsize*2;
+        }
+    }
+
+        for(i=0;i<nsamples*nch;i++)
+            {
+                state->finbuf[state->nbufsamples*nch+i] = ((double *)buf)[i+p*nch];
+                double s = state->outbuf[state->nbufsamples*nch+i];
+                if (state->dither) {
+                    double u;
+                    s -= hm1;
+                    u = s;
+//					s += ditherbuf[(ditherptr++) & (DITHERLEN-1)];
+                    if (s < amin) s = amin;
+                    if (amax < s) s = amax;
+                    hm1 = s - u;
+                    ((double *)buf)[i+p*nch] = s;
+                } else {
+                    if (s < amin) s = amin;
+                    if (amax < s) s = amax;
+                    ((double *)buf)[i+p*nch] = s;
+                }
+            }
+
+  p += nsamples;
+  state->nbufsamples += nsamples;
+
+  return p;
+}
 extern "C" void *paramlist_alloc (void) {
     return (void *)(new paramlist);
 }

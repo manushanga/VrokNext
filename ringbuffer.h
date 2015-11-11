@@ -16,8 +16,7 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef RINGBUFFER_H
-#define RINGBUFFER_H
+#pragma once
 
 #include <cstdlib>
 
@@ -70,6 +69,10 @@ public:
             return false;
         }
     }
+    void Clear()
+    {
+        _front = _rear = _used = 0;
+    }
     ~Ringbuffer()
     {
         delete[] _buffer;
@@ -77,4 +80,3 @@ public:
 
 };
 
-#endif // RINGBUFFER_H

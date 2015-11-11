@@ -16,8 +16,7 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef DELAYBUFFER_H
-#define DELAYBUFFER_H
+#pragma once
 
 #include <stdlib.h>
 #include <cstring>
@@ -68,4 +67,3 @@ public:
     }
 };
 
-#endif // DELAYBUFFER_H

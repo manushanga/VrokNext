@@ -13,6 +13,10 @@
 */
 #include <limits>
 #include "ffmpeg.h"
+
+#define DIE_ON_ERR(ret) \
+    if (ret < 0) \
+        return false;
 #define SHORTTOFL (1.0f/32768.0f)
 #define SEEK_MAX 0xFFFFFFFFFFFFFFFFL
 
@@ -27,7 +31,7 @@ Vrok::DecoderFFMPEG::DecoderFFMPEG() :
     }
     s++;
     container=avformat_alloc_context();
-    _ringbuffer = new Ringbuffer<float>(
+    _ringbuffer = new Ringbuffer<double>(
                 2*FFMPEG_MAX_BUF_SIZE +
                 2*FF_INPUT_BUFFER_PADDING_SIZE);
     //container->interrupt_callback.callback = FFMPEGDecoder::ff_avio_interrupt;
@@ -56,6 +60,7 @@ bool Vrok::DecoderFFMPEG::Open(Vrok::Resource *resource)
 {
     container=nullptr;
     ctx=nullptr;
+    _ringbuffer->Clear();
 
     audio_stream_id = -1;
     if(avformat_open_input(&container,resource->_filename.c_str(),NULL,NULL)<0){
@@ -117,10 +122,11 @@ bool Vrok::DecoderFFMPEG::Open(Vrok::Resource *resource)
 
     current_in_seconds=0;
     DBG("opend");
+
     return true;
 }
 
-bool Vrok::DecoderFFMPEG::SetBufferConfig(BufferConfig *config)
+bool Vrok::DecoderFFMPEG::GetBufferConfig(BufferConfig *config)
 {
     config->channels = ctx->channels;
     config->samplerate=ctx->sample_rate;
@@ -173,15 +179,18 @@ bool Vrok::DecoderFFMPEG::DecoderRun(Buffer *buffer,  BufferConfig *config)
             packetFinished = av_read_frame(container,&packet);
         }
 
-        if (packetFinished < 0)
-            return false;
+        DIE_ON_ERR(packetFinished);
 
+        int ret=0;
         // process audio packets
-        int g=avcodec_decode_audio4(ctx,frame,&frameFinished,&packet);
+        ret = avcodec_decode_audio4(ctx,frame,&frameFinished,&packet);
 
-        av_samples_get_buffer_size(&plane_size, ctx->channels,
+        DIE_ON_ERR(ret);
+
+        ret = av_samples_get_buffer_size(&plane_size, ctx->channels,
                                             frame->nb_samples,
                                             ctx->sample_fmt, 1);
+        DIE_ON_ERR(ret);
 
         temp_write=0;
 
@@ -237,18 +246,20 @@ bool Vrok::DecoderFFMPEG::DecoderRun(Buffer *buffer,  BufferConfig *config)
                     break;
                 default:
                    DBG("PCM type not supported");
+                   return false;
             }
         } else {
             DBG("frame failed");
+            return false;
         }
 
         if (!_ringbuffer->Write(temp,temp_write))
         {
             DBG("Write buffer not enough!");
+            return false;
         }
 
         av_free_packet(&packet);
-
     }
 
     return true;

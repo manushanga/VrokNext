@@ -1,6 +1,8 @@
 #include "component.h"
 #include <stdio.h>
+
 namespace  Vrok {
+
 template<>
 Vrok::Property<int>::Property():
     _type(PropertyType::INT)
@@ -14,8 +16,17 @@ Vrok::Property<double>::Property():
     _type(PropertyType::DBL)
 {}
 
+void PropertyBase::SetName(std::string name)
+{
+    _name = name;
 }
 
+std::string PropertyBase::GetName()
+{
+    return _name;
+}
+
+}
 
 Vrok::Component::Component()
 {

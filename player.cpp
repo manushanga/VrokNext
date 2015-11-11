@@ -3,6 +3,7 @@
 #include "ffmpeg.h"
 
 Vrok::Player::Player() :
+    BufferGraph::Point(),
     _new_resource(false),
     _work(true),
     _command_queue(new Queue<Command>(5)),
@@ -70,7 +71,6 @@ void Vrok::Player::Run()
     Command cmd;
     bool got;
 
-
     if (!_decoder_work)
     {
         got = _command_queue->Pop(cmd);
@@ -83,7 +83,7 @@ void Vrok::Player::Run()
                 if (_decoder_work)
                 {
                     BufferConfig bufc_new;
-                    _decoder->SetBufferConfig(&bufc_new);
+                    _decoder->GetBufferConfig(&bufc_new);
                     SetBufferConfig(&bufc_new);
                     delete (Resource *)cmd.data;
                 }
@@ -111,7 +111,7 @@ void Vrok::Player::Run()
                 if (_decoder_work)
                 {
                     BufferConfig bufc_new;
-                    _decoder->SetBufferConfig(&bufc_new);
+                    _decoder->GetBufferConfig(&bufc_new);
                     SetBufferConfig(&bufc_new);
                     delete (Resource *)cmd.data;
                     return;
@@ -134,14 +134,19 @@ void Vrok::Player::Run()
             auto b=AcquireBuffer();
             if (b )
             {
+
+                std::cout<<"sid"<<_cur_stream_id<<std::endl;
                 if (*b->GetBufferConfig() != *GetBufferConfig())
                 {
                     b->Reset(GetBufferConfig());
                 }
+                b->GetWatch().Reset();
                 _decoder_work = _decoder->DecoderRun(b, GetBufferConfig());
                 atomic_thread_fence(memory_order_seq_cst);
 
-                PushBuffer(b);
+                // don't push out failed buffers
+                if (_decoder_work)
+                    PushBuffer(b);
             }
         }
     }

@@ -41,7 +41,8 @@ SOURCES += main.cpp \
     component.cpp \
     eq.cpp \
     shibatch/equ.cpp \
-    shibatch/ooura_fft.c
+    shibatch/ooura_fft.c \
+    alsa.cpp
 
 HEADERS += \
     threadpool.h \
@@ -69,7 +70,8 @@ HEADERS += \
     component.h \
     common.h \
     runnable.h \
-    eq.h
+    eq.h \
+    alsa.h
 
 win32 {
 LIBS        += \
@@ -80,12 +82,16 @@ LIBS        += \
 
 unix {
 LIBS    += \
-    -lavformat -lavcodec -lavutil -lao
+    -lavformat -lavcodec -lavutil -lao -lasound
 }
-
-CONFIG(debug)
+CONFIG(release)
 {
     DEFINES += \
         DEBUG \
+        USE_OOURA
+}
+CONFIG(debug)
+{
+    DEFINES += \
         USE_OOURA
 }

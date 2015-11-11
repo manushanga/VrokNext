@@ -16,9 +16,7 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef RESOURCE
-#define RESOURCE
-
+#pragma once
 #include <string>
 
 using namespace std;
@@ -32,5 +30,3 @@ public:
 };
 
 }
-#endif // RESOURCE
-

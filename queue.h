@@ -45,7 +45,9 @@ private:
     mutex guard;
     atomic<bool> bpop_,bpush_;
     condition_variable cv_pop_,cv_push_;
-    const int max_tries=200;
+    const int max_tries=1000;
+    // sleep for some amount of micro seconds
+    const int sleep_for=100;
 public:
     Queue(int size) :
         size_(size),
@@ -144,7 +146,7 @@ public:
     bool PeakBlocking(T& t)
     {
         int i=0;
-        while (!Peak(t) && i<max_tries) { i++; this_thread::sleep_for(chrono::microseconds(1001)); }
+        while (!Peak(t) && i<max_tries) { i++; this_thread::sleep_for(chrono::microseconds(sleep_for +1)); }
 #ifdef DEBUG
         if (i==max_tries) DBG("drop");
 #endif
@@ -153,7 +155,7 @@ public:
     bool PopBlocking(T& t)
     {
         int i=0;
-        while (!Pop(t) && i<max_tries) {  i++; this_thread::sleep_for(chrono::microseconds(1000));  }
+        while (!Pop(t) && i<max_tries) {  i++; this_thread::sleep_for(chrono::microseconds(sleep_for));  }
 #ifdef DEBUG
         if (i==max_tries) DBG("drop");
 #endif
@@ -163,7 +165,7 @@ public:
     bool PushBlocking(T t)
     {
         int i=0;
-        while (!Push(t) && i<max_tries) {  i++; this_thread::sleep_for(chrono::microseconds(999)); }
+        while (!Push(t) && i<max_tries) {  i++; this_thread::sleep_for(chrono::microseconds(sleep_for -1)); }
 #ifdef DEBUG
         if (i==max_tries) DBG("drop");
 #endif

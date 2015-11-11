@@ -16,8 +16,7 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef PCH_H
-#define PCH_H
+#pragma once
 
 #include <cstdio>
 #include <cstdlib>
@@ -29,6 +28,7 @@
 #include "componentmanager.h"
 
 #include <mutex>
+
 extern std::mutex lockxx;
-#endif // PCH_H
+
 

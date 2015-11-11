@@ -49,9 +49,11 @@ typedef struct {
 
 void *paramlist_alloc (void);
 void paramlist_free (void *);
-void equ_makeTable(SuperEqState *state, float *lbc,void *param,float fs);
+void equ_makeTable(SuperEqState *state, REAL *lbc,void *param,REAL fs);
 int equ_modifySamples(SuperEqState *state, char *buf,int nsamples,int nch,int bps);
 int equ_modifySamples_float (SuperEqState *state, char *buf,int nsamples,int nch);
+int equ_modifySamples_double (SuperEqState *state, char *buf,int nsamples,int nch);
+
 void equ_clearbuf(SuperEqState *state);
 void equ_init(SuperEqState *state, int wb, int channels);
 void equ_quit(SuperEqState *state);

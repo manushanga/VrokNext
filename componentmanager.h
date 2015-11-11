@@ -16,13 +16,13 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef COMPONENTMANAGER_H
-#define COMPONENTMANAGER_H
+
+#pragma once
+
 #include <map>
 #include <sstream>
-#include "component.h"
 
-using namespace std;
+#include "component.h"
 
 namespace Vrok {
 class ComponentManager
@@ -38,17 +38,17 @@ public:
     static ComponentManager *GetSingleton();
     bool RegisterComponent(Component *component);
     bool RegisterProperty(Component *component,
-                          string propertyname,
+                          std::string propertyname,
                           PropertyBase *property);
-    Component *GetComponent(string component);
+    Component *GetComponent(std::string component);
     void SetProperty(Component *component, PropertyBase *property, void *data);
-    PropertyBase *GetProperty(Component *component, string prop_name);
+    PropertyBase *GetProperty(Component *component, std::string prop_name);
 
     ~ComponentManager();
 private:
-    map<string, int> _used_names;
-    map<string, Component *> _component_map;
-    map<Component *, map<string, PropertyBase *> > _property_map;
+    std::map<std::string, int> _used_names;
+    std::map<std::string, Component *> _component_map;
+    std::map<Component *, std::map<std::string, PropertyBase *> > _property_map;
     ComponentConfig *_component_config;
 
     bool Load();
@@ -57,5 +57,3 @@ private:
 };
 }
 
-
-#endif // COMPONENTMANAGER_H

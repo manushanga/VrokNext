@@ -28,9 +28,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef TAPDISTORTION_H
-#define TAPDISTORTION_H
-
+#pragma once
 #include <stdint.h>
 #include <stdlib.h>
 #define _USE_MATH_DEFINES
@@ -466,4 +464,3 @@ public:
     ~TapDistortion();
 };
 
-#endif // TAPDISTORTION_H

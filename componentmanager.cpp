@@ -1,5 +1,7 @@
 #include "componentmanager.h"
 
+using namespace std;
+
 bool Vrok::ComponentManager::RegisterComponent(Component *component)
 {
     stringstream name;
@@ -24,6 +26,8 @@ bool Vrok::ComponentManager::RegisterProperty(Component *component,
                                string propertyname,
                                PropertyBase *property)
 {
+    property->SetName(propertyname);
+
     auto it=_property_map.find(component);
     if (it != _property_map.end())
     {
