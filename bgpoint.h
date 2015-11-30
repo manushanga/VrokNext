@@ -28,7 +28,7 @@
 #include "runnable.h"
 #include "bufferconfig.h"
 
-#define BUFFERS 10
+#define BUFFERS 3
 
 namespace BufferGraph {
 
@@ -56,8 +56,8 @@ public:
 
         auto _config=BufferConfig();
 
-        _free_buffers = new Queue<Buffer *>(12);
-        _used_buffers = new Queue<Buffer *>(12);
+        _free_buffers = new Queue<Buffer *>(BUFFERS+1);
+        _used_buffers = new Queue<Buffer *>(BUFFERS+1);
 
         for (int i=0;i<BUFFERS;i++)
         {

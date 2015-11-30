@@ -30,6 +30,7 @@ namespace Vrok {
     class DriverAlsa : public Driver
     {
     private:
+        std::atomic<bool> _play;
         uint32_t _multiplier;
         snd_pcm_t *_handle;
         snd_pcm_hw_params_t *_params;

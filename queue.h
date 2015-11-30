@@ -45,9 +45,9 @@ private:
     mutex guard;
     atomic<bool> bpop_,bpush_;
     condition_variable cv_pop_,cv_push_;
-    const int max_tries=1000;
+    const int max_tries=500;
     // sleep for some amount of micro seconds
-    const int sleep_for=100;
+    const int sleep_for=1000;
 public:
     Queue(int size) :
         size_(size),

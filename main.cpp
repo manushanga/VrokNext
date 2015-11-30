@@ -18,6 +18,7 @@
 #include "eq.h"
 #include "fir.h"
 #include "threadpool.h"
+#include "ffmpeg.h"
 #include <QDir>
 
 #define BUF_SIZE 100
@@ -38,15 +39,23 @@ struct CBData
 void NextTrack(void *user)
 {
     CBData *data= (CBData *) user;
-    Vrok::Resource *res=new Vrok::Resource;
+    Vrok::Resource *res = new Vrok::Resource();
+    Vrok::Decoder *decoder = new Vrok::DecoderFFMPEG();
+
     if (data->list->size())
-    {
-        res->_filename = (*data->list)[rand() % data->list->size()].absoluteFilePath().toStdString();
-        data->player->Flush();
-        data->pFIR->Flush();
+    {        
+        do
+        {
+            res->_filename = (*data->list)[rand() % data->list->size()].absoluteFilePath().toStdString();
+        } while (!decoder->Open(res));
+
+        data->player->SubmitForPlayback(decoder);
+
         data->pOut->Flush();
         data->pSSEQ->Flush();
-        data->player->SubmitForPlaybackNow(res);
+        data->player->Flush();
+        data->pFIR->Flush();
+
     }
 }
 int main(int argc, char *argv[])
@@ -131,11 +140,14 @@ int main(int argc, char *argv[])
             {
                 Vrok::Resource *res=new Vrok::Resource;
                 res->_filename = filelist[track_id].absoluteFilePath().toStdString();
+
                 pl->Flush();
                 out->Flush();
                 pSSEQ->Flush();
                 pFIR->Flush();
-                pl->SubmitForPlaybackNow(res);
+                Vrok::Decoder *decoder = new Vrok::DecoderFFMPEG();
+                if (decoder->Open(res))
+                    pl->SubmitForPlayback(decoder);
             } else
             {
                 WARN("invalid index");
@@ -155,7 +167,9 @@ int main(int argc, char *argv[])
                 Vrok::Resource *res=new Vrok::Resource;
                 res->_filename = filelist[track_id].absoluteFilePath().toStdString();
 
-                pl->SubmitForPlaybackNow(res);
+                Vrok::Decoder *decoder = new Vrok::DecoderFFMPEG();
+                if (decoder->Open(res))
+                    pl->SubmitForPlayback(decoder);
 
             } else
             {
@@ -167,7 +181,11 @@ int main(int argc, char *argv[])
         {
             Vrok::Resource *res=new Vrok::Resource;
             res->_filename = query.section(' ',1).toStdString();
-            pl->SubmitForPlaybackNow(res);
+
+            Vrok::Decoder *decoder = new Vrok::DecoderFFMPEG();
+            if (decoder->Open(res))
+                pl->SubmitForPlayback(decoder);
+
         } else if (command.compare("setc")==0)
         {
             current_comp = Vrok::ComponentManager::GetSingleton()->GetComponent(

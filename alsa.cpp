@@ -12,7 +12,6 @@ bool Vrok::DriverAlsa::BufferConfigChange(BufferConfig *config)
 {
     if (_handle)
     {
-        snd_pcm_pause(_handle, true);
         snd_pcm_drop(_handle);
         snd_pcm_close(_handle);
         _handle = nullptr;
@@ -25,9 +24,9 @@ bool Vrok::DriverAlsa::BufferConfigChange(BufferConfig *config)
 /*
     snd_pcm_sw_params_t *swparams;
     snd_pcm_sw_params_malloc(&swparams);
-    snd_pcm_sw_params_current (handle, swparams);
-    snd_pcm_sw_params_set_start_threshold (handle, swparams, VPBUFFER_FRAMES - PERIOD_SIZE);
-    snd_pcm_sw_params (handle, swparams);
+    snd_pcm_sw_params_current (_handle, swparams);
+    snd_pcm_sw_params_set_start_threshold (_handle, swparams, PERIOD_SIZE);
+    snd_pcm_sw_params (_handle, swparams);
     snd_pcm_sw_params_free(swparams);
 */
     snd_pcm_hw_params_alloca(&_params);
@@ -78,8 +77,6 @@ bool Vrok::DriverAlsa::BufferConfigChange(BufferConfig *config)
     int dir;
     //snd_pcm_hw_params_get_rate(_params, &out_srate, &dir);
 
-    snd_pcm_pause(_handle, false);
-
     return true;
 }
 
@@ -105,5 +102,7 @@ bool Vrok::DriverAlsa::DriverRun(Buffer *buffer)
     {
         DBG("write error "<<ret);
     }
+
     return true;
 }
+

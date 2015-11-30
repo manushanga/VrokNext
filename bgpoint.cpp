@@ -9,14 +9,6 @@ Buffer *BufferGraph::Point::AcquireBuffer()
     Buffer *b=nullptr;
 
     _free_buffers->PopBlocking(b);
-    if (b)
-    {
-        std::cout<<"set sid"<<_cur_stream_id<<std::endl;
-        b->SetStreamId(_cur_stream_id);
-    } else
-    {
-        std::cout<<"null buff"<<std::endl;
-    }
     return b;
 }
 

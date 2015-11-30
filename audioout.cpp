@@ -60,3 +60,4 @@ bool Vrok::DriverAudioOut::DriverRun(Buffer *buffer)
 
     return true;
 }
+

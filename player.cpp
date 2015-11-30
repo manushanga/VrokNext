@@ -12,21 +12,13 @@ Vrok::Player::Player() :
     _callback(nullptr),
     _paused(false)
 {
-    _decoder = new DecoderFFMPEG();
+    _decoder = NULL;
 }
 
-bool Vrok::Player::SubmitForPlayback(Resource *resource)
+bool Vrok::Player::SubmitForPlayback(Vrok::Decoder *decoder)
 {
     Command cmd;
-    cmd.data = resource;
-    cmd.type = OPEN;
-    _command_queue->PushBlocking(cmd);
-    return true;
-}
-bool Vrok::Player::SubmitForPlaybackNow(Resource* resource)
-{
-    Command cmd;
-    cmd.data = resource;
+    cmd.data = decoder;
     cmd.type = OPEN;
     _command_now_queue->PushBlocking(cmd);
     //_command_queue->Clear();
@@ -71,84 +63,61 @@ void Vrok::Player::Run()
     Command cmd;
     bool got;
 
-    if (!_decoder_work)
+
+    got = _command_now_queue->Pop(cmd);
+    if (got)
     {
-        got = _command_queue->Pop(cmd);
-        if (got)
+        DBG("opening");
+        // we got something on the play queue
+        // close playing song and start next
+        if (cmd.type == OPEN)
         {
-            if (cmd.type == OPEN)
+            if (_decoder)
             {
                 _decoder->Close();
-                _decoder_work=_decoder->Open((Resource *)cmd.data);
-                if (_decoder_work)
-                {
-                    BufferConfig bufc_new;
-                    _decoder->GetBufferConfig(&bufc_new);
-                    SetBufferConfig(&bufc_new);
-                    delete (Resource *)cmd.data;
-                }
+                delete _decoder;
             }
-        } else {
-            if (_callback)
-                _callback(_callback_user);
+            _decoder = (Vrok::Decoder*) cmd.data;
+            BufferConfig config;
+            _decoder->GetBufferConfig(&config);
+            SetBufferConfig(&config);
 
-            _decoder_work = _command_now_queue->Peak(cmd);
-            if (!_decoder_work)
-                this_thread::sleep_for(chrono::seconds(1));
-        }
-    } else
-    {
-        got = _command_now_queue->Pop(cmd);
-        if (got)
+        } else if (cmd.type == PAUSE)
         {
-            DBG("opening");
-            // we got something on the play queue
-            // close playing song and start next
-            if (cmd.type == OPEN)
-            {
-                _decoder->Close();
-                _decoder_work = _decoder->Open((Resource *)cmd.data);
-                if (_decoder_work)
-                {
-                    BufferConfig bufc_new;
-                    _decoder->GetBufferConfig(&bufc_new);
-                    SetBufferConfig(&bufc_new);
-                    delete (Resource *)cmd.data;
-                    return;
-                }
-                else
-                {
-                    DBG("decoder fail");
-                    return;
-                }
-            } else if (cmd.type == PAUSE)
-            {
-                _paused=true;
-            } else if (cmd.type == RESUME)
-            {
-                _paused=false;
-            }
-        }
-        if (!_paused)
+            _paused=true;
+        } else if (cmd.type == RESUME)
         {
-            auto b=AcquireBuffer();
-            if (b )
-            {
-
-                std::cout<<"sid"<<_cur_stream_id<<std::endl;
-                if (*b->GetBufferConfig() != *GetBufferConfig())
-                {
-                    b->Reset(GetBufferConfig());
-                }
-                b->GetWatch().Reset();
-                _decoder_work = _decoder->DecoderRun(b, GetBufferConfig());
-                atomic_thread_fence(memory_order_seq_cst);
-
-                // don't push out failed buffers
-                if (_decoder_work)
-                    PushBuffer(b);
-            }
+            _paused=false;
         }
     }
+    else if (!_decoder_work)
+    {
+        if (_callback)
+            _callback(_callback_user);
+
+        _decoder_work = _command_now_queue->Peak(cmd);
+
+    }
+
+    if (_decoder && !_paused)
+    {
+        auto b=AcquireBuffer();
+        if (b)
+        {
+            b->SetStreamId(_cur_stream_id);
+            if (*b->GetBufferConfig() != *GetBufferConfig())
+            {
+                b->Reset(GetBufferConfig());
+            }
+            b->GetWatch().Reset();
+            _decoder_work = _decoder->DecoderRun(b, GetBufferConfig());
+            atomic_thread_fence(memory_order_seq_cst);
+
+            // don't push out failed buffers
+            if (_decoder_work)
+                PushBuffer(b);
+        }
+    }
+
 }
 

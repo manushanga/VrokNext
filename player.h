@@ -65,8 +65,8 @@ namespace Vrok {
         // if a track that can not be played by the decoder
         // has been submitted, decoder will stop or goto the
         // next playable file
-        bool SubmitForPlayback(Resource* resource);
-        bool SubmitForPlaybackNow(Resource* resource);
+
+        bool SubmitForPlayback(Decoder* decoder);
         bool Resume();
         bool Pause();
         bool Stop();

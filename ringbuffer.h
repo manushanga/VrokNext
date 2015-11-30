@@ -71,7 +71,9 @@ public:
     }
     void Clear()
     {
-        _front = _rear = _used = 0;
+        _front = 0;
+        _rear = 0;
+        _used = 0;
     }
     ~Ringbuffer()
     {

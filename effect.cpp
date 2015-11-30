@@ -29,6 +29,7 @@ void Vrok::Effect::Run()
                 buffer->Reset(c);
                 len=c->channels * c->frames;
             }
+            buffer->SetStreamId(buffers[0]->GetStreamId());
             memset(buffer->GetData(),0,len*sizeof(double));
             buffer->GetWatch() = buffers[0]->GetWatch();
 
