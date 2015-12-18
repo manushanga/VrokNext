@@ -28,6 +28,7 @@ namespace Vrok {
     {
     private:
         atomic<bool> _new_resource;
+        atomic<double> _volume;
         ao_device *_ao_device;
     protected:
     public:
@@ -35,7 +36,7 @@ namespace Vrok {
         virtual ~DriverAudioOut() {}
         bool BufferConfigChange(BufferConfig *config);
         bool DriverRun(Buffer *buffer);
-
+        void setVolume(double volume);
         Vrok::ComponentType ComponentType()
         {
             return Vrok::ComponentType::Driver;

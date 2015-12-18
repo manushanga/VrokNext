@@ -4,13 +4,9 @@
 #
 #-------------------------------------------------
 
-QT       += core
-
-QT       -= gui
+QT       += gui declarative
 
 TARGET = threadpool
-CONFIG   += console
-CONFIG   -= app_bundle
 
 TEMPLATE = app
 
@@ -42,7 +38,10 @@ SOURCES += main.cpp \
     eq.cpp \
     shibatch/equ.cpp \
     shibatch/ooura_fft.c \
-    alsa.cpp
+    alsa.cpp \
+    notify.cpp \
+    vumeter.cpp \
+    disp.cpp
 
 HEADERS += \
     threadpool.h \
@@ -71,7 +70,10 @@ HEADERS += \
     common.h \
     runnable.h \
     eq.h \
-    alsa.h
+    alsa.h \
+    notify.h \
+    vumeter.h \
+    disp.h
 
 win32 {
 LIBS        += \
@@ -95,3 +97,6 @@ CONFIG(debug)
     DEFINES += \
         USE_OOURA
 }
+
+FORMS += \
+    disp.ui

@@ -1,10 +1,15 @@
 #include "alsa.h"
 
+#include <cmath>
+
 #define PERIOD_SIZE 128
+
+#define DB_TO_A(__db) (std::pow(2,(__db/10.0)))
 
 Vrok::DriverAlsa::DriverAlsa() :
     _handle(nullptr),
-    _params(nullptr)
+    _params(nullptr),
+    _volume(1.0)
 {
 }
 
@@ -38,25 +43,25 @@ bool Vrok::DriverAlsa::BufferConfigChange(BufferConfig *config)
 
     if (snd_pcm_format_mask_test(mask, SND_PCM_FORMAT_S32))
     {
-        DBG("bit depth is 32");
+        DBG(1,"bit depth is 32");
         snd_pcm_hw_params_set_format(_handle, _params, SND_PCM_FORMAT_S32);
         _multiplier = (1<<31) -1 ;
     }
     else if (snd_pcm_format_mask_test(mask, SND_PCM_FORMAT_S24))
     {
-        DBG("bit depth is 24");
+        DBG(1,"bit depth is 24");
         snd_pcm_hw_params_set_format(_handle, _params, SND_PCM_FORMAT_S24);
         _multiplier = (1<<23) -1;
     }
     else if (snd_pcm_format_mask_test(mask, SND_PCM_FORMAT_S16))
     {
-        DBG("bit depth is 16");
+        DBG(1,"bit depth is 16");
         snd_pcm_hw_params_set_format(_handle, _params, SND_PCM_FORMAT_S16);
         _multiplier = (1<<15) -1;
     }
     else if (snd_pcm_format_mask_test(mask, SND_PCM_FORMAT_S8))
     {
-        DBG("bit depth is 8");
+        DBG(1,"bit depth is 8");
         snd_pcm_hw_params_set_format(_handle, _params, SND_PCM_FORMAT_S8);
         _multiplier = (1<<7) -1;;
     } else
@@ -87,22 +92,27 @@ bool Vrok::DriverAlsa::DriverRun(Buffer *buffer)
     int frames = buffer->GetBufferConfig()->frames * buffer->GetBufferConfig()->channels;
     for(int i=0;i< frames;i++)
     {
-        ibuffer[i] = buffer->GetData()[i] * _multiplier;
+        ibuffer[i] = buffer->GetData()[i] * _multiplier * _volume;
     }
     ret = snd_pcm_writei(_handle, ibuffer, buffer->GetBufferConfig()->frames);
 
     if (ret == -EPIPE || ret == -EINTR || ret == -ESTRPIPE)
     {
-        DBG("trying to recover");
+        DBG(1,"trying to recover");
         if ( snd_pcm_recover(_handle, ret, 0) < 0 )
         {
-            DBG("recover failed for "<<ret);
+            WARN(9,"recover failed for "<<ret);
         }
     } else if (ret < 0 && ret != -EAGAIN)
     {
-        DBG("write error "<<ret);
+        WARN(9,"write error "<<ret);
     }
 
     return true;
+}
+
+void Vrok::DriverAlsa::setVolume(double volume)
+{
+    _volume = DB_TO_A(volume);
 }
 

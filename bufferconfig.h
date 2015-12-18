@@ -38,7 +38,7 @@ struct BufferConfig
     }
     void Print()
     {
-        DBG(frames<<" "<<channels<<" "<<samplerate);
+        DBG(1,frames<<" "<<channels<<" "<<samplerate);
     }
 };
 

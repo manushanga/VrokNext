@@ -1,7 +1,10 @@
+#include <cmath>
+
 #include "eq.h"
 
-#define CLIP(x) ((x>1.0f)?1.0f:(x<-1.0f?-1.0f:x))
-
+#define CLIP(__x) ((__x>1.0f)?1.0f:(__x<-1.0f?-1.0f:__x))
+#define DB_TO_A(__db) (std::pow(2,(__db/10.0)))
+#define A_TO_DB(__a) (10.0 * std::log(__a))
 
 Vrok::EffectSSEQ::EffectSSEQ() :
     _sb_paramsroot(nullptr)
@@ -35,9 +38,9 @@ Vrok::EffectSSEQ::EffectSSEQ() :
 
     for (int i=0;i<BAR_COUNT;i++)
     {
-        _bands[i].Set(1.0);
+        _bands[i].Set(0.0);
     }
-    _preamp.Set(1.0);
+    _preamp.Set(0.0);
     
     BufferConfig *bc=GetBufferConfig();
     
@@ -45,8 +48,7 @@ Vrok::EffectSSEQ::EffectSSEQ() :
     float sb_bands_copy[BAR_COUNT];
     
     for (int i=0;i<BAR_COUNT;i++){
-        sb_bands_copy[i]=_bands[i].Get()*_preamp.Get();
-        DBG(sb_bands_copy[i]);
+        sb_bands_copy[i]=DB_TO_A(_bands[i].Get())* DB_TO_A(_preamp.Get());
     }
 
 
@@ -82,7 +84,7 @@ void Vrok::EffectSSEQ::PropertyChanged(PropertyBase *property)
     float sb_bands_copy[BAR_COUNT];
     
     for (int i=0;i<BAR_COUNT;i++){
-        sb_bands_copy[i]=_bands[i].Get()*_preamp.Get();
+        sb_bands_copy[i]=DB_TO_A(_bands[i].Get())* DB_TO_A(_preamp.Get());
     }
 
     equ_makeTable (&_sb_state, sb_bands_copy, params, bc->samplerate);
@@ -90,5 +92,4 @@ void Vrok::EffectSSEQ::PropertyChanged(PropertyBase *property)
         paramlist_free (_sb_paramsroot);
     _sb_paramsroot = params;
 
-    
 }

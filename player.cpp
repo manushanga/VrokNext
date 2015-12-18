@@ -51,6 +51,15 @@ bool Vrok::Player::Stop()
     return true;
 }
 
+bool Vrok::Player::Skip()
+{
+    Command cmd;
+    cmd.data = NULL;
+    cmd.type = SKIP;
+    _command_now_queue->PushBlocking(cmd);
+    return true;
+}
+
 void Vrok::Player::SetNextTrackCallback(Vrok::Player::NextTrackCallback callback, void *user)
 {
 
@@ -67,7 +76,6 @@ void Vrok::Player::Run()
     got = _command_now_queue->Pop(cmd);
     if (got)
     {
-        DBG("opening");
         // we got something on the play queue
         // close playing song and start next
         if (cmd.type == OPEN)
@@ -81,22 +89,22 @@ void Vrok::Player::Run()
             BufferConfig config;
             _decoder->GetBufferConfig(&config);
             SetBufferConfig(&config);
-
         } else if (cmd.type == PAUSE)
         {
             _paused=true;
         } else if (cmd.type == RESUME)
         {
             _paused=false;
+        } else if (cmd.type == SKIP)
+        {
+            if (_callback)
+                _callback(_callback_user);
         }
     }
-    else if (!_decoder_work)
+    else if (!_decoder)
     {
         if (_callback)
             _callback(_callback_user);
-
-        _decoder_work = _command_now_queue->Peak(cmd);
-
     }
 
     if (_decoder && !_paused)
@@ -114,8 +122,13 @@ void Vrok::Player::Run()
             atomic_thread_fence(memory_order_seq_cst);
 
             // don't push out failed buffers
-            if (_decoder_work)
-                PushBuffer(b);
+            if (!_decoder_work)
+            {
+                _decoder->Close();
+                delete _decoder;
+                _decoder = NULL;
+            }
+            PushBuffer(b);
         }
     }
 

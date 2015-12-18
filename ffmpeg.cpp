@@ -64,14 +64,13 @@ bool Vrok::DecoderFFMPEG::Open(Vrok::Resource *resource)
 
     audio_stream_id = -1;
     if(avformat_open_input(&container,resource->_filename.c_str(),NULL,NULL)<0){
-        DBG(resource->_filename);
-        DBG("Can't open file");
+        WARN(9,"Can't open file");
         Close();
         return false;
     }
 
     if(avformat_find_stream_info(container, NULL)<0){
-        DBG("Stream info load failed");
+        WARN(9,"Stream info load failed");
         return false;
     }
 
@@ -83,7 +82,7 @@ bool Vrok::DecoderFFMPEG::Open(Vrok::Resource *resource)
         }
     }
     if(audio_stream_id==-1){
-        DBG("No audio stream");
+        WARN(9,"No audio stream");
         Close();
         return false;
     }
@@ -92,15 +91,15 @@ bool Vrok::DecoderFFMPEG::Open(Vrok::Resource *resource)
     ctx=container->streams[audio_stream_id]->codec;
     codec=avcodec_find_decoder(ctx->codec_id);
 
-    DBG("codec: "<<codec->long_name);
+    DBG(1,"codec: "<<codec->long_name);
     if(codec==NULL){
-        DBG("Cannot find codec");
+        WARN(9,"Cannot find codec");
         Close();
         return false;
     }
 
     if(avcodec_open2(ctx,codec,NULL)<0){
-        DBG("Codec cannot be opened");
+        WARN(9,"Codec cannot be opened");
         Close();
         return false;
     }
@@ -121,7 +120,7 @@ bool Vrok::DecoderFFMPEG::Open(Vrok::Resource *resource)
     frame=av_frame_alloc();
 
     current_in_seconds=0;
-    DBG("opend");
+    DBG(1,"opend");
 
     return true;
 }
@@ -130,9 +129,9 @@ bool Vrok::DecoderFFMPEG::GetBufferConfig(BufferConfig *config)
 {
     config->channels = ctx->channels;
     config->samplerate=ctx->sample_rate;
-    DBG("p "<<config->channels);
+    DBG(1,"p "<<config->channels);
 
-    DBG("p "<<config->samplerate);
+    DBG(1,"p "<<config->samplerate);
 
     return true;
 }
@@ -245,17 +244,17 @@ bool Vrok::DecoderFFMPEG::DecoderRun(Buffer *buffer,  BufferConfig *config)
                     }
                     break;
                 default:
-                   DBG("PCM type not supported");
+                   WARN(9,"PCM type not supported");
                    return false;
             }
         } else {
-            DBG("frame failed");
+            WARN(5,"frame failed");
             return false;
         }
 
         if (!_ringbuffer->Write(temp,temp_write))
         {
-            DBG("Write buffer not enough!");
+            WARN(9,"Write buffer not enough!");
             return false;
         }
 

@@ -2,6 +2,10 @@
 
 #include <mutex>
 #include <iostream>
+#include <sstream>
+
+#include "notify.h"
+
 extern std::mutex __global_console_lock;
 
 
@@ -36,22 +40,22 @@ extern std::mutex __global_console_lock;
 // -- debug
 #ifdef DEBUG
 
-#define DBG(...) \
+#define DBG(__level, ...) \
     {\
-        __global_console_lock.lock(); \
-        std::cout<<__VA_ARGS__<<std::endl; \
-        __global_console_lock.unlock(); \
+        std::stringstream __sstream; \
+        __sstream << __VA_ARGS__ ; \
+        Vrok::Notify::GetInstance()->NotifyDebug(__level, __sstream.str()); \
     }
 
 #else
 #define DBG(...)
 #endif
 // -- warn
-#define WARN(...) \
+#define WARN(__level, ...) \
     {\
-        __global_console_lock.lock(); \
-        std::cerr<<__VA_ARGS__<<std::endl; \
-        __global_console_lock.unlock(); \
+        std::stringstream __sstream; \
+        __sstream << __VA_ARGS__ ; \
+        Vrok::Notify::GetInstance()->NotifyWarning(__level, __sstream.str()); \
     }
 
     

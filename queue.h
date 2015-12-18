@@ -148,7 +148,7 @@ public:
         int i=0;
         while (!Peak(t) && i<max_tries) { i++; this_thread::sleep_for(chrono::microseconds(sleep_for +1)); }
 #ifdef DEBUG
-        if (i==max_tries) DBG("drop");
+        if (i==max_tries) DBG(6,"drop");
 #endif
         return i<max_tries;
     }
@@ -157,7 +157,7 @@ public:
         int i=0;
         while (!Pop(t) && i<max_tries) {  i++; this_thread::sleep_for(chrono::microseconds(sleep_for));  }
 #ifdef DEBUG
-        if (i==max_tries) DBG("drop");
+        if (i==max_tries) DBG(6,"drop");
 #endif
         return i<max_tries;
  
@@ -167,7 +167,7 @@ public:
         int i=0;
         while (!Push(t) && i<max_tries) {  i++; this_thread::sleep_for(chrono::microseconds(sleep_for -1)); }
 #ifdef DEBUG
-        if (i==max_tries) DBG("drop");
+        if (i==max_tries) DBG(6,"drop");
 #endif
         return i<max_tries;
     }

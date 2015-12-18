@@ -33,7 +33,11 @@ namespace Vrok {
         virtual ~Driver() {}
         virtual bool BufferConfigChange(BufferConfig *config)=0;
         virtual bool DriverRun(Buffer *buffer)=0;
+        virtual void setVolume(double volume) = 0;
         void Run();
+
+        // volume in decibels
+
     };
 }
 

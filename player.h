@@ -36,7 +36,7 @@ namespace Vrok {
     public:
         typedef void (*NextTrackCallback)(void *user);
     private:
-        enum CommandType {OPEN, PAUSE, RESUME, STOP, SEEK};
+        enum CommandType {OPEN, PAUSE, RESUME, STOP, SEEK, SKIP};
         struct Command
         {
             CommandType type;
@@ -70,6 +70,7 @@ namespace Vrok {
         bool Resume();
         bool Pause();
         bool Stop();
+        bool Skip();
         void SetNextTrackCallback(NextTrackCallback callback, void *user);
 
         void Run();

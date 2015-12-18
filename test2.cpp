@@ -37,7 +37,6 @@ void NodeAT2::Run()
 
         auto xx=GetBufferConfig();
 
-        DBG(::this_thread::get_id()<<" w"<<b);
 
         b->GetData()[0]=j;
         for (int x=1;x<xx->frames*xx->channels;x++)
@@ -66,7 +65,6 @@ void NodeBT2::Run()
         auto b=AcquireBuffer();
         auto xx=GetBufferConfig();
         auto bb=PeakAllSources();
-        DBG(::this_thread::get_id()<<" "<<bb[0]->GetData()[1]);
 
 
         if (j!=bb[0]->GetData()[0]) {
@@ -95,9 +93,7 @@ void NodeCT2::Run()
     while (true)
     {
         auto bb=PeakAllSources();
-        DBG("TIME"<<_stop_watch->Stop());
 
-        DBG(::this_thread::get_id()<<" "<<bb[0]->GetData()[1]);
 
         auto xx=GetBufferConfig();
 

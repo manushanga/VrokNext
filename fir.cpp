@@ -40,110 +40,6 @@ sampling frequency: 2000 Hz
 
 #define FIR_LEN 90
 #define CLIP(x) ((x>1.0f)?1.0f:(x<-1.0f?-1.0f:x))
-float coeffs[] = {
-
-    0.001455,
-    0.001472,
-    0.001523,
-    0.001607,
-    0.001723,
-    0.001871,
-    0.002051,
-    0.002263,
-    0.002504,
-    0.002775,
-    0.003074,
-    0.003401,
-    0.003753,
-    0.004131,
-    0.004531,
-    0.004953,
-    0.005395,
-    0.005855,
-    0.006332,
-    0.006824,
-    0.007328,
-    0.007843,
-    0.008366,
-    0.008896,
-    0.009431,
-    0.009968,
-    0.010505,
-    0.011040,
-    0.011572,
-    0.012097,
-    0.012614,
-    0.013121,
-    0.013616,
-    0.014096,
-    0.014560,
-    0.015006,
-    0.015433,
-    0.015837,
-    0.016219,
-    0.016576,
-    0.016907,
-    0.017211,
-    0.017486,
-    0.017732,
-    0.017946,
-    0.018129,
-    0.018280,
-    0.018398,
-    0.018483,
-    0.018534,
-    0.018551,
-    0.018534,
-    0.018483,
-    0.018398,
-    0.018280,
-    0.018129,
-    0.017946,
-    0.017732,
-    0.017486,
-    0.017211,
-    0.016907,
-    0.016576,
-    0.016219,
-    0.015837,
-    0.015433,
-    0.015006,
-    0.014560,
-    0.014096,
-    0.013616,
-    0.013121,
-    0.012614,
-    0.012097,
-    0.011572,
-    0.011040,
-    0.010505,
-    0.009968,
-    0.009431,
-    0.008896,
-    0.008366,
-    0.007843,
-    0.007328,
-    0.006824,
-    0.006332,
-    0.005855,
-    0.005395,
-    0.004953,
-    0.004531,
-    0.004131,
-    0.003753,
-    0.003401,
-    0.003074,
-    0.002775,
-    0.002504,
-    0.002263,
-    0.002051,
-    0.001871,
-    0.001723,
-    0.001607,
-    0.001523,
-    0.001472,
-    0.001455
-};
 
 
 Vrok::EffectFIR::EffectFIR() :
@@ -152,7 +48,7 @@ Vrok::EffectFIR::EffectFIR() :
     int len=(FIR_LEN+GetBufferConfig()->frames)* GetBufferConfig()->channels;
     for (int i=0;i<len;i++)
     {
-        _buffer[i] = 0;
+        _buffer[i] = 0.0;
     }
     _dist[0].activate();
     _dist[1].activate();
@@ -173,8 +69,8 @@ Vrok::EffectFIR::EffectFIR() :
     _lp_freq.Set(150.0f);
     _hp_freq.Set(50.0f);
 
-    _wet_vol.Set(1);
-    _dry_vol.Set(1);
+    _wet_vol.Set(0.5);
+    _dry_vol.Set(0.5);
 
     _f32_dry_vol = _dry_vol.Get();
     _f32_wet_vol = _wet_vol.Get();
@@ -211,17 +107,24 @@ bool Vrok::EffectFIR::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int 
     }*/
     double *proc=in_buffer_set[0]->GetData();
     double *proc_out=out_buffer->GetData();
+    proc_out[0]=proc[0];
     for (int j=0;j<bc->frames;j++) {
 
         for (int i=0;i<bc->channels;i++)
         {
-            proc_out[i] = _lp[i][1].process(_lp[i][0].process(proc[i]));
+            proc_out[i] = proc[i];
+        }
+        for (int i=0;i<bc->channels;i++)
+        {
+            proc_out[i] = _lp[i][1].process(_lp[i][0].process(proc_out[i]));
 
             proc_out[i] = _dist[i].process(proc_out[i]);
 
-            proc_out[i] = _hp[i][0].process(_hp[i][1].process(proc_out[i]));
+            proc_out[i] = _lp[i][2].process(_lp[i][3].process(proc_out[i]));
+//            proc_out[i] = _hp[i][0].process(_hp[i][1].process(proc_out[i]));
 
-            proc_out[i] = CLIP(proc_out[i]*_f32_wet_vol + proc[i]*_f32_dry_vol);
+
+            proc_out[i] = CLIP((proc_out[i]*_f32_wet_vol + proc[i])*_f32_dry_vol);
         }
         proc+=bc->channels;
         proc_out+=bc->channels;
@@ -238,6 +141,7 @@ bool Vrok::EffectFIR::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int 
     _hp[1][0].sanitize();
     _hp[0][1].sanitize();
     _hp[1][1].sanitize();
+    _meter.Process(out_buffer);
 //    for (int i=0;i<len;i++)
 //    {
 //        _buffer[i+fir_len] = in_buffer_set[0]->GetData()[i];
@@ -264,8 +168,41 @@ bool Vrok::EffectFIR::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int 
 
 void Vrok::EffectFIR::PropertyChanged(PropertyBase *property)
 {
+    if ( !(_blend.Get() < 10.0 && _blend.Get() > -10.0) )
+    {
+        WARN(9, "invalid value for blend");
+        return;
+    }
 
-    _lp[0][0].set_lp_rbj(_lp_freq.Get(), 0.707, (float)48000.0);
+    if ( !(_drive.Get() < 10.0 && _drive.Get() > 0.0) )
+    {
+        WARN(9, "invalid value for drive");
+        return;
+    }
+    if ( !(_hp_freq.Get() < 20000.0 && _hp_freq.Get() > 0.0) )
+    {
+        WARN(9, "invalid value for hp_freq");
+        return;
+    }
+    if ( !(_lp_freq.Get() < 20000.0 && _lp_freq.Get() > 0.0) )
+    {
+        WARN(9, "invalid value for lp_freq");
+        return;
+    }
+
+    if ( !(_dry_vol.Get() < 20.0 && _dry_vol.Get() > 0.0) )
+    {
+        WARN(9, "invalid value for dry vol");
+        return;
+    }
+
+    if ( !(_wet_vol.Get() < 20.0 && _wet_vol.Get() > 0.0) )
+    {
+        WARN(9, "invalid value for wet vol");
+        return;
+    }
+
+    _lp[0][0].set_lp_rbj(_lp_freq.Get(), 0.707, (float)GetBufferConfig()->samplerate);
     _lp[0][1].copy_coeffs(_lp[0][0]);
     _lp[0][2].copy_coeffs(_lp[0][0]);
     _lp[0][3].copy_coeffs(_lp[0][0]);
@@ -275,18 +212,24 @@ void Vrok::EffectFIR::PropertyChanged(PropertyBase *property)
     _lp[1][3].copy_coeffs(_lp[0][0]);
 
 
-    _hp[0][0].set_hp_rbj(_hp_freq.Get(), 0.707, (float)48000.0);
+    _hp[0][0].set_hp_rbj(_hp_freq.Get(), 0.707, (float)GetBufferConfig()->samplerate);
     _hp[0][1].copy_coeffs(_hp[0][0]);
     _hp[1][0].copy_coeffs(_hp[0][0]);
     _hp[1][1].copy_coeffs(_hp[0][0]);
 
-    _dist[0].set_sample_rate(48000.0);
+    _dist[0].set_sample_rate((float)GetBufferConfig()->samplerate);
     _dist[0].set_params(_blend.Get(),_drive.Get());
-    _dist[1].set_sample_rate(48000.0);
+    _dist[1].set_sample_rate((float)GetBufferConfig()->samplerate);
     _dist[1].set_params(_blend.Get(),_drive.Get());
 
     _f32_dry_vol = _dry_vol.Get();
     _f32_wet_vol = _wet_vol.Get();
 
 
+}
+
+bool Vrok::EffectFIR::BufferConfigChange(BufferConfig *config)
+{
+    DBG(0,"bufferchange fot vu");
+    _meter.SetBufferConfig(config);
 }

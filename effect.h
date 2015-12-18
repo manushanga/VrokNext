@@ -16,24 +16,29 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef EFFECT_H
-#define EFFECT_H
+#pragma once
 
 #include "bgpoint.h"
 
 namespace Vrok {
+class VUMeter;
 class Effect : public BufferGraph::Point, public Component
 {
 private:
 protected:
     atomic<bool> _work;
 public:
+    typedef std::vector<VUMeter *> VUMeters;
     Effect();
     virtual ~Effect() {}
     virtual bool EffectRun(Buffer *out_buffer,
                            Buffer **in_buffer_set,
                            int buffer_count)=0;
+    virtual bool BufferConfigChange(BufferConfig *config) {}
     void Run();
+    VUMeters GetMeters()
+    {
+        return VUMeters();
+    }
 };
 }
-#endif // EFFECT_H

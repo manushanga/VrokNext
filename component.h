@@ -45,6 +45,7 @@ class Property : public PropertyBase
 private:
     PropertyType _type;
     std::atomic<T> _data;
+    T _default;
 public:
     Property();
 
@@ -71,8 +72,6 @@ public:
 
 };
 
-
-
 class Component
 {
 public:
@@ -83,7 +82,7 @@ public:
     virtual const char *Description() { return ""; }
     virtual const char *Author() { return ""; }
     virtual const char *License() { return ""; }
-    virtual void PropertyChanged(PropertyBase *property) {}
+    virtual void PropertyChanged(PropertyBase *property) { }
     virtual ~Component();
 };
 

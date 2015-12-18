@@ -24,7 +24,7 @@ void Vrok::Effect::Run()
             {
                // DBG("xx");
                 SetBufferConfig(c);
-
+                BufferConfigChange(c);
                 //GetBufferConfig()->Print();
                 buffer->Reset(c);
                 len=c->channels * c->frames;

@@ -21,6 +21,8 @@
 #include "common.h"
 #include "effect.h"
 #include "tapdistortion.h"
+#include "vumeter.h"
+
 namespace Vrok {
 class EffectFIR : public Effect
 {
@@ -33,15 +35,23 @@ private:
     biquad_d2 _lp[2][4];
     biquad_d2 _hp[2][2];
     TapDistortion _dist[2];
+    VUMeter _meter;
 public:
     EffectFIR();
     bool EffectRun(Buffer *out_buffer,
                    Buffer **in_buffer_set,
                    int buffer_count);
     void PropertyChanged(PropertyBase *property);
+    bool BufferConfigChange(BufferConfig *config);
     Vrok::ComponentType ComponentType()
     {
         return Vrok::ComponentType::Effect;
+    }
+    VUMeters GetMeters()
+    {
+        VUMeters meters;
+        meters.push_back(&_meter);
+        return meters;
     }
     Component *CreateSelf()
     {

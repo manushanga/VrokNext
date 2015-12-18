@@ -35,16 +35,16 @@ bool Vrok::DriverAudioOut::BufferConfigChange(BufferConfig *config)
 
         _ao_device=ao_open_live(ao_default_driver_id(),&sformat,NULL);
 
-        DBG("o "<<config->channels);
+        DBG(1,"o "<<config->channels);
 
-        DBG("o "<<config->samplerate);
+        DBG(1,"o "<<config->samplerate);
     }
     return true;
 }
 bool Vrok::DriverAudioOut::DriverRun(Buffer *buffer)
 {
     //DBG(buffer);
-    DBG("arrival: "<<buffer->GetWatch().Stop());
+    DBG(6,"arrival: "<<buffer->GetWatch().Stop());
 
     uint16_t cbuf[8192*4];
 
@@ -59,5 +59,10 @@ bool Vrok::DriverAudioOut::DriverRun(Buffer *buffer)
 
 
     return true;
+}
+
+void Vrok::DriverAudioOut::setVolume(double volume)
+{
+
 }
 
