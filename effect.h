@@ -19,16 +19,16 @@
 #pragma once
 
 #include "bgpoint.h"
+#include "vumeter.h"
 
 namespace Vrok {
-class VUMeter;
 class Effect : public BufferGraph::Point, public Component
 {
 private:
 protected:
     atomic<bool> _work;
 public:
-    typedef std::vector<VUMeter *> VUMeters;
+
     Effect();
     virtual ~Effect() {}
     virtual bool EffectRun(Buffer *out_buffer,
@@ -36,9 +36,9 @@ public:
                            int buffer_count)=0;
     virtual bool BufferConfigChange(BufferConfig *config) {}
     void Run();
-    VUMeters GetMeters()
+    std::vector<VUMeter *> GetMeters()
     {
-        return VUMeters();
+        return std::vector<VUMeter *>();
     }
 };
 }

@@ -41,7 +41,9 @@ SOURCES += main.cpp \
     alsa.cpp \
     notify.cpp \
     vumeter.cpp \
-    disp.cpp
+    disp.cpp \
+    common.cpp \
+    py_exposer.cpp
 
 HEADERS += \
     threadpool.h \

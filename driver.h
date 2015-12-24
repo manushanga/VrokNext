@@ -19,6 +19,7 @@
 #pragma once
 
 #include "bgpoint.h"
+#include "vumeter.h"
 
 namespace Vrok {
 
@@ -28,12 +29,15 @@ namespace Vrok {
         atomic<bool> _new_resource;
     protected:
         atomic<bool> _work;
+        atomic<double> _volume;
+        VUMeter _meter;
     public:
         Driver();
         virtual ~Driver() {}
         virtual bool BufferConfigChange(BufferConfig *config)=0;
-        virtual bool DriverRun(Buffer *buffer)=0;
-        virtual void setVolume(double volume) = 0;
+        virtual bool DriverRun(Buffer *buffer) = 0;
+        virtual void SetVolume(double volume);
+        virtual std::vector<VUMeter *> GetMeters();
         void Run();
 
         // volume in decibels

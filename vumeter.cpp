@@ -1,10 +1,13 @@
 #include <cmath>
+#include <tuple>
 
 #include "vumeter.h"
 
-Vrok::VUMeter::VUMeter() :
+Vrok::VUMeter::VUMeter(std::string name) :
+    _name(name),
     _falloff(0),
-    _clip_falloff(0)
+    _clip_falloff(0),
+    _active(true)
 {
     for (int i=0;i<MAX_CHANNELS;++i)
     {
@@ -12,6 +15,22 @@ Vrok::VUMeter::VUMeter() :
         _clip[i] = 0;
         _count_over[i] = 0;
     }
+}
+
+void Vrok::VUMeter::GetValues(int channel, double &value, double &clip)
+{
+    value = _value[channel];
+    clip = _clip[channel];
+}
+
+double Vrok::VUMeter::GetValue(int channel)
+{
+    return _value[channel].load();
+}
+
+double Vrok::VUMeter::GetClip(int channel)
+{
+    return _clip[channel].load();
 }
 
 void Vrok::VUMeter::Process(Buffer *buffer)
@@ -30,6 +49,8 @@ void Vrok::VUMeter::Process(Buffer *buffer)
         Sanitize(clip);
         _clip[ch] = clip;
 
+        if (!_active)
+            continue;
 
         for (int i=0;i<bc->frames;++i)
         {

@@ -11,7 +11,6 @@ void Vrok::Effect::Run()
 {
     int len=GetBufferConfig()->channels * GetBufferConfig()->frames;
 
-
     auto buffers=PeakAllSources();
     if (buffers)
     {

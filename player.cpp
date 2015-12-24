@@ -9,10 +9,10 @@ Vrok::Player::Player() :
     _command_queue(new Queue<Command>(5)),
     _command_now_queue(new Queue<Command>(5)),
     _decoder_work(false),
-    _callback(nullptr),
-    _paused(false)
+    _events(nullptr),
+    _paused(false),
+    _decoder(nullptr)
 {
-    _decoder = NULL;
 }
 
 bool Vrok::Player::SubmitForPlayback(Vrok::Decoder *decoder)
@@ -60,11 +60,9 @@ bool Vrok::Player::Skip()
     return true;
 }
 
-void Vrok::Player::SetNextTrackCallback(Vrok::Player::NextTrackCallback callback, void *user)
+void Vrok::Player::SetEvents(Vrok::Player::Events *events)
 {
-
-    _callback = callback;
-    _callback_user = user;
+    _events = events;
 }
 
 void Vrok::Player::Run()
@@ -97,14 +95,14 @@ void Vrok::Player::Run()
             _paused=false;
         } else if (cmd.type == SKIP)
         {
-            if (_callback)
-                _callback(_callback_user);
+            if (_events)
+                _events->QueueNext();
         }
     }
     else if (!_decoder)
     {
-        if (_callback)
-            _callback(_callback_user);
+        if (_events)
+            _events->QueueNext();
     }
 
     if (_decoder && !_paused)
@@ -125,7 +123,6 @@ void Vrok::Player::Run()
             if (!_decoder_work)
             {
                 _decoder->Close();
-                delete _decoder;
                 _decoder = NULL;
             }
             PushBuffer(b);

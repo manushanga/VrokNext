@@ -257,12 +257,9 @@ void process(QString query)
     } else if (command.compare("vol")==0)
     {
         auto vol =query.section(' ',1).toDouble();
-        out->setVolume(vol);
+        out->SetVolume(vol);
     } else if (command.compare("q")==0){
         exit(0);
-    } else if (command.compare("v")==0)
-    {
-        std::cout<<pFIR->GetMeters()[0]->GetValue(0)<<std::endl;
     }
     else
     {
@@ -351,6 +348,8 @@ int main(int argc, char *argv[])
     Disp disp(pFIR->GetMeters()[0]);
     disp.show();
 
+    Disp disp1(out->GetMeters()[0]);
+    disp1.show();
     a.exec();
 
     pool.JoinThreads();

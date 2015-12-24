@@ -4,12 +4,18 @@
 
 #define PERIOD_SIZE 128
 
-#define DB_TO_A(__db) (std::pow(2,(__db/10.0)))
+#define X32MUL ( (1U<<31) -1 )
+#define X24MUL ( (1U<<23) -1 )
+#define X16MUL ( (1U<<15) -1 )
+#define X8MUL ( (1U<<7) -1 )
+
+#define X24_GETI(buffer, i) ( (char*) buffer )[i*3]
+#define X24_WRITE(buffer, i, X32) memcpy( &(X24_GETI(buffer, i)), &(X32), 3 )
 
 Vrok::DriverAlsa::DriverAlsa() :
     _handle(nullptr),
     _params(nullptr),
-    _volume(1.0)
+    _buffer(nullptr)
 {
 }
 
@@ -41,32 +47,42 @@ bool Vrok::DriverAlsa::BufferConfigChange(BufferConfig *config)
     snd_pcm_format_mask_alloca(&mask);
     snd_pcm_hw_params_get_format_mask(_params, mask);
 
+    if (_buffer)
+    {
+        delete[] _buffer;
+        _buffer = nullptr;
+    }
+
     if (snd_pcm_format_mask_test(mask, SND_PCM_FORMAT_S32))
     {
         DBG(1,"bit depth is 32");
         snd_pcm_hw_params_set_format(_handle, _params, SND_PCM_FORMAT_S32);
-        _multiplier = (1<<31) -1 ;
+        _buffer = new char[ 4 * config->frames * config->channels ];
+        _multiplier = X32MUL;
     }
     else if (snd_pcm_format_mask_test(mask, SND_PCM_FORMAT_S24))
     {
         DBG(1,"bit depth is 24");
         snd_pcm_hw_params_set_format(_handle, _params, SND_PCM_FORMAT_S24);
-        _multiplier = (1<<23) -1;
+        _buffer = new char[ 3 * config->frames * config->channels ];
+        _multiplier = X24MUL;
     }
     else if (snd_pcm_format_mask_test(mask, SND_PCM_FORMAT_S16))
     {
         DBG(1,"bit depth is 16");
         snd_pcm_hw_params_set_format(_handle, _params, SND_PCM_FORMAT_S16);
-        _multiplier = (1<<15) -1;
+        _buffer = new char[ 2 * config->frames * config->channels ];
+        _multiplier = X16MUL;
     }
     else if (snd_pcm_format_mask_test(mask, SND_PCM_FORMAT_S8))
     {
         DBG(1,"bit depth is 8");
         snd_pcm_hw_params_set_format(_handle, _params, SND_PCM_FORMAT_S8);
-        _multiplier = (1<<7) -1;;
+        _buffer = new char[ 1 * config->frames * config->channels ];
+        _multiplier = X8MUL;
     } else
     {
-        throw std::runtime_error("unsupported native format");
+        throw std::runtime_error("unsupported native hardware format");
     }
 
     snd_pcm_hw_params_set_channels(_handle, _params, config->channels);
@@ -90,11 +106,59 @@ bool Vrok::DriverAlsa::DriverRun(Buffer *buffer)
     int ret;
     int ibuffer[8192*8];
     int frames = buffer->GetBufferConfig()->frames * buffer->GetBufferConfig()->channels;
-    for(int i=0;i< frames;i++)
+
+    switch (_multiplier)
     {
-        ibuffer[i] = buffer->GetData()[i] * _multiplier * _volume;
+    case X32MUL:
+    {
+        int32_t *ibuffer = (int32_t *) _buffer;
+        for (int i=0;i< frames;i++)
+        {
+            double val = buffer->GetData()[i];
+            Vrok::Clip(val,-1.0,1.0);
+            ibuffer[i] = val * _multiplier;
+        }
+        break;
     }
-    ret = snd_pcm_writei(_handle, ibuffer, buffer->GetBufferConfig()->frames);
+    case X24MUL:
+    {
+
+        for (int i=0;i< frames;i++)
+        {
+            double val = buffer->GetData()[i];
+            Vrok::Clip(val,-1.0,1.0);
+            int ival = val * _multiplier;
+            X24_WRITE(_buffer, i, ival);
+        }
+        break;
+    }
+    case X16MUL:
+    {
+        int16_t *ibuffer = (int16_t *) _buffer;
+        for (int i=0;i< frames;i++)
+        {
+            double val = buffer->GetData()[i];
+            Vrok::Clip(val,-1.0,1.0);
+            ibuffer[i] = val * _multiplier;
+        }
+        break;
+    }
+    case X8MUL:
+    {
+        int8_t *ibuffer = (int8_t *) _buffer;
+        for (int i=0;i< frames;i++)
+        {
+            double val = buffer->GetData()[i];
+            Vrok::Clip(val,-1.0,1.0);
+            ibuffer[i] = val * _multiplier;
+        }
+        break;
+    }
+    default:
+        throw std::runtime_error("invalid hardware format");
+    }
+
+    ret = snd_pcm_writei(_handle, _buffer, buffer->GetBufferConfig()->frames);
 
     if (ret == -EPIPE || ret == -EINTR || ret == -ESTRPIPE)
     {
@@ -110,9 +174,3 @@ bool Vrok::DriverAlsa::DriverRun(Buffer *buffer)
 
     return true;
 }
-
-void Vrok::DriverAlsa::setVolume(double volume)
-{
-    _volume = DB_TO_A(volume);
-}
-

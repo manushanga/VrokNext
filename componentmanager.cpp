@@ -54,11 +54,21 @@ Vrok::Component *Vrok::ComponentManager::GetComponent(string component)
     }
 }
 
-void Vrok::ComponentManager::SetProperty(Vrok::Component *component, PropertyBase *property, void *data)
+void Vrok::ComponentManager::SetProperty(Vrok::Component *component, PropertyBase *property, string value)
 {
-
-    property->Set(data);
-
+    if (property->GetType() == PropertyType::FLT)
+    {
+        float val = atof(value.c_str());
+        property->Set(&val);
+    } else if (property->GetType() == PropertyType::DBL)
+    {
+        double val = atof(value.c_str());
+        property->Set(&val);
+    } else if (property->GetType() == PropertyType::INT)
+    {
+        int val = atoi(value.c_str());
+        property->Set(&val);
+    }
     component->PropertyChanged(property);
 
 }

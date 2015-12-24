@@ -13,11 +13,16 @@ class VUMeter
     std::atomic<double> _value[MAX_CHANNELS];
     int _count_over[MAX_CHANNELS];
     double _falloff, _clip_falloff;
+    std::atomic<bool> _active;
+    std::string _name;
 public:
-    VUMeter();
-    double GetValue(int channel) { return _value[channel]; }
-    double GetClipping(int channel) { return _clip[channel]; }
+    VUMeter(std::string name);
+    void GetValues(int channel, double& value, double& clip);
+    double GetValue(int channel);
+    double GetClip(int channel);
     void Process(Buffer *buffer);
     void SetBufferConfig(BufferConfig *bc);
+    void SetActive(bool active) { _active = active; }
+    bool GetActive() { return _active; }
 };
 }

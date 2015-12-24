@@ -41,7 +41,8 @@ public:
                           std::string propertyname,
                           PropertyBase *property);
     Component *GetComponent(std::string component);
-    void SetProperty(Component *component, PropertyBase *property, void *data);
+    void SetProperty(Component *component, PropertyBase *property, std::string value);
+
     PropertyBase *GetProperty(Component *component, std::string prop_name);
 
     ~ComponentManager();

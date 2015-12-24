@@ -47,9 +47,9 @@ public:
     {
         return Vrok::ComponentType::Effect;
     }
-    VUMeters GetMeters()
+    std::vector<VUMeter *> GetMeters()
     {
-        VUMeters meters;
+        std::vector<VUMeter *> meters;
         meters.push_back(&_meter);
         return meters;
     }

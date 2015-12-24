@@ -61,7 +61,7 @@ bool Vrok::DriverAudioOut::DriverRun(Buffer *buffer)
     return true;
 }
 
-void Vrok::DriverAudioOut::setVolume(double volume)
+void Vrok::DriverAudioOut::SetVolume(double volume)
 {
 
 }

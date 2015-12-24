@@ -35,13 +35,13 @@ namespace Vrok {
         uint32_t _multiplier;
         snd_pcm_t *_handle;
         snd_pcm_hw_params_t *_params;
+        char *_buffer;
     protected:
     public:
         DriverAlsa();
         virtual ~DriverAlsa() {}
         bool BufferConfigChange(BufferConfig *config);
         bool DriverRun(Buffer *buffer);
-        void setVolume(double volume);
         Vrok::ComponentType ComponentType()
         {
             return Vrok::ComponentType::Driver;

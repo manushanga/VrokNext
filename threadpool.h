@@ -25,8 +25,10 @@
 
 #include "runnable.h"
 
-
 using namespace std;
+
+namespace Vrok
+{
 class ThreadPool
 {
 private:
@@ -58,3 +60,4 @@ public:
 
     static void Work(ThreadData *th);
 };
+}

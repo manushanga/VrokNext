@@ -36,7 +36,7 @@ namespace Vrok {
         virtual ~DriverAudioOut() {}
         bool BufferConfigChange(BufferConfig *config);
         bool DriverRun(Buffer *buffer);
-        void setVolume(double volume);
+        void SetVolume(double volume);
         Vrok::ComponentType ComponentType()
         {
             return Vrok::ComponentType::Driver;

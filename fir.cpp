@@ -39,10 +39,9 @@ sampling frequency: 2000 Hz
 */
 
 #define FIR_LEN 90
-#define CLIP(x) ((x>1.0f)?1.0f:(x<-1.0f?-1.0f:x))
-
 
 Vrok::EffectFIR::EffectFIR() :
+    _meter("out"),
     _buffer(new float[(FIR_LEN+GetBufferConfig()->frames)* GetBufferConfig()->channels])
 {
     int len=(FIR_LEN+GetBufferConfig()->frames)* GetBufferConfig()->channels;
@@ -121,10 +120,8 @@ bool Vrok::EffectFIR::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int 
             proc_out[i] = _dist[i].process(proc_out[i]);
 
             proc_out[i] = _lp[i][2].process(_lp[i][3].process(proc_out[i]));
-//            proc_out[i] = _hp[i][0].process(_hp[i][1].process(proc_out[i]));
 
-
-            proc_out[i] = CLIP((proc_out[i]*_f32_wet_vol + proc[i])*_f32_dry_vol);
+            proc_out[i] = (proc_out[i]*_f32_wet_vol + proc[i])*_f32_dry_vol;
         }
         proc+=bc->channels;
         proc_out+=bc->channels;

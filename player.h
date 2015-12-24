@@ -34,7 +34,12 @@ namespace Vrok {
     class Player : public BufferGraph::Point, public Component
     {
     public:
-        typedef void (*NextTrackCallback)(void *user);
+        class Events
+        {
+        public:
+            virtual void QueueNext() = 0;
+        };
+
     private:
         enum CommandType {OPEN, PAUSE, RESUME, STOP, SEEK, SKIP};
         struct Command
@@ -45,19 +50,23 @@ namespace Vrok {
         atomic<bool> _new_resource;
         bool _paused;
     protected:
+
         atomic<bool> _work;
         bool _decoder_work;
-        NextTrackCallback _callback;
-        void *_callback_user;
+        Events *_events;
         // _play_queue: queue tracks needed to be played
         // one after other here
         // _play_now_queue: queue tracks will interrupt
         // the playback here
 
         Queue<Command> *_command_queue, *_command_now_queue;
-    public:
+
         Decoder *_decoder;
+
+
+    public:
         Player();
+
         virtual ~Player() {}
 
         // before submission to a decoder instance the track
@@ -71,7 +80,7 @@ namespace Vrok {
         bool Pause();
         bool Stop();
         bool Skip();
-        void SetNextTrackCallback(NextTrackCallback callback, void *user);
+        void SetEvents(Events *events);
 
         void Run();
 

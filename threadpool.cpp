@@ -1,6 +1,6 @@
 #include "threadpool.h"
 #include "debug.h"
-ThreadPool::ThreadPool(size_t thread_count)
+Vrok::ThreadPool::ThreadPool(size_t thread_count)
 {
 
     _runnables.resize(thread_count);
@@ -8,7 +8,7 @@ ThreadPool::ThreadPool(size_t thread_count)
     _thread_data.resize(thread_count);
 }
 
-bool ThreadPool::RegisterWork(size_t thread_id, Runnable *runnable)
+bool Vrok::ThreadPool::RegisterWork(size_t thread_id, Runnable *runnable)
 {
     if (thread_id < _runnables.size())
     {
@@ -19,7 +19,7 @@ bool ThreadPool::RegisterWork(size_t thread_id, Runnable *runnable)
         return false;
     }
 }
-void ThreadPool::CreateThreads()
+void Vrok::ThreadPool::CreateThreads()
 {
     for (size_t i=0;
          i<_threads.size();
@@ -35,7 +35,7 @@ void ThreadPool::CreateThreads()
         _threads[i] =new thread(ThreadPool::Work, th);
     }
 }
-void ThreadPool::StopThreads()
+void Vrok::ThreadPool::StopThreads()
 {
     for (size_t i=0;
          i<_threads.size();
@@ -45,7 +45,7 @@ void ThreadPool::StopThreads()
     }
 }
 
-void ThreadPool::JoinThreads()
+void Vrok::ThreadPool::JoinThreads()
 {
     for (size_t i=0;
          i<_threads.size();
@@ -56,7 +56,7 @@ void ThreadPool::JoinThreads()
 }
 
 
-ThreadPool::~ThreadPool()
+Vrok::ThreadPool::~ThreadPool()
 {
     for (size_t i=0;i<_threads.size();i++)
     {
@@ -65,7 +65,7 @@ ThreadPool::~ThreadPool()
     }
 }
 
-void ThreadPool::Work(ThreadData *th)
+void Vrok::ThreadPool::Work(ThreadData *th)
 {
 
     for (size_t i=0;i<(*th->runnables)[th->thread_id].size();i++)

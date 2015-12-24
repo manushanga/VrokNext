@@ -34,6 +34,15 @@ namespace Vrok {
     const int MAX_CHANNELS=8;
 
     template<typename T>
+    void Clip(T& value, T low, T high)
+    {
+        if (value < low)
+            value = low;
+        else if (value > high)
+            value = high;
+    }
+
+    template<typename T>
     inline T SmallValue() {
         return 0;
     }
