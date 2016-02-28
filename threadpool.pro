@@ -42,8 +42,7 @@ SOURCES += main.cpp \
     notify.cpp \
     vumeter.cpp \
     disp.cpp \
-    common.cpp \
-    py_exposer.cpp
+    common.cpp
 
 HEADERS += \
     threadpool.h \

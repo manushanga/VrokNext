@@ -93,6 +93,12 @@ BOOST_PYTHON_MODULE(vrok)
     class_<Vrok::Property<double>,bases<Vrok::PropertyBase>, boost::noncopyable>("PropertyDouble",boost::python::init<>());
     class_<Vrok::Property<int>,bases<Vrok::PropertyBase>, boost::noncopyable>("PropertyInteger",boost::python::init<>());
 
+    class_<Vrok::Driver::DeviceInfo, boost::noncopyable>("DeviceInfo", boost::python::no_init)
+            .def_readonly("name", &Vrok::Driver::DeviceInfo::name);
+
+    class_<std::vector<Vrok::Driver::DeviceInfo>>("DeviceInfoList")
+            .def(vector_indexing_suite<std::vector<Vrok::Driver::DeviceInfo>>());
+
     class_<Vrok::ComponentManager,boost::noncopyable >("ComponentManager", boost::python::no_init)
             .def("GetSingleton", &Vrok::ComponentManager::GetSingleton, return_value_policy<reference_existing_object>())
             .def("GetComponent", &Vrok::ComponentManager::GetComponent, return_value_policy<reference_existing_object>())
@@ -141,8 +147,10 @@ BOOST_PYTHON_MODULE(vrok)
             .def("Flush", &Vrok::DriverAlsa::Flush)
             .def("GetMeters", &Vrok::DriverAlsa::GetMeters)
             .def("Preallocate",&Vrok::Player::Preallocate)
-            .def("RegisterSource", &Vrok::DriverAlsa::RegisterSource);
-
+            .def("RegisterSource", &Vrok::DriverAlsa::RegisterSource)
+            .def("SetDevice", &Vrok::DriverAlsa::SetDevice)
+            .def("GetDeviceInfo", &Vrok::DriverAlsa::GetDeviceInfo)
+            .def("GetDefaultDevice", &Vrok::DriverAlsa::GetDefaultDevice);
 
 //    class_<Vrok::VUMeter>("VUMeter");
 

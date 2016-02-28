@@ -15,8 +15,47 @@
 Vrok::DriverAlsa::DriverAlsa() :
     _handle(nullptr),
     _params(nullptr),
-    _buffer(nullptr)
+    _buffer(nullptr),
+    _device("default")
 {
+}
+
+bool Vrok::DriverAlsa::SetDevice(string device)
+{
+    _device = device;
+}
+
+std::vector<Vrok::Driver::DeviceInfo> Vrok::DriverAlsa::GetDeviceInfo()
+{
+    std::vector<DeviceInfo> info;
+    char **hints;
+    /* Enumerate sound devices */
+    int err = snd_device_name_hint(-1, "pcm", (void***)&hints);
+
+    if (err != 0)
+       return info;
+
+    char** n = hints;
+    while (*n != NULL) {
+
+        char *name = snd_device_name_get_hint(*n, "NAME");
+
+        if (name != NULL && 0 != strcmp("null", name)) {
+            DeviceInfo devinfo;
+            devinfo.name = std::string(name);
+            devinfo.user_data = (void*) (*n);
+            info.push_back(devinfo);
+            free(name);
+        }
+        n++;
+    }
+    snd_device_name_free_hint((void**)hints);
+    return info;
+}
+
+string Vrok::DriverAlsa::GetDefaultDevice()
+{
+    return "default";
 }
 
 bool Vrok::DriverAlsa::BufferConfigChange(BufferConfig *config)
@@ -28,7 +67,7 @@ bool Vrok::DriverAlsa::BufferConfigChange(BufferConfig *config)
         _handle = nullptr;
         _params = nullptr;
     }
-    if (snd_pcm_open(&_handle, "default", SND_PCM_STREAM_PLAYBACK, 0) < 0)
+    if (snd_pcm_open(&_handle, _device.c_str(), SND_PCM_STREAM_PLAYBACK, 0) < 0)
     {
         throw std::runtime_error("Alsa:init: failed to open pcm");
     }

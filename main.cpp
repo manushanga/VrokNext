@@ -43,37 +43,43 @@ struct CBData
     Vrok::EffectFIR *pFIR;
     QFileInfoList *list;
 };
-void NextTrack(void *user)
+
+class PlayerEvents : public Vrok::Player::Events
 {
-    CBData *data= (CBData *) user;
-    Vrok::Resource *res = new Vrok::Resource();
-    Vrok::Decoder *decoder = new Vrok::DecoderFFMPEG();
-    std::vector<std::string> files;
-    foreach (QFileInfo f, *(data->list))
+public:
+    CBData data;
+    void QueueNext()
     {
-        if (f.isFile())
+        Vrok::Resource *res = new Vrok::Resource();
+        Vrok::Decoder *decoder = new Vrok::DecoderFFMPEG();
+        std::vector<std::string> files;
+        foreach (QFileInfo f, *(data.list))
         {
-            files.push_back(f.absoluteFilePath().toStdString());
+            if (f.isFile())
+            {
+                files.push_back(f.absoluteFilePath().toStdString());
+            }
+        }
+        if (data.list->size())
+        {
+            std::cout <<"-----------"<<std::endl;
+
+            res->_filename = files[rand() % files.size()];
+            DBG(0,res->_filename);
+
+
+            if (decoder->Open(res))
+            {
+                data.pOut->Flush();
+                data.pSSEQ->Flush();
+                data.player->Flush();
+                data.pFIR->Flush();
+                data.player->SubmitForPlayback(decoder);
+            }
         }
     }
-    if (data->list->size())
-    {
-        std::cout <<"-----------"<<std::endl;
+};
 
-        res->_filename = files[rand() % files.size()];
-        DBG(0,res->_filename);
-
-
-        if (decoder->Open(res))
-        {
-            data->pOut->Flush();
-            data->pSSEQ->Flush();
-            data->player->Flush();
-            data->pFIR->Flush();
-            data->player->SubmitForPlayback(decoder);
-        }
-    }
-}
 class CNotifier : public Vrok::Notify::Notifier
 {
 public:
@@ -187,21 +193,7 @@ void process(QString query)
                                                             prop);
         if (p)
         {
-
-            Vrok::PropertyType ct= p->GetType();
-            switch(ct)
-            {
-            case Vrok::PropertyType::FLT:
-            {
-                float pp=query.section(' ',2,2).toFloat();
-                Vrok::ComponentManager::GetSingleton()->SetProperty(current_comp,p,&pp);
-                break;
-            }
-            default:
-            {
-                WARN(9,"Invalid type");
-            }
-            }
+            Vrok::ComponentManager::GetSingleton()->SetProperty(current_comp,p,query.section(' ',2,2).toStdString());
         } else
         {
             WARN(9,"no property found");
@@ -283,7 +275,7 @@ int main(int argc, char *argv[])
     srand(time(NULL));
 
 
-    ThreadPool pool(2);
+    Vrok::ThreadPool pool(2);
 
     //Vrok::EffectFIR pre1;
     pFIR->RegisterSource(pSSEQ);
@@ -317,8 +309,16 @@ int main(int argc, char *argv[])
     data.pOut = out;
     data.pSSEQ = pSSEQ;
     data.list = &filelist;
+    PlayerEvents events;
+    events.data = data;
+    pl->SetEvents(&events);
+    auto vec = out->GetDeviceInfo();
+    for(int i=0;i<vec.size();i++)
+    {
+        std::cout<<vec[i].name<<std::endl;
 
-
+    }
+    out->SetDevice(vec[0].name);
     if (argc > 1)
     {
         path = QString(argv[1]);
@@ -339,8 +339,7 @@ int main(int argc, char *argv[])
        }
        inputFile.close();
     }
-
-    pl->SetNextTrackCallback(NextTrack, &data);
+;
     pool.CreateThreads();
 
     QApplication a(argc,argv);

@@ -36,10 +36,14 @@ namespace Vrok {
         snd_pcm_t *_handle;
         snd_pcm_hw_params_t *_params;
         char *_buffer;
+        std::string _device;
     protected:
     public:
         DriverAlsa();
         virtual ~DriverAlsa() {}
+        bool SetDevice(string device);
+        std::vector<DeviceInfo> GetDeviceInfo();
+        std::string GetDefaultDevice();
         bool BufferConfigChange(BufferConfig *config);
         bool DriverRun(Buffer *buffer);
         Vrok::ComponentType ComponentType()

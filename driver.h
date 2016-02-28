@@ -32,8 +32,26 @@ namespace Vrok {
         atomic<double> _volume;
         VUMeter _meter;
     public:
+        class DeviceInfo
+        {
+        public:
+            std::string name;
+            void *user_data;
+            bool operator==(const DeviceInfo& device_info)
+            {
+                return name == device_info.name && user_data == device_info.user_data;
+            }
+            bool operator==(DeviceInfo& device_info)
+            {
+                return name == device_info.name && user_data == device_info.user_data;
+            }
+
+        };
         Driver();
         virtual ~Driver() {}
+        virtual std::vector<DeviceInfo> GetDeviceInfo() = 0;
+        virtual std::string GetDefaultDevice() = 0;
+        virtual bool SetDevice(std::string device) = 0;
         virtual bool BufferConfigChange(BufferConfig *config)=0;
         virtual bool DriverRun(Buffer *buffer) = 0;
         virtual void SetVolume(double volume);

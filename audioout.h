@@ -30,10 +30,14 @@ namespace Vrok {
         atomic<bool> _new_resource;
         atomic<double> _volume;
         ao_device *_ao_device;
+        int _device_id;
     protected:
     public:
         DriverAudioOut();
         virtual ~DriverAudioOut() {}
+        std::vector<DeviceInfo> GetDeviceInfo();
+        std::string GetDefaultDevice();
+        bool SetDevice(std::string device);
         bool BufferConfigChange(BufferConfig *config);
         bool DriverRun(Buffer *buffer);
         void SetVolume(double volume);
