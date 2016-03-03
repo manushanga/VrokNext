@@ -67,6 +67,6 @@ Windows & Linux
 Linux - with python support
 ---------------------------
 
-* Execute python3 dir0 [dir1 [dir2 [dir3 [ ... [dirN]]]]] , dirX are directories that the script will search for media
+* Execute python3 testbp.py dir0 [dir1 [dir2 [dir3 [ ... [dirN]]]]] , dirX are directories that the script will search for media
 
 
