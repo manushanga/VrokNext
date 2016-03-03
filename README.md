@@ -56,13 +56,13 @@ Windows & Linux
     band_0 through band_17 = [0.0..inf), default: 1.0
 
 2. FIR filter 
-    Despite the name, currently implements bass enhancer (from Calf plugins for JACK)
+    Despite the name, currently implements a bass enhancer (from Calf plugins for JACK)
     dry_vol = [0.0..inf), default: 1.0, dry signal mix level  
     wet_vol = [0.0..inf), default: 1.0, wet signal mix level  
     blend = [-10.0..10.0), default: 9.0  
     drive = [0.0..10.0), default: 1.0  
     lp_freq = [0.0..20000.0], default: 150.0, low pass frequency  
-    lp_freq = [0.0..20000.0], default: 50.0, high pass frequency  
+    hp_freq = [0.0..20000.0], default: 50.0, high pass frequency  
 
 Linux - with python support
 ---------------------------
