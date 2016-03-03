@@ -1,8 +1,22 @@
+import os, random, sys
 import vrok
 import time
 import threading
 
+def get_file_list(path):
+    list = []
+    for dp, dn, fn in os.walk(path):
+        for f in fn:
+            filepath = os.path.join(dp, f)
+            #print(filepath)
+            if os.path.isfile(filepath) and (f.endswith("mp3") or f.endswith("MP3") or f.endswith("flac")):
+                list.append(filepath)
+    return list
+
 r = vrok.Resource()
+files = []
+for path in sys.argv:
+    files.extend(get_file_list(path))
 
 pl = vrok.Player()
 fir = vrok.EffectFIR()
@@ -27,14 +41,15 @@ th.start()
 
 events = vrok.PlayerEvents()
 def QueueNext():
-    r.filename = "/home/madura/Downloads/Adarayada Me - W.D. Amaradewa ( Official HD Music Video ).mp3"
+    r.filename = random.choice(files)
+    print(r.filename)
     print(dec.Open(r))
     pl.SubmitForPlayback(dec)
     
 events.QueueNext = QueueNext
 
-r.filename = "/home/madura/Downloads/Adarayada Me - W.D. Amaradewa ( Official HD Music Video ).mp3"
-#r.filename = "https://r2---sn-nau-jhcs.googlevideo.com/videoplayback?upn=pgdMfggesK0&expire=1451313458&mm=31&source=youtube&mn=sn-nau-jhcs&mt=1451291823&mv=m&ms=au&fexp=9405348%2C9407169%2C9416126%2C9420452%2C9422596%2C9423236%2C9423662%2C9423715%2C9424114%2C9424822%2C9424988%2C9425222%2C9425362%2C9425637%2C9425978&pl=22&dur=219.057&requiressl=yes&ipbits=0&mime=video%2F3gpp&ip=112.134.98.113&key=yt6&itag=17&id=o-AFxd4Qd10FJbNeeG6rZnLGYD6Dlo2R3_uM1eVvr8Xy4W&initcwndbps=617500&lmt=1394294361048236&signature=809DA56792D8FC26A8FD7AE6D72B6414BDAC4F7E.512E6620600E67592BAF09153BA8ABC7305024D6&sver=3&sparams=dur%2Cid%2Cinitcwndbps%2Cip%2Cipbits%2Citag%2Clmt%2Cmime%2Cmm%2Cmn%2Cms%2Cmv%2Cpl%2Crequiressl%2Csource%2Cupn%2Cexpire&ratebypass=yes"
+r.filename = random.choice(files)
+print(r.filename)
 compman = vrok.ComponentManager.GetSingleton()
 comp = compman.GetComponent("FIR filter:0");
 if (comp != None):
@@ -51,6 +66,7 @@ pl.Preallocate()
 out.Preallocate()
 fir.Preallocate()
 
+out.SetVolume(-10.0)
 pl.SetEvents(events)
 t = vrok.ThreadPool(2)
 
