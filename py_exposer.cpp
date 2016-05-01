@@ -110,7 +110,10 @@ BOOST_PYTHON_MODULE(vrok)
             .def_readwrite("filename", &Vrok::Resource::_filename);
     class_<Vrok::DecoderFFMPEG, bases<Vrok::Decoder>, boost::noncopyable>("DecoderFFMPEG", boost::python::init<>())
             .def("Open",&Vrok::DecoderFFMPEG::Open)
-            .def("Close",&Vrok::DecoderFFMPEG::Close);
+            .def("Close",&Vrok::DecoderFFMPEG::Close)
+            .def("Create",&Vrok::DecoderFFMPEG::Create, return_value_policy<reference_existing_object>())
+            .staticmethod("Create");
+
     class_<Vrok::Player, bases<BufferGraph::Point,Vrok::Component, Runnable>,boost::noncopyable>("Player",boost::python::init<>())
             .def("SubmitForPlayback",&Vrok::Player::SubmitForPlayback)
             .def("Resume",&Vrok::Player::Resume)

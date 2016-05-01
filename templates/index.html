@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jquerymobile/1.4.5/jquery.mobile.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquerymobile/1.4.5/jquery.mobile.min.js"></script>
+<script type="text/javascript">
+/* <![CDATA[ */
+
+
+
+function onSearchTextChange()
+{   
+    $("#song_list").empty()
+    $.getJSON("/find?match="+$("#searchbox").val(),function(data){
+    	$.each(data.result, function(i,data){
+                $("#song_list").append('<li><a href=\"/play/'+data.index+'">'+data.file+'</a></li>');
+    	});
+    	$("#song_list").listview('refresh');
+    });  
+}
+$(document).ready(function(){
+    $("#searchbox").bind("keyup",onSearchTextChange);
+    $("ol").children('li').on('click', function () {
+        var selected_index = $(this).index();
+        alert('Selected Index = ' + selected_index);
+    });
+
+});
+/* ]]> */
+</script>
+
+
+</head>
+<body>
+
+<div data-role="page" id="pageone">
+  <div data-role="main" class="ui-content">
+    <input id="searchbox" class="textbox" style="width:300px">
+    <br/>
+    <br/>
+    <ol data-role="listview" id="song_list">
+    </ol>
+  </div>
+</div> 
+
+</body>
+</html>

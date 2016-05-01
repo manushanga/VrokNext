@@ -56,6 +56,7 @@ namespace Vrok
 class DecoderFFMPEG : public Decoder
 {
 public:
+    static DecoderFFMPEG* Create() { return new DecoderFFMPEG(); }
     DecoderFFMPEG();
     ~DecoderFFMPEG();
     bool Open(Resource *resource);
