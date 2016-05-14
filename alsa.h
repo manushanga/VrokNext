@@ -19,9 +19,10 @@
 #pragma once
 
 #include <unistd.h>
+
+#include <atomic>
+
 #include <alsa/asoundlib.h>
-#include <sys/inotify.h>
-#include <samplerate.h>
 
 #include "driver.h"
 
@@ -31,7 +32,7 @@ namespace Vrok {
     {
     private:
         std::atomic<bool> _play;
-        atomic<double> _volume;
+        std::atomic<double> _volume;
         uint32_t _multiplier;
         snd_pcm_t *_handle;
         snd_pcm_hw_params_t *_params;
@@ -41,7 +42,7 @@ namespace Vrok {
     public:
         DriverAlsa();
         virtual ~DriverAlsa() {}
-        bool SetDevice(string device);
+        bool SetDevice(std::string device);
         std::vector<DeviceInfo> GetDeviceInfo();
         std::string GetDefaultDevice();
         bool BufferConfigChange(BufferConfig *config);
@@ -72,3 +73,4 @@ namespace Vrok {
         }
     };
 }
+

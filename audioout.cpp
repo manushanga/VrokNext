@@ -1,5 +1,7 @@
 #include "audioout.h"
 
+using namespace std;
+
 Vrok::DriverAudioOut::DriverAudioOut() :
     _ao_device(nullptr),
     _volume(0),

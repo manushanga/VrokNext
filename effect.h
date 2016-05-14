@@ -18,6 +18,8 @@
  */
 #pragma once
 
+#include <atomic>
+
 #include "bgpoint.h"
 #include "vumeter.h"
 
@@ -26,7 +28,7 @@ class Effect : public BufferGraph::Point, public Component
 {
 private:
 protected:
-    atomic<bool> _work;
+    std::atomic<bool> _work;
 public:
 
     Effect();

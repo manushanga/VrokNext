@@ -33,158 +33,156 @@
 
 #include "debug.h"
 
-using namespace std;
 template<typename T>
 class Queue
 {
 private:
-    alignas(64) atomic<int> front_,rear_;
-    alignas(64) int g_front_, g_rear_;
-    int size_;
-    T *container;
-    mutex guard;
-    atomic<bool> bpop_,bpush_;
-    condition_variable cv_pop_,cv_push_;
-    const int max_tries=500;
+    alignas(64) std::atomic<int> _front,_rear;
+    alignas(64) int _g_front, _g_rear;
+    int _size;
+    T *_container;
+    std::mutex _guard;
+    std::atomic<bool> _bpop,_bpush;
+    const int _max_tries=500;
     // sleep for some amount of micro seconds
-    const int sleep_for=1000;
+    const int _sleep_for=1000;
 public:
     Queue(int size) :
-        size_(size),
-        bpop_(false),
-        bpush_(false)
+        _size(size),
+        _bpop(false),
+        _bpush(false)
     {
-        g_front_ = front_ = 0;
-        g_rear_ = rear_ = 0;
+        _g_front = _front = 0;
+        _g_rear = _rear = 0;
 
-        container = static_cast<T *>( malloc(sizeof(T)*size) );
+        _container = static_cast<T *>( malloc(sizeof(T)*size) );
 
     }
     int GetSize() const
     {
-        return size_;
+        return _size;
     }
     bool PopLocked(T& t)
     {
-        lock_guard<mutex> ll(guard);
-        if (g_rear_ == g_front_)
+        std::lock_guard<std::mutex> ll(_guard);
+        if (_g_rear == _g_front)
         {
             return false;
         } else {
-            t= container[g_rear_];
-            g_rear_=(g_rear_+1)%size_;
+            t= _container[_g_rear];
+            _g_rear=(_g_rear+1)%_size;
             return true;
         }
 
     }
     bool PeakLocked(T& t)
     {
-        lock_guard<mutex> ll(guard);
-        if (g_rear_ == g_front_)
+        std::lock_guard<std::mutex> ll(_guard);
+        if (_g_rear == _g_front)
         {
             return false;
         } else {
-            t= container[g_rear_];
+            t= _container[_g_rear];
             return true;
         }
 
     }
     bool PushLocked(T t)
     {
-        lock_guard<mutex> ll(guard);
-        int nfront=(g_front_ + 1)%size_;
-        if (nfront == g_rear_)
+        std::lock_guard<std::mutex> ll(_guard);
+        int nfront=(_g_front + 1)%_size;
+        if (nfront == _g_rear)
         {
             return false;
         } else {
-            container[g_front_]=t;
-            g_front_=nfront;
+            _container[_g_front]=t;
+            _g_front=nfront;
             return true;
         }
     }
     bool Peak(T& t)
     {
-        int cr=rear_.load(memory_order_relaxed);
-        if (cr == front_.load(memory_order_acquire))
+        int cr=_rear.load(std::memory_order_relaxed);
+        if (cr == _front.load(std::memory_order_acquire))
         {
             return false;
         }
 
-        t=container[cr];
+        t=_container[cr];
         return true;
 
     }
     bool Pop(T& t)
     {
-        int cr=rear_.load(memory_order_relaxed);
+        int cr=_rear.load(std::memory_order_relaxed);
         //std::cout<<cr<<" "<<cf<<std::endl;
-        if (cr == front_.load(memory_order_acquire))
+        if (cr == _front.load(std::memory_order_acquire))
         {
             return false;
         }
-        t = container[cr];
-        rear_.store((cr+1)%size_,memory_order_release);
+        t = _container[cr];
+        _rear.store((cr+1)%_size,std::memory_order_release);
         return true;
 
 
     }
     bool Push(T t)
     {
-        int cf=front_.load(memory_order_relaxed);
+        int cf=_front.load(std::memory_order_relaxed);
 
-        int new_cf=(cf+1) % size_;
-        if (new_cf == rear_.load(memory_order_acquire)) {
+        int new_cf=(cf+1) % _size;
+        if (new_cf == _rear.load(std::memory_order_acquire)) {
 
             return false;
         }
 
-        container[cf]=t;
-        front_.store(new_cf,memory_order_release);
+        _container[cf]=t;
+        _front.store(new_cf,std::memory_order_release);
 
         return true;
     }
     bool PeakBlocking(T& t)
     {
         int i=0;
-        while (!Peak(t) && i<max_tries) { i++; this_thread::sleep_for(chrono::microseconds(sleep_for +1)); }
+        while (!Peak(t) && i<_max_tries) { i++; std::this_thread::sleep_for(std::chrono::microseconds(_sleep_for +1)); }
 #ifdef DEBUG
         if (i==max_tries) DBG(6,"drop");
 #endif
-        return i<max_tries;
+        return i<_max_tries;
     }
     bool PopBlocking(T& t)
     {
         int i=0;
-        while (!Pop(t) && i<max_tries) {  i++; this_thread::sleep_for(chrono::microseconds(sleep_for));  }
+        while (!Pop(t) && i<_max_tries) {  i++; std::this_thread::sleep_for(std::chrono::microseconds(_sleep_for));  }
 #ifdef DEBUG
         if (i==max_tries) DBG(6,"drop");
 #endif
-        return i<max_tries;
+        return i<_max_tries;
  
     }
     bool PushBlocking(T t)
     {
         int i=0;
-        while (!Push(t) && i<max_tries) {  i++; this_thread::sleep_for(chrono::microseconds(sleep_for -1)); }
+        while (!Push(t) && i<_max_tries) {  i++; std::this_thread::sleep_for(std::chrono::microseconds(_sleep_for -1)); }
 #ifdef DEBUG
         if (i==max_tries) DBG(6,"drop");
 #endif
-        return i<max_tries;
+        return i<_max_tries;
     }
 
 
     void PrintQueue()
     {
-        for (int i=0;i<size_;i++)
+        for (int i=0;i<_size;i++)
         {
-            std::cout<<container[i]<<" ";
+            std::cout<<_container[i]<<" ";
         }
         std::cout<<std::endl;
     }
 
     ~Queue()
     {
-        free(container);
+        free(_container);
     }
 };
 

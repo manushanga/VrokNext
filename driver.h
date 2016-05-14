@@ -26,10 +26,10 @@ namespace Vrok {
     class Driver : public BufferGraph::Point, public Component
     {
     private:
-        atomic<bool> _new_resource;
+        std::atomic<bool> _new_resource;
     protected:
-        atomic<bool> _work;
-        atomic<double> _volume;
+        std::atomic<bool> _work;
+        std::atomic<double> _volume;
         VUMeter _meter;
     public:
         class DeviceInfo

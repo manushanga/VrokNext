@@ -16,8 +16,9 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef PREAMP_H
-#define PREAMP_H
+#pragma once
+
+#include <atomic>
 
 #include "effect.h"
 #include "delaybuffer.h"
@@ -29,7 +30,7 @@ private:
     DelayBuffer<double> delay,delay1;
 
 protected:
-    atomic<bool> _work;
+    std::atomic<bool> _work;
 public:
     EffectPreamp();
     virtual ~EffectPreamp() {}
@@ -38,4 +39,4 @@ public:
                    int buffer_count);
 };
 }
-#endif // PREAMP_H
+

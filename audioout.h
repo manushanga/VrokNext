@@ -18,17 +18,18 @@
  */
 #pragma once
 
-#include "driver.h"
-
+#include <atomic>
 #include <ao/ao.h>
+
+#include "driver.h"
 
 namespace Vrok {
 
     class DriverAudioOut : public Driver
     {
     private:
-        atomic<bool> _new_resource;
-        atomic<double> _volume;
+        std::atomic<bool> _new_resource;
+        std::atomic<double> _volume;
         ao_device *_ao_device;
         int _device_id;
     protected:

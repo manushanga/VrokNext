@@ -90,7 +90,7 @@ Buffer **BufferGraph::Point::PeakAllSources()
                 // give the readers another turn
                 // to get that buffer and check
                 // later
-                this_thread::yield();
+                std::this_thread::yield();
             }
         }
         j++;

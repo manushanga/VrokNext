@@ -1,4 +1,4 @@
-﻿
+
 #include <queue.h>
 #include <thread>
 #include <iostream>
@@ -263,7 +263,7 @@ int main(int argc, char *argv[])
 
 {
     CNotifier notifier;
-    Vrok::Notify::GetInstance()->setNotifier(&notifier);
+    Vrok::Notify::GetInstance()->SetNotifier(&notifier);
 
     pl=new Vrok::Player;
     out= new Vrok::DriverAlsa;

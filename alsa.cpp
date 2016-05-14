@@ -1,4 +1,5 @@
 #include "alsa.h"
+#include "debug.h"
 
 #include <cmath>
 
@@ -20,7 +21,7 @@ Vrok::DriverAlsa::DriverAlsa() :
 {
 }
 
-bool Vrok::DriverAlsa::SetDevice(string device)
+bool Vrok::DriverAlsa::SetDevice(std::string device)
 {
     _device = device;
 }
@@ -53,7 +54,7 @@ std::vector<Vrok::Driver::DeviceInfo> Vrok::DriverAlsa::GetDeviceInfo()
     return info;
 }
 
-string Vrok::DriverAlsa::GetDefaultDevice()
+std::string Vrok::DriverAlsa::GetDefaultDevice()
 {
     return "default";
 }
@@ -69,7 +70,8 @@ bool Vrok::DriverAlsa::BufferConfigChange(BufferConfig *config)
     }
     if (snd_pcm_open(&_handle, _device.c_str(), SND_PCM_STREAM_PLAYBACK, 0) < 0)
     {
-        throw std::runtime_error("Alsa:init: failed to open pcm");
+		WARN(0,"Alsa:init: failed to open pcm");
+		return false;
     }
 /*
     snd_pcm_sw_params_t *swparams;
@@ -121,7 +123,8 @@ bool Vrok::DriverAlsa::BufferConfigChange(BufferConfig *config)
         _multiplier = X8MUL;
     } else
     {
-        throw std::runtime_error("unsupported native hardware format");
+        WARN(0,"unsupported native hardware format");
+		return false;
     }
 
     snd_pcm_hw_params_set_channels(_handle, _params, config->channels);
@@ -130,7 +133,8 @@ bool Vrok::DriverAlsa::BufferConfigChange(BufferConfig *config)
 
     if (snd_pcm_hw_params(_handle, _params) < 0)
     {
-        throw std::runtime_error("Alsa:init: failed to set pcm params");
+		WARN(0,"Alsa:init: failed to set pcm params");
+		return false;
     }
 
     snd_pcm_hw_params_current(_handle, _params);
@@ -194,7 +198,8 @@ bool Vrok::DriverAlsa::DriverRun(Buffer *buffer)
         break;
     }
     default:
-        throw std::runtime_error("invalid hardware format");
+        WARN(0,"invalid hardware format");
+		return false;
     }
 
     ret = snd_pcm_writei(_handle, _buffer, buffer->GetBufferConfig()->frames);
@@ -213,3 +218,5 @@ bool Vrok::DriverAlsa::DriverRun(Buffer *buffer)
 
     return true;
 }
+
+
