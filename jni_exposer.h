@@ -38,4 +38,7 @@ JNIEXPORT void JNICALL Java_com_mx_vrok_VrokServices_createThreads
 JNIEXPORT void JNICALL Java_com_mx_vrok_VrokServices_joinThreads
   (JNIEnv *, jobject);
 
+JNIEXPORT void JNICALL Java_com_mx_vrok_VrokServices_setupCallbacks
+  (JNIEnv *, jobject , jobject);
+
 }

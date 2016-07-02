@@ -14,12 +14,13 @@ public:
     class Events
     {
     public:
-        virtual void OnBuffer(Buffer* buffer) = 0;
+        virtual void OnBuffer(double* buffer) = 0;
         virtual void OnBufferConfigChange(int frames, int samplerate, int channels) = 0;
     };
-    DriverJBufferOut();
+
     std::vector<DeviceInfo> GetDeviceInfo();
     std::string GetDefaultDevice();
+    void SetEvents(Events* events);
     bool SetDevice(std::string device);
     void ThreadStart();
     void ThreadEnd();
@@ -51,6 +52,8 @@ public:
     {
         return "GPL v2";
     }
+private:
+    Events* m_events;
 };
 
 }
