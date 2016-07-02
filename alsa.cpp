@@ -147,7 +147,6 @@ bool Vrok::DriverAlsa::BufferConfigChange(BufferConfig *config)
 bool Vrok::DriverAlsa::DriverRun(Buffer *buffer)
 {
     int ret;
-    int ibuffer[8192*8];
     int frames = buffer->GetBufferConfig()->frames * buffer->GetBufferConfig()->channels;
 
     switch (_multiplier)

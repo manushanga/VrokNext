@@ -26,8 +26,8 @@ public:
         static Notify notify;
         return &notify;
     }
-    void setNotifier(Notifier *notifier) { _notifier = notifier; }
-    void setErrorLevel(int level) { _elevel = level; }
+    void SetNotifier(Notifier *notifier) { _notifier = notifier; }
+    void SetErrorLevel(int level) { _elevel = level; }
     void setWarningLevel(int level) { _wlevel = level; }
     void setDebugLevel(int level) { _dlevel = level; }
     void NotifyError(int level, std::string msg);
@@ -41,3 +41,4 @@ private:
 };
 
 }
+

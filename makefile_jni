@@ -1,0 +1,47 @@
+OBJECTS= \
+    threadpool.o \
+    queue.o \
+    buffer.o \
+    ffmpeg.o \
+    jbufferout.o \
+    bgpoint.o \
+    debug.o \
+    driver.o \
+    audioout.o \
+    effect.o \
+    preamp.o \
+    player.o \
+    fir.o \
+    tapdistortion.o \
+    componentmanager.o \
+    component.o \
+    eq.o \
+    shibatch/equ.o \
+    shibatch/ooura_fft.o \
+    alsa.o \
+    notify.o \
+    vumeter.o \
+    common.o
+JNI_OBJECTS= \
+    jni_exposer.o
+
+CC=gcc
+CXX=g++
+DEFINES=-DDEBUG
+JNI_INCLUDE= -I/usr/lib/jvm/default-java/include -I/usr/lib/jvm/default-java/include/linux
+CFLAGS= -g -O2 -fPIC  -DUSE_OOURA $(JNI_INCLUDE) $(DEFINES)
+CXXFLAGS= -g -O2 -fPIC -std=c++11 -DUSE_OOURA $(JNI_INCLUDE) $(DEFINES)
+LDFLAGS= -shared -lavformat -lavcodec -lavutil -lao -lasound
+JNI_LIBNAME = libvrok_jni.so
+
+$(JNI_LIBNAME): $(OBJECTS)  $(JNI_OBJECTS)
+	$(CC) $(LDFLAGS) $(OBJECTS) $(JNI_OBJECTS)  -o $@
+
+cc_vrok: $(EXECUTABLE)
+
+all: cc_vrok java_test
+	java -Djava.library.path="/home/madura/wrk/threadpool/" -classpath . test
+
+java_test:
+	javac test.java
+        
