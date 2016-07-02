@@ -1,8 +1,8 @@
 #include "jbufferout.h"
 
-Vrok::DriverJBufferOut::DriverJBufferOut()
+void Vrok::DriverJBufferOut::SetEvents(Vrok::DriverJBufferOut::Events *events)
 {
-
+    m_events = events;
 }
 
 std::vector<Vrok::Driver::DeviceInfo> Vrok::DriverJBufferOut::GetDeviceInfo()
@@ -42,10 +42,12 @@ Vrok::DriverJBufferOut::~DriverJBufferOut()
 
 bool Vrok::DriverJBufferOut::BufferConfigChange(BufferConfig *config)
 {
-
+    m_events->OnBufferConfigChange(config->frames, config->samplerate, config->channels);
+    return true;
 }
 
 bool Vrok::DriverJBufferOut::DriverRun(Buffer *buffer)
 {
-
+    m_events->OnBuffer(buffer->GetData());
+    return true;
 }
