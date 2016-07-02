@@ -7,7 +7,6 @@ OBJECTS= \
     bgpoint.o \
     debug.o \
     driver.o \
-    audioout.o \
     effect.o \
     preamp.o \
     player.o \
@@ -31,17 +30,22 @@ DEFINES=-DDEBUG
 JNI_INCLUDE= -I/usr/lib/jvm/default-java/include -I/usr/lib/jvm/default-java/include/linux
 CFLAGS= -g -O2 -fPIC  -DUSE_OOURA $(JNI_INCLUDE) $(DEFINES)
 CXXFLAGS= -g -O2 -fPIC -std=c++11 -DUSE_OOURA $(JNI_INCLUDE) $(DEFINES)
-LDFLAGS= -shared -lavformat -lavcodec -lavutil -lao -lasound
+LDFLAGS= -shared -lavformat -lavcodec -lavutil -lasound
 JNI_LIBNAME = libvrok_jni.so
+
+all: $(JNI_LIBNAME)   javatest 
 
 $(JNI_LIBNAME): $(OBJECTS)  $(JNI_OBJECTS)
 	$(CC) $(LDFLAGS) $(OBJECTS) $(JNI_OBJECTS)  -o $@
 
-cc_vrok: $(EXECUTABLE)
 
-all: cc_vrok java_test
-	java -Djava.library.path="/home/madura/wrk/threadpool/" -classpath . test
+runtest: javatest 
+	java -Djava.library.path="$(shell pwd)" -classpath . test
 
-java_test:
+javatest: test.java
 	javac test.java
-        
+
+clean:
+	rm *.o
+	rm *.so
+	rm *.class
