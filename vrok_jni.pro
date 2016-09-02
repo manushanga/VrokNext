@@ -6,11 +6,13 @@ INCLUDEPATH += \
 HEADERS += \
     jni_exposer.h \
     extern-jni.h \
-    jbufferout.h
+    jbufferout.h \
+    resampler.h
 
 SOURCES += \
     jni_exposer.cpp \
-    jbufferout.cpp
+    jbufferout.cpp \
+    resampler.cpp
 
 SOURCES += \
     com/mx/vrok/VrokServices.java \

@@ -17,7 +17,7 @@
 JavaVM* g_VM=nullptr;
 
 static Vrok::Player *pl=nullptr;
-static Vrok::Driver *out=nullptr;
+static Vrok::DriverJBufferOut *out=nullptr;
 static Vrok::EffectSSEQ *pSSEQ=nullptr;
 static Vrok::EffectFIR *pFIR=nullptr;
 static Vrok::Component *current=nullptr;
@@ -335,4 +335,10 @@ JNIEXPORT void JNICALL Java_com_mx_vrok_VrokServices_joinThreads
 (JNIEnv *, jobject)
 {
     JoinThreads();
+}
+
+JNIEXPORT void JNICALL Java_com_mx_vrok_VrokServices_setSamplerate
+(JNIEnv *, jobject, int samplerate)
+{
+    out->SetOutputSamplerate(samplerate);
 }

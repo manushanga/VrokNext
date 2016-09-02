@@ -10,8 +10,8 @@ public class TestEventCallback implements EventCallback
     
     public void onBuffer(double[] pcm)
     {
-        for (int i=0;i<pcm.length;i++)
-            System.out.println(pcm[i]);
+        //for (int i=0;i<pcm.length;i++)
+        //    System.out.println(pcm[i]);
 
     }
 }

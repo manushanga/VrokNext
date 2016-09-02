@@ -10,6 +10,7 @@ public class VrokServices
     public native void open(String url);
     public native void close();
     public native void setupCallbacks(EventCallback callback);
+    public native void setSamplerate(int samplerate);
     
     public VrokServices(EventCallback callback)
     {

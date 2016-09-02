@@ -11,7 +11,8 @@ class test {
         TestEventCallback tc = new TestEventCallback();
         VrokServices services = new VrokServices(tc);
 
-        services.open("http://104.238.193.114:7034");
+        services.open("/media/madura/Data1/Songs/Video/Hiru Unplugged EP 29 Karunarathna Divulgane _ 2016-07-15.mp4");
+        services.setSamplerate(9000);
         services.createThreads();
         services.joinThreads();
     }

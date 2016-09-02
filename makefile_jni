@@ -30,7 +30,7 @@ DEFINES=-DDEBUG
 JNI_INCLUDE= -I/usr/lib/jvm/default-java/include -I/usr/lib/jvm/default-java/include/linux
 CFLAGS= -g -O2 -fPIC  -DUSE_OOURA $(JNI_INCLUDE) $(DEFINES)
 CXXFLAGS= -g -O2 -fPIC -std=c++11 -DUSE_OOURA $(JNI_INCLUDE) $(DEFINES)
-LDFLAGS= -shared -lavformat -lavcodec -lavutil -lasound
+LDFLAGS= -shared -lavformat -lavcodec -lavutil -lasound -lsamplerate -lao
 JNI_LIBNAME = libvrok_jni.so
 
 all: $(JNI_LIBNAME)   javatest 
