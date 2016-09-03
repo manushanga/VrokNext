@@ -12,7 +12,7 @@ class test {
         VrokServices services = new VrokServices(tc);
 
         services.open("/media/madura/Data1/Songs/Video/Hiru Unplugged EP 29 Karunarathna Divulgane _ 2016-07-15.mp4");
-        services.setSamplerate(22000);
+        services.setSamplerate(48000);
         services.createThreads();
         services.joinThreads();
     }

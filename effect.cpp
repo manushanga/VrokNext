@@ -1,5 +1,6 @@
 #include "effect.h"
 #include <cstring>
+
 Vrok::Effect::Effect() :
     BufferGraph::Point(),
     _input_bc(0,0,0),
@@ -41,5 +42,9 @@ void Vrok::Effect::Run()
         }
 
         ReleaseAllSources(buffers);
+    }
+    else
+    {
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
 }

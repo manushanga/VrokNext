@@ -58,9 +58,12 @@ bool Vrok::Resampler::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int 
     cfg.samplerate = _out_samplerate.Get();
     out_buffer->Reset(&cfg);
 
+    //int len = src->GetBufferConfig()->frames *  src->GetBufferConfig()->channels;
     for (int i=0;i<len;i++)
     {
         out_buffer->GetData()[i] = double(_out_buffer[i]);
+        //out_buffer->GetData()[i] = src->GetData()[i];
+
     }
 
     return true;

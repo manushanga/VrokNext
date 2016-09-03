@@ -54,5 +54,8 @@ void Vrok::Driver::Run()
         _meter.Process(buffers[0]);
         _work=DriverRun(buffers[0]);
         ReleaseAllSources(buffers);
+    } else
+    {
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
 }
