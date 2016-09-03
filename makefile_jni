@@ -20,6 +20,7 @@ OBJECTS= \
     alsa.o \
     notify.o \
     vumeter.o \
+    resampler.o \
     common.o
 JNI_OBJECTS= \
     jni_exposer.o

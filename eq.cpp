@@ -41,25 +41,8 @@ Vrok::EffectSSEQ::EffectSSEQ() :
         _bands[i].Set(0.0);
     }
     _preamp.Set(0.0);
-    
-    BufferConfig *bc=GetBufferConfig();
-    
-    void *params = paramlist_alloc ();
-    float sb_bands_copy[BAR_COUNT];
-    
-    for (int i=0;i<BAR_COUNT;i++){
-        sb_bands_copy[i]=DB_TO_A(_bands[i].Get())* DB_TO_A(_preamp.Get());
-    }
 
-
-    equ_init (&_sb_state, 14, bc->channels);
-
-    equ_makeTable (&_sb_state, sb_bands_copy, params, bc->samplerate);
-    if (_sb_paramsroot)
-        paramlist_free (_sb_paramsroot);
-    _sb_paramsroot = params;
-
-    
+    //BufferConfigChange(GetBufferConfig());
 }
 
 bool Vrok::EffectSSEQ::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int buffer_count)
@@ -88,6 +71,28 @@ void Vrok::EffectSSEQ::PropertyChanged(PropertyBase *property)
     }
 
     equ_makeTable (&_sb_state, sb_bands_copy, params, bc->samplerate);
+    if (_sb_paramsroot)
+        paramlist_free (_sb_paramsroot);
+    _sb_paramsroot = params;
+
+}
+
+bool Vrok::EffectSSEQ::BufferConfigChange(BufferConfig *config)
+{
+    DBG(0,"000000000oo");
+    config->Print();
+    void *params = paramlist_alloc ();
+    float sb_bands_copy[BAR_COUNT];
+
+    for (int i=0;i<BAR_COUNT;i++){
+        sb_bands_copy[i]=DB_TO_A(_bands[i].Get())* DB_TO_A(_preamp.Get());
+    }
+
+    //equ_quit();
+    //equ_clearbuf()
+    equ_init (&_sb_state, 14, config->channels);
+
+    equ_makeTable (&_sb_state, sb_bands_copy, params, config->samplerate);
     if (_sb_paramsroot)
         paramlist_free (_sb_paramsroot);
     _sb_paramsroot = params;

@@ -2,6 +2,8 @@
 #include <cstring>
 Vrok::Effect::Effect() :
     BufferGraph::Point(),
+    _input_bc(0,0,0),
+    _first_run(true),
     _work(true)
 {
 
@@ -9,7 +11,6 @@ Vrok::Effect::Effect() :
 
 void Vrok::Effect::Run()
 {
-    int len=GetBufferConfig()->channels * GetBufferConfig()->frames;
 
     auto buffers=PeakAllSources();
     if (buffers)
@@ -19,17 +20,19 @@ void Vrok::Effect::Run()
         {
             BufferConfig *c=buffers[0]->GetBufferConfig();
 
-            if ((*c) != *buffer->GetBufferConfig())
+            if ( _first_run || (_input_bc != *c))
             {
-               // DBG("xx");
-                SetBufferConfig(c);
-                BufferConfigChange(c);
-                //GetBufferConfig()->Print();
-                buffer->Reset(c);
-                len=c->channels * c->frames;
+                if (BufferConfigChange(c) == false)
+                {
+                    WARN(0,"BufferConfig failed");
+                    return ;
+                }
+                _first_run = false;
+                _input_bc = *c;
             }
+
             buffer->SetStreamId(buffers[0]->GetStreamId());
-            memset(buffer->GetData(),0,len*sizeof(double));
+
             buffer->GetWatch() = buffers[0]->GetWatch();
 
             _work=EffectRun(buffer, buffers, _sources.size());

@@ -100,11 +100,11 @@ bool Vrok::EffectFIR::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int 
     int fir_len=FIR_LEN*bc->channels;
     int len=bc->frames*bc->channels;
 
-    /*for (int i=0;i<len;i++)
+    for (int i=0;i<len;i++)
     {
-        out_buffer->GetData()[i] = CLIP(tap.process(in_buffer_set[0]->GetData()[i]));
-    }*/
-    double *proc=in_buffer_set[0]->GetData();
+        out_buffer->GetData()[i] = (in_buffer_set[0]->GetData()[i]);
+    }
+    /*double *proc=in_buffer_set[0]->GetData();
     double *proc_out=out_buffer->GetData();
     proc_out[0]=proc[0];
     for (int j=0;j<bc->frames;j++) {
@@ -159,7 +159,7 @@ bool Vrok::EffectFIR::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int 
 //    {
 //        _buffer[i]=in_buffer_set[0]->GetData()[bc->frames*bc->channels - fir_len +i];
 //    }
-
+*/
     return true;
 }
 

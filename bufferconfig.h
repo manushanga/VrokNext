@@ -23,7 +23,7 @@ struct BufferConfig
 {
     int frames,channels,samplerate;
 
-    BufferConfig(int frames_=1024, int channels_=2, int samplerate_=48000) :
+    BufferConfig(int frames_=1024, int channels_=2, int samplerate_=44100) :
         frames(frames_),
         channels(channels_),
         samplerate(samplerate_)

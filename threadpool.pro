@@ -42,8 +42,7 @@ SOURCES += main.cpp \
     notify.cpp \
     vumeter.cpp \
     disp.cpp \
-    common.cpp \
-    javabuffer.cpp
+    common.cpp
 
 HEADERS += \
     threadpool.h \
@@ -75,8 +74,7 @@ HEADERS += \
     alsa.h \
     notify.h \
     vumeter.h \
-    disp.h \
-    javabuffer.h
+    disp.h
 
 win32 {
 LIBS        += \

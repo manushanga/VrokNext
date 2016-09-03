@@ -31,6 +31,10 @@ namespace Vrok {
         std::atomic<bool> _work;
         std::atomic<double> _volume;
         VUMeter _meter;
+        BufferConfig _input_bc;
+        bool _first_run;
+
+        const BufferConfig& GetOldBufferConfig() { return _input_bc; }
     public:
         class DeviceInfo
         {

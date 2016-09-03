@@ -1,4 +1,5 @@
-/** EQ frontend for ShibachSuperEQ
+ 
+/** FIR Filter
  * Copyright (C) Madura A.
  *
  * This program is free software; you can redistribute it and/or
@@ -16,28 +17,28 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef SSEQ_H
-#define SSEQ_H
+#pragma once
+
+#include <samplerate.h>
 
 #include "common.h"
 #include "effect.h"
-#include "shibatch/equ.h"
-#include "shibatch/paramlist.hpp"
 
-#define BAR_COUNT 18
 
 namespace Vrok {
-class EffectSSEQ : public Effect
+class Resampler : public Effect
 {
 private:
+    static const int INTERNAL_BUFFER_SIZE = 8192;
 
-    Property<float> _bands[BAR_COUNT];
-    Property<float> _preamp;
-    SuperEqState _sb_state;
-    void *_sb_paramsroot;
+    Property<int> _out_samplerate;
+    SRC_STATE *_current_state;
+    SRC_DATA _sr_data;
 
+    float _buffer[INTERNAL_BUFFER_SIZE];
+    float _out_buffer[INTERNAL_BUFFER_SIZE];
 public:
-    EffectSSEQ();
+    Resampler();
     bool EffectRun(Buffer *out_buffer,
                    Buffer **in_buffer_set,
                    int buffer_count);
@@ -47,21 +48,27 @@ public:
     {
         return Vrok::ComponentType::Effect;
     }
+    std::vector<VUMeter *> GetMeters()
+    {
+        std::vector<VUMeter *> meters;
+        //meters.push_back(&_meter);
+        return meters;
+    }
     Component *CreateSelf()
     {
-        return new EffectSSEQ();
+        return new Resampler();
     }
     const char *ComponentName()
     {
-        return "SSEQ";
+        return "FIR filter";
     }
     const char *Description()
     {
-        return "Shibach Super EQ";
+        return "FIR filter";
     }
     const char *Author()
     {
-        return "Naoki Shibata, Madura A.";
+        return "Madura A.";
     }
     const char *License()
     {
@@ -69,5 +76,3 @@ public:
     }
 };
 }
-
-#endif // SSEQ_H

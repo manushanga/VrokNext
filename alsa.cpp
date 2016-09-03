@@ -61,17 +61,25 @@ std::string Vrok::DriverAlsa::GetDefaultDevice()
 
 bool Vrok::DriverAlsa::BufferConfigChange(BufferConfig *config)
 {
-    if (_handle)
+    config->Print();
+
+    if (GetOldBufferConfig().samplerate != config->samplerate || GetOldBufferConfig().channels != config->channels)
     {
-        snd_pcm_drop(_handle);
-        snd_pcm_close(_handle);
-        _handle = nullptr;
-        _params = nullptr;
-    }
-    if (snd_pcm_open(&_handle, _device.c_str(), SND_PCM_STREAM_PLAYBACK, 0) < 0)
-    {
-		WARN(0,"Alsa:init: failed to open pcm");
-		return false;
+        DBG(0, "alsa: init");
+        if (_handle)
+        {
+            snd_pcm_drop(_handle);
+            snd_pcm_close(_handle);
+            _handle = nullptr;
+            _params = nullptr;
+        }
+        if (snd_pcm_open(&_handle, _device.c_str(), SND_PCM_STREAM_PLAYBACK, 0) < 0)
+        {
+            WARN(0,"alsa:init: failed to open pcm");
+            return false;
+        }
+
+
     }
 /*
     snd_pcm_sw_params_t *swparams;
@@ -127,25 +135,35 @@ bool Vrok::DriverAlsa::BufferConfigChange(BufferConfig *config)
 		return false;
     }
 
-    snd_pcm_hw_params_set_channels(_handle, _params, config->channels);
-    snd_pcm_hw_params_set_rate(_handle, _params, config->samplerate, 0);
-    snd_pcm_hw_params_set_period_size(_handle, _params, PERIOD_SIZE, 0);
-
-    if (snd_pcm_hw_params(_handle, _params) < 0)
+    // do not re initialize for buffer size changes, practically above should
+    // be the same because the device doesn't change runtime
+    if (GetOldBufferConfig().samplerate != config->samplerate || GetOldBufferConfig().channels != config->channels)
     {
-		WARN(0,"Alsa:init: failed to set pcm params");
-		return false;
+
+        snd_pcm_hw_params_set_channels(_handle, _params, config->channels);
+        snd_pcm_hw_params_set_rate(_handle, _params, config->samplerate, 0);
+        snd_pcm_hw_params_set_period_size(_handle, _params, PERIOD_SIZE, 0);
+
+        if (snd_pcm_hw_params(_handle, _params) < 0)
+        {
+            WARN(0,"alsa:init: failed to set pcm params");
+            return false;
+        }
+
+        snd_pcm_hw_params_current(_handle, _params);
+        int dir;
+        unsigned int out_srate;
+        snd_pcm_hw_params_get_rate(_params, &out_srate, &dir);
+
     }
-
-    snd_pcm_hw_params_current(_handle, _params);
-    int dir;
-    //snd_pcm_hw_params_get_rate(_params, &out_srate, &dir);
-
     return true;
 }
 
 bool Vrok::DriverAlsa::DriverRun(Buffer *buffer)
 {
+    assert(_buffer);
+    //buffer->GetBufferConfig()->Print();
+
     int ret;
     int frames = buffer->GetBufferConfig()->frames * buffer->GetBufferConfig()->channels;
 

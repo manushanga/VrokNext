@@ -11,6 +11,7 @@
 #include "preamp.h"
 #include "fir.h"
 #include "eq.h"
+#include "resampler.h"
 #include "threadpool.h"
 #include "componentmanager.h"
 
@@ -18,6 +19,8 @@ JavaVM* g_VM=nullptr;
 
 static Vrok::Player *pl=nullptr;
 static Vrok::DriverJBufferOut *out=nullptr;
+static Vrok::DriverAlsa *outAlsa=nullptr;
+static Vrok::Resampler *pResampler=nullptr;
 static Vrok::EffectSSEQ *pSSEQ=nullptr;
 static Vrok::EffectFIR *pFIR=nullptr;
 static Vrok::Component *current=nullptr;
@@ -132,8 +135,9 @@ void CreateContext()
 
     DBG(0,"Creating Context");
     pl = new Vrok::Player;
-    //out = new Vrok::DriverAlsa;
+    outAlsa = new Vrok::DriverAlsa;
     out = new Vrok::DriverJBufferOut;
+    pResampler = new Vrok::Resampler;
     pSSEQ = new Vrok::EffectSSEQ;
     pFIR = new Vrok::EffectFIR;
     pool = new Vrok::ThreadPool(4);
@@ -178,29 +182,48 @@ void RegisterSink(BufferGraph::Point *parent, BufferGraph::Point *sink)
 void CreateThreads()
 {
     DBG(0,"player");
-    pFIR->RegisterSource(pl);
-    pFIR->RegisterSink(pSSEQ);
+    //pFIR->RegisterSource(pl);
+    //pl->RegisterSink(pFIR);
 
-    pSSEQ->RegisterSource(pFIR);
-    pSSEQ->RegisterSink(out);
+    //pFIR->RegisterSink(pResampler);
+    //pResampler->RegisterSource(pFIR);
 
-    pl->RegisterSink(pFIR);
+    //pSSEQ->RegisterSource(pFIR);
+    //pFIR->RegisterSink(pSSEQ);
 
-    out->RegisterSource(pSSEQ);
+    //pSSEQ->RegisterSink(out);
+    //out->RegisterSource(pSSEQ);
+
+    //outAlsa->RegisterSource(pResampler);
+    //pResampler->RegisterSink(outAlsa);
+
+    pl->RegisterSink(pResampler);
+
+    pResampler->RegisterSource(pl);
+
+    pResampler->RegisterSink(outAlsa);
+    pResampler->RegisterSink(out);
+
+    outAlsa->RegisterSource(pResampler);
+    out->RegisterSource(pResampler);
+
+
 
     DBG(0,"Reg");
 
     out->Preallocate();
     pl->Preallocate();
+    outAlsa->Preallocate();
+    pResampler->Preallocate();
     pSSEQ->Preallocate();
     pFIR->Preallocate();
 
 
     DBG(0,"pre");
     pool->RegisterWork(0,pl);
-    pool->RegisterWork(1,pSSEQ);
-    pool->RegisterWork(2,pFIR);
-    pool->RegisterWork(3,out);
+    pool->RegisterWork(1,pResampler);
+    pool->RegisterWork(2,out);
+    pool->RegisterWork(3,outAlsa);
     DBG(0,"reg");
     //setEvents
     DBG(0,"regxx");
@@ -232,7 +255,9 @@ void DeleteContext()
 {
     delete pl;
     delete out;
+    delete outAlsa;
     delete pSSEQ;
+    delete pResampler;
     delete pool;
     delete pFIR;
 }
@@ -340,5 +365,10 @@ JNIEXPORT void JNICALL Java_com_mx_vrok_VrokServices_joinThreads
 JNIEXPORT void JNICALL Java_com_mx_vrok_VrokServices_setSamplerate
 (JNIEnv *, jobject, int samplerate)
 {
-    out->SetOutputSamplerate(samplerate);
+    Vrok::PropertyBase *p = Vrok::ComponentManager::GetSingleton()->GetProperty(
+                                pResampler,
+                                "output_samplerate"
+                            );
+    Vrok::ComponentManager::GetSingleton()->SetProperty(pResampler, p, std::to_string(samplerate));
+    //out->SetOutputSamplerate(samplerate);
 }

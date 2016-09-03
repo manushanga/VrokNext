@@ -6,7 +6,9 @@ Vrok::Driver::Driver() :
     BufferGraph::Point(),
     _work(true),
     _volume(1.0),
-    _meter("out")
+    _meter("out"),
+    _input_bc(0,0,0),
+    _first_run(true)
 {
 
 }
@@ -29,13 +31,16 @@ void Vrok::Driver::Run()
     if (buffers)
     {
         BufferConfig *c=buffers[0]->GetBufferConfig();
-        //c->Print();
-        //GetBufferConfig()->Print();
-        if (*c!= *GetBufferConfig())
+
+        if ( _first_run || (_input_bc != *c))
         {
-            std::cout<<"---channging conf"<<std::endl;
-            BufferConfigChange(c);
-            SetBufferConfig(c);
+            if (BufferConfigChange(c) == false)
+            {
+                WARN(0,"BufferConfig failed");
+                return ;
+            }
+            _first_run = false;
+            _input_bc = *c;
         }
         // unchecked mixing
         for (size_t i=0;i<_sources.size();i++)
