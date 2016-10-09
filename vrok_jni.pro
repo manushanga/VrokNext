@@ -12,7 +12,8 @@ HEADERS += \
 SOURCES += \
     jni_exposer.cpp \
     jbufferout.cpp \
-    resampler.cpp
+    resampler.cpp \
+    ffmpeg.cpp
 
 SOURCES += \
     com/mx/vrok/VrokServices.java \

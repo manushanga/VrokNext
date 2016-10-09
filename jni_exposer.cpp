@@ -15,6 +15,8 @@
 #include "threadpool.h"
 #include "componentmanager.h"
 
+#include "buffer.h"
+#include "bufferconfig.h"
 JavaVM* g_VM=nullptr;
 
 static Vrok::Player *pl=nullptr;
@@ -29,6 +31,8 @@ static Vrok::ThreadPool *pool=nullptr;
 static jmethodID onBuffer;
 static jmethodID onBufferConfigChange;
 static jobject objEventCallback;
+
+static bool g_withOutputPlayback = false;
 
 class JNIInvoker
 {
@@ -72,7 +76,7 @@ public:
     {}
     void OnBuffer(double* buffer)
     {
-        DBG(0,"onBuffer");
+        DBG(5,"onBuffer");
         assert(m_frames != 0 && m_channels != 0);
         JNIInvoker invoker;
 
@@ -84,10 +88,10 @@ public:
     }
     void OnBufferConfigChange(int frames, int samplerate, int channels)
     {
-        DBG(0,"onBufferConfigChange");
+        DBG(5,"onBufferConfigChange");
         JNIInvoker invoker;
-        DBG(0, invoker.getEnv());
-        DBG(0, frames  << " "<< samplerate <<" "<< channels);
+        DBG(9, invoker.getEnv());
+        DBG(9, frames  << " "<< samplerate <<" "<< channels);
         m_samplerate = samplerate;
         m_frames = frames;
         m_channels = channels;
@@ -140,6 +144,7 @@ void CreateContext()
     pResampler = new Vrok::Resampler;
     pSSEQ = new Vrok::EffectSSEQ;
     pFIR = new Vrok::EffectFIR;
+
     pool = new Vrok::ThreadPool(4);
 
 }
@@ -242,7 +247,59 @@ void SubmitForPlayback(Vrok::Resource *resource)
     dec->Open(resource);
     pl->SubmitForPlayback(dec);
 }
+void PlaySingleThread(Vrok::Resource *resource, bool withOutputPlayback)
+{
+    DBG(0, "single thread mode");
+    Vrok::Decoder* dec = new Vrok::DecoderFFMPEG();
+    dec->Open(resource);
+    BufferConfig bc,bcOld1(0,0,0),bcOld2(0,0,0);
+    dec->GetBufferConfig(&bc);
+    Buffer* b = new Buffer(bc,0);
+    Buffer* bout = new Buffer(bc,0);
 
+    Buffer** barray = new Buffer*[1];
+    bool run = dec->DecoderRun(b, &bc);
+    pResampler->BufferConfigChange(&bc);
+
+    if (withOutputPlayback)
+    {
+        outAlsa->BufferConfigChange(&bc);
+    }
+
+    while (run)
+    {
+        run = dec->DecoderRun(b, &bc);
+        barray[0] = b;
+
+        pResampler->EffectRun(bout, barray, 1);
+
+        if (bcOld1 != *bout->GetBufferConfig())
+        {
+            out->BufferConfigChange(bout->GetBufferConfig());
+            out->SetOldBufferConfig(*bout->GetBufferConfig());
+        }
+        bcOld1 = *bout->GetBufferConfig();
+
+        out->DriverRun(bout);
+
+
+        if (withOutputPlayback)
+        {
+            if (bcOld2 != *bout->GetBufferConfig())
+            {
+                outAlsa->BufferConfigChange(bout->GetBufferConfig());
+                outAlsa->SetOldBufferConfig(*bout->GetBufferConfig());
+            }
+            bcOld2 = *bout->GetBufferConfig();
+
+            outAlsa->DriverRun(bout);
+        }
+
+    }
+    delete b;
+    delete bout;
+    delete[] barray;
+}
 void PausePlayer()
 {
     pl->Pause();
@@ -326,7 +383,21 @@ JNIEXPORT void JNICALL Java_com_mx_vrok_VrokServices_open
     const char *zPath = env->GetStringUTFChars( url , NULL );
     DBG(0, zPath);
     SubmitForPlayback(CreateResource(zPath));
+
     env->ReleaseStringUTFChars(url, zPath);
+
+}
+
+JNIEXPORT void JNICALL Java_com_mx_vrok_VrokServices_openSingleThread
+(JNIEnv *env, jobject th, jstring url, bool withOutputPlayback)
+{
+    const char *zPath = env->GetStringUTFChars( url , NULL );
+    DBG(0, zPath);
+
+    PlaySingleThread(CreateResource(zPath), withOutputPlayback);
+
+    env->ReleaseStringUTFChars(url, zPath);
+
 }
 
 JNIEXPORT void JNICALL Java_com_mx_vrok_VrokServices_setupCallbacks

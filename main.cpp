@@ -31,6 +31,7 @@
 #define BUF_SIZE 100
 
 
+Vrok::ThreadPool pool(2);
 using namespace std;
 using std::chrono::duration_cast;
 using std::chrono::duration;
@@ -50,6 +51,7 @@ public:
     CBData data;
     void QueueNext()
     {
+
         Vrok::Resource *res = new Vrok::Resource();
         Vrok::Decoder *decoder = new Vrok::DecoderFFMPEG();
         std::vector<std::string> files;
@@ -275,7 +277,6 @@ int main(int argc, char *argv[])
     srand(time(NULL));
 
 
-    Vrok::ThreadPool pool(2);
 
     //Vrok::EffectFIR pre1;
     pFIR->RegisterSource(pSSEQ);

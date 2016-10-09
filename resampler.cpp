@@ -79,6 +79,6 @@ bool Vrok::Resampler::BufferConfigChange(BufferConfig *config)
     _sr_data.src_ratio = double(_out_samplerate.Get())/ double(config->samplerate);
     int err=0;
     _current_state = src_new(SRC_SINC_FASTEST, config->channels, &err);
-
+    DBG(0,"asdd"<<_current_state);
     return true;
 }

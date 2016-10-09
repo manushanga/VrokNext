@@ -27,6 +27,7 @@
 namespace Vrok {
 class Decoder : public Component {
 public:
+    virtual ~Decoder() {}
     virtual bool Open(Resource* resource)=0;
     virtual bool GetBufferConfig(BufferConfig *config)=0;
     virtual bool Close()=0;

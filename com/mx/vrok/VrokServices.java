@@ -8,6 +8,7 @@ public class VrokServices
     public native void createThreads();
     public native void joinThreads();
     public native void open(String url);
+    public native void openSingleThread(String url, boolean withOutputPlayback);
     public native void close();
     public native void setupCallbacks(EventCallback callback);
     public native void setSamplerate(int samplerate);

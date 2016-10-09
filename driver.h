@@ -51,6 +51,8 @@ namespace Vrok {
             }
 
         };
+        void SetOldBufferConfig(BufferConfig& config) { _input_bc = config; }
+
         Driver();
         virtual ~Driver() {}
         virtual std::vector<DeviceInfo> GetDeviceInfo() = 0;

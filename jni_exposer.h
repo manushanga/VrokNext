@@ -29,6 +29,9 @@ JNI_OnUnLoad(JavaVM *vm, void *reserved)
 JNIEXPORT void JNICALL Java_com_mx_vrok_VrokServices_open
   (JNIEnv *, jobject, jstring);
 
+JNIEXPORT void JNICALL Java_com_mx_vrok_VrokServices_openSingleThread
+  (JNIEnv *, jobject, jstring, bool);
+
 JNIEXPORT void JNICALL Java_com_mx_vrok_VrokServices_setSamplerate
   (JNIEnv *, jobject, int);
   
