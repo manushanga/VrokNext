@@ -195,12 +195,13 @@ bool Vrok::DecoderFFMPEG::DecoderRun(Buffer *buffer,  BufferConfig *config)
 
 
             // process audio packets
-            DBG(0, "CC"<< packet.buf->size<<" "<< packet.size);
-
             ret = avcodec_decode_audio4(ctx,frame,&got_frame,&packet);
 
             DIE_ON_ERR(ret);
-            av_free_packet(&packet);
+            if (got_frame == 0)
+            {
+                av_free_packet(&packet);
+            }
 
         }
 
@@ -279,7 +280,7 @@ bool Vrok::DecoderFFMPEG::DecoderRun(Buffer *buffer,  BufferConfig *config)
             WARN(9,"Write buffer not enough!");
             return false;
         }
-        //av_free_packet(&packet);
+        av_free_packet(&packet);
     }
 
     return true;
