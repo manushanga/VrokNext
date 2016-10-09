@@ -39,6 +39,7 @@ extern "C" {
 
 #include <libavutil/mathematics.h>
 #include <libavutil/samplefmt.h>
+#include <libavutil/opt.h>
 #include <libavformat/avformat.h>
 #include <libavformat/avio.h>
 #include <libswscale/swscale.h>
@@ -84,7 +85,7 @@ private:
     uint64_t seek_to;
     uint64_t duration_in_seconds;
 
-    int frameFinished,packetFinished;
+    int got_frame,packetFinished;
     int plane_size;
     int vpbuffer_write;
     int vpbuffer_samples;
