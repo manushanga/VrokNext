@@ -16,7 +16,10 @@
 
 #define DIE_ON_ERR(ret) \
     if (ret < 0) \
-        return false;
+    { \
+        DBG(0,"die on "<<__LINE__); \
+        return false; \
+    }
 #define SHORTTOFL (1.0f/32768.0f)
 #define SEEK_MAX 0xFFFFFFFFFFFFFFFFL
 
@@ -54,6 +57,7 @@ Vrok::DecoderFFMPEG::DecoderFFMPEG() :
 Vrok::DecoderFFMPEG::~DecoderFFMPEG()
 {
     Close();
+    delete _ringbuffer;
 }
 
 bool Vrok::DecoderFFMPEG::Open(Vrok::Resource *resource)
@@ -87,9 +91,12 @@ bool Vrok::DecoderFFMPEG::Open(Vrok::Resource *resource)
         return false;
     }
 
+    av_find_best_stream(container, AVMEDIA_TYPE_AUDIO, -1, -1, &codec, 0);
+
     audio_st = container->streams[audio_stream_id];
     ctx=container->streams[audio_stream_id]->codec;
-    codec=avcodec_find_decoder(ctx->codec_id);
+    av_opt_set_int(ctx, "refcounted_frames", 0, 0);
+    //codec=avcodec_find_decoder(ctx->codec_id);
 
     DBG(1,"codec: "<<codec->long_name);
     if(codec==NULL){
@@ -109,7 +116,7 @@ bool Vrok::DecoderFFMPEG::Open(Vrok::Resource *resource)
 
     duration_in_seconds = container->duration / AV_TIME_BASE;
 
-    frameFinished=0;
+    got_frame=0;
     packetFinished=0;
     vpbuffer_write=0;
     temp_write=0;
@@ -166,34 +173,47 @@ bool Vrok::DecoderFFMPEG::Close()
 */
 bool Vrok::DecoderFFMPEG::DecoderRun(Buffer *buffer,  BufferConfig *config)
 {
-    packetFinished = 0;
+
     while (!_ringbuffer->Read(buffer->GetData(),config->channels*config->frames))
     {
-        packetFinished = av_read_frame(container,&packet);
-
-        // eat up video packets!
-        while (packet.stream_index!=audio_stream_id && packetFinished >=0)
-        {
-            av_free_packet(&packet);
-            packetFinished = av_read_frame(container,&packet);
-        }
-
-        DIE_ON_ERR(packetFinished);
-
         int ret=0;
-        // process audio packets
-        ret = avcodec_decode_audio4(ctx,frame,&frameFinished,&packet);
+        got_frame = 0;
+        while (got_frame == 0)
+        {
+            ret = av_read_frame(container,&packet);
 
-        DIE_ON_ERR(ret);
+            DIE_ON_ERR(ret);
+
+            // eat up video packets!
+            while (packet.stream_index!=audio_stream_id && ret == 0)
+            {
+                av_free_packet(&packet);
+                ret = av_read_frame(container,&packet);
+            }
+
+            DIE_ON_ERR(ret);
+
+
+            // process audio packets
+            DBG(0, "CC"<< packet.buf->size<<" "<< packet.size);
+
+            ret = avcodec_decode_audio4(ctx,frame,&got_frame,&packet);
+
+            DIE_ON_ERR(ret);
+            av_free_packet(&packet);
+
+        }
 
         ret = av_samples_get_buffer_size(&plane_size, ctx->channels,
                                             frame->nb_samples,
                                             ctx->sample_fmt, 1);
+
+
         DIE_ON_ERR(ret);
 
         temp_write=0;
 
-        if(frameFinished){
+        if(got_frame){
             current_in_seconds = ( audio_st->time_base.num * frame->pkt_pts )/ audio_st->time_base.den ;
             switch (sfmt){
 
@@ -248,17 +268,18 @@ bool Vrok::DecoderFFMPEG::DecoderRun(Buffer *buffer,  BufferConfig *config)
                    return false;
             }
         } else {
+
             WARN(5,"frame failed");
             return false;
         }
 
         if (!_ringbuffer->Write(temp,temp_write))
         {
+
             WARN(9,"Write buffer not enough!");
             return false;
         }
-
-        av_free_packet(&packet);
+        //av_free_packet(&packet);
     }
 
     return true;

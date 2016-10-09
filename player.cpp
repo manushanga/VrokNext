@@ -123,6 +123,7 @@ void Vrok::Player::Run()
             if (!_decoder_work)
             {
                 _decoder->Close();
+                delete _decoder;
                 _decoder = NULL;
             }
             PushBuffer(b);
