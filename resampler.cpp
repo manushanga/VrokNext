@@ -17,20 +17,29 @@ bool Vrok::Resampler::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int 
     Buffer *src = in_buffer_set[0];
     SRC_DATA data_copy = _sr_data;
 
-    assert(INTERNAL_BUFFER_SIZE >= src->GetBufferConfig()->channels * src->GetBufferConfig()->frames);
+    //assert(INTERNAL_BUFFER_SIZE >= src->GetBufferConfig()->channels * src->GetBufferConfig()->frames);
+
     int len = src->GetBufferConfig()->channels * src->GetBufferConfig()->frames;
+    if (_buffer.size() != len)
+        _buffer.resize(len);
+
+
     for (int i=0;i<len;i++)
     {
         _buffer[i] = float(src->GetData()[i]);
     }
 
-    data_copy.data_in = &_buffer[0];
-    data_copy.data_out = &_out_buffer[0];
 
     data_copy.end_of_input = 0;
     data_copy.output_frames = src->GetBufferConfig()->frames * _sr_data.src_ratio *2;
 
-    assert(INTERNAL_BUFFER_SIZE >= data_copy.output_frames);
+    if (_out_buffer.size() != data_copy.output_frames )
+        _out_buffer.resize(data_copy.output_frames );
+
+    data_copy.data_in = _buffer.data();
+    data_copy.data_out = _out_buffer.data();
+
+    //assert(INTERNAL_BUFFER_SIZE >= data_copy.output_frames);
 
     data_copy.output_frames_gen = 1;
     int out_frames=0;
@@ -50,7 +59,7 @@ bool Vrok::Resampler::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int 
 
 
     len = out_frames * src->GetBufferConfig()->channels;
-    assert( len < INTERNAL_BUFFER_SIZE);
+    //assert( len < INTERNAL_BUFFER_SIZE);
 
     BufferConfig cfg;
     cfg.channels = src->GetBufferConfig()->channels;

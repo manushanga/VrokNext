@@ -29,14 +29,13 @@ namespace Vrok {
 class Resampler : public Effect
 {
 private:
-    static const int INTERNAL_BUFFER_SIZE = 8192;
 
     Property<int> _out_samplerate;
     SRC_STATE *_current_state;
     SRC_DATA _sr_data;
 
-    float _buffer[INTERNAL_BUFFER_SIZE];
-    float _out_buffer[INTERNAL_BUFFER_SIZE];
+    std::vector<float> _buffer;
+    std::vector<float> _out_buffer;
 public:
     Resampler();
     bool EffectRun(Buffer *out_buffer,
