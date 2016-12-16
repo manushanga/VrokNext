@@ -17,12 +17,15 @@
 
 #include "buffer.h"
 #include "bufferconfig.h"
+
+#define MAX_THREADS 32
+
 JavaVM* g_VM=nullptr;
 
-static Vrok::Player *pl=nullptr;
-static Vrok::DriverJBufferOut *out=nullptr;
-static Vrok::DriverAlsa *outAlsa=nullptr;
-static Vrok::Resampler *pResampler=nullptr;
+static Vrok::Player *pPlayer[MAX_THREADS] = {nullptr};
+static Vrok::DriverJBufferOut *pJavaOut[MAX_THREADS] = {nullptr};
+static Vrok::DriverAlsa *pOutAlsa = nullptr;
+static Vrok::Resampler *pResampler[MAX_THREADS] = {nullptr};
 static Vrok::EffectSSEQ *pSSEQ=nullptr;
 static Vrok::EffectFIR *pFIR=nullptr;
 static Vrok::Component *current=nullptr;
@@ -30,7 +33,7 @@ static Vrok::ThreadPool *pool=nullptr;
 
 static jmethodID onBuffer;
 static jmethodID onBufferConfigChange;
-static jobject objEventCallback;
+static jobject objEventCallback[MAX_THREADS];
 
 static bool g_withOutputPlayback = false;
 
@@ -69,14 +72,15 @@ private:
 class CBufferEvents : public Vrok::DriverJBufferOut::Events
 {
 public:
-    CBufferEvents() :
+    CBufferEvents(int thread) :
         m_samplerate(0),
         m_frames(0),
-        m_channels(0)
+        m_channels(0),
+        m_thread(thread)
     {}
     void OnBuffer(double* buffer)
     {
-        DBG(5,"onBuffer");
+        DBG(5,"onBuffer tid:" <<m_thread);
         assert(m_frames != 0 && m_channels != 0);
         JNIInvoker invoker;
 
@@ -84,23 +88,24 @@ public:
         result = invoker.getEnv()->NewDoubleArray(m_frames * m_channels);
 
         invoker.getEnv()->SetDoubleArrayRegion(result, 0, m_frames * m_channels, buffer);
-        invoker.getEnv()->CallVoidMethod(objEventCallback, onBuffer, result);
+        invoker.getEnv()->CallVoidMethod(objEventCallback[m_thread], onBuffer, result);
     }
     void OnBufferConfigChange(int frames, int samplerate, int channels)
     {
-        DBG(5,"onBufferConfigChange");
+        DBG(5,"onBufferConfigChange tid:" <<m_thread);
         JNIInvoker invoker;
         DBG(9, invoker.getEnv());
         DBG(9, frames  << " "<< samplerate <<" "<< channels);
         m_samplerate = samplerate;
         m_frames = frames;
         m_channels = channels;
-        invoker.getEnv()->CallVoidMethod(objEventCallback, onBufferConfigChange, frames, samplerate, channels);
+        invoker.getEnv()->CallVoidMethod(objEventCallback[m_thread], onBufferConfigChange, frames, samplerate, channels);
     }
 private:
     int m_samplerate;
     int m_channels;
     int m_frames;
+    int m_thread;
 };
 class CNotifier : public Vrok::Notify::Notifier
 {
@@ -138,10 +143,10 @@ void CreateContext()
     Vrok::Notify::GetInstance()->SetNotifier(new CNotifier());
 
     DBG(0,"Creating Context");
-    pl = new Vrok::Player;
-    outAlsa = new Vrok::DriverAlsa;
-    out = new Vrok::DriverJBufferOut;
-    pResampler = new Vrok::Resampler;
+    pPlayer[0] = new Vrok::Player;
+    pOutAlsa = new Vrok::DriverAlsa;
+    pJavaOut[0] = new Vrok::DriverJBufferOut;
+    pResampler[0] = new Vrok::Resampler;
     pSSEQ = new Vrok::EffectSSEQ;
     pFIR = new Vrok::EffectFIR;
 
@@ -202,33 +207,33 @@ void CreateThreads()
     //outAlsa->RegisterSource(pResampler);
     //pResampler->RegisterSink(outAlsa);
 
-    pl->RegisterSink(pResampler);
+    pPlayer[0]->RegisterSink(pResampler[0]);
 
-    pResampler->RegisterSource(pl);
+    pResampler[0]->RegisterSource(pPlayer[0]);
 
-    pResampler->RegisterSink(outAlsa);
-    pResampler->RegisterSink(out);
+    pResampler[0]->RegisterSink(pOutAlsa);
+    pResampler[0]->RegisterSink(pJavaOut[0]);
 
-    outAlsa->RegisterSource(pResampler);
-    out->RegisterSource(pResampler);
+    pOutAlsa->RegisterSource(pResampler[0]);
+    pJavaOut[0]->RegisterSource(pResampler[0]);
 
 
 
     DBG(0,"Reg");
 
-    out->Preallocate();
-    pl->Preallocate();
-    outAlsa->Preallocate();
-    pResampler->Preallocate();
+    pJavaOut[0]->Preallocate();
+    pPlayer[0]->Preallocate();
+    pOutAlsa->Preallocate();
+    pResampler[0]->Preallocate();
     pSSEQ->Preallocate();
     pFIR->Preallocate();
 
 
     DBG(0,"pre");
-    pool->RegisterWork(0,pl);
-    pool->RegisterWork(1,pResampler);
-    pool->RegisterWork(2,out);
-    pool->RegisterWork(3,outAlsa);
+    pool->RegisterWork(0,pPlayer[0]);
+    pool->RegisterWork(1,pResampler[0]);
+    pool->RegisterWork(2,pJavaOut[0]);
+    pool->RegisterWork(3,pOutAlsa);
     DBG(0,"reg");
     //setEvents
     DBG(0,"regxx");
@@ -245,9 +250,9 @@ void SubmitForPlayback(Vrok::Resource *resource)
 {
     Vrok::Decoder* dec = new Vrok::DecoderFFMPEG();
     dec->Open(resource);
-    pl->SubmitForPlayback(dec);
+    pPlayer[0]->SubmitForPlayback(dec);
 }
-void PlaySingleThread(Vrok::Resource *resource, bool withOutputPlayback)
+void PlaySingleThread(Vrok::Resource *resource, int thread, bool withOutputPlayback)
 {
     DBG(0, "single thread mode");
     Vrok::Decoder* dec = new Vrok::DecoderFFMPEG();
@@ -259,11 +264,11 @@ void PlaySingleThread(Vrok::Resource *resource, bool withOutputPlayback)
 
     Buffer** barray = new Buffer*[1];
     bool run = dec->DecoderRun(b, &bc);
-    pResampler->BufferConfigChange(&bc);
+    pResampler[thread]->BufferConfigChange(&bc);
 
-    if (withOutputPlayback)
+    if (withOutputPlayback && thread == 0)
     {
-        outAlsa->BufferConfigChange(&bc);
+        pOutAlsa->BufferConfigChange(&bc);
     }
 
     while (run)
@@ -271,28 +276,28 @@ void PlaySingleThread(Vrok::Resource *resource, bool withOutputPlayback)
         run = dec->DecoderRun(b, &bc);
         barray[0] = b;
 
-        pResampler->EffectRun(bout, barray, 1);
+        pResampler[thread]->EffectRun(bout, barray, 1);
 
         if (bcOld1 != *bout->GetBufferConfig())
         {
-            out->BufferConfigChange(bout->GetBufferConfig());
-            out->SetOldBufferConfig(*bout->GetBufferConfig());
+            pJavaOut[0]->BufferConfigChange(bout->GetBufferConfig());
+            pJavaOut[0]->SetOldBufferConfig(*bout->GetBufferConfig());
         }
         bcOld1 = *bout->GetBufferConfig();
 
-        out->DriverRun(bout);
+        pJavaOut[0]->DriverRun(bout);
 
 
-        if (withOutputPlayback)
+        if (withOutputPlayback && thread == 0)
         {
             if (bcOld2 != *bout->GetBufferConfig())
             {
-                outAlsa->BufferConfigChange(bout->GetBufferConfig());
-                outAlsa->SetOldBufferConfig(*bout->GetBufferConfig());
+                pOutAlsa->BufferConfigChange(bout->GetBufferConfig());
+                pOutAlsa->SetOldBufferConfig(*bout->GetBufferConfig());
             }
             bcOld2 = *bout->GetBufferConfig();
 
-            outAlsa->DriverRun(bout);
+            pOutAlsa->DriverRun(bout);
         }
 
     }
@@ -302,19 +307,19 @@ void PlaySingleThread(Vrok::Resource *resource, bool withOutputPlayback)
 }
 void PausePlayer()
 {
-    pl->Pause();
+    pPlayer[0]->Pause();
 }
 void ResumePlayer()
 {
-    pl->Resume();
+    pPlayer[0]->Resume();
 }
 void DeleteContext()
 {
-    delete pl;
-    delete out;
-    delete outAlsa;
+    delete pPlayer[0];
+    delete pJavaOut[0];
+    delete pOutAlsa;
     delete pSSEQ;
-    delete pResampler;
+    delete pResampler[0];
     delete pool;
     delete pFIR;
 }
@@ -389,30 +394,30 @@ JNIEXPORT void JNICALL Java_com_mx_vrok_VrokServices_open
 }
 
 JNIEXPORT void JNICALL Java_com_mx_vrok_VrokServices_openSingleThread
-(JNIEnv *env, jobject th, jstring url, bool withOutputPlayback)
+(JNIEnv *env, jobject th, jstring url, int thread, bool withOutputPlayback)
 {
     const char *zPath = env->GetStringUTFChars( url , NULL );
     DBG(0, zPath);
 
-    PlaySingleThread(CreateResource(zPath), withOutputPlayback);
+    PlaySingleThread(CreateResource(zPath), thread, withOutputPlayback);
 
     env->ReleaseStringUTFChars(url, zPath);
 
 }
 
 JNIEXPORT void JNICALL Java_com_mx_vrok_VrokServices_setupCallbacks
-(JNIEnv *env, jobject th, jobject callback)
+(JNIEnv *env, jobject th, int thread, jobject callback)
 {
     DBG(0,"setting up");
-    objEventCallback = env->NewGlobalRef(callback);
-    jclass cls = (jclass) env->NewGlobalRef( (jobject) env->GetObjectClass(objEventCallback) );// env->GetObjectClass(callback);
+    objEventCallback[thread] = env->NewGlobalRef(callback);
+    jclass cls = (jclass) env->NewGlobalRef( (jobject) env->GetObjectClass(objEventCallback[thread]) );// env->GetObjectClass(callback);
     onBuffer = env->GetMethodID(cls, "onBuffer", "([D)V");
     onBufferConfigChange = env->GetMethodID(cls, "onBufferConfigChange", "(III)V");
 
     DBG(0, "onBuffer "<< (void*) onBuffer);
     DBG(0, "onBufferConfigChange "<< (void*) onBufferConfigChange);
 
-    dynamic_cast<Vrok::DriverJBufferOut*>(out)->SetEvents(new CBufferEvents);
+    dynamic_cast<Vrok::DriverJBufferOut*>(pJavaOut[thread])->SetEvents(new CBufferEvents(thread));
 
 }
 
@@ -434,12 +439,12 @@ JNIEXPORT void JNICALL Java_com_mx_vrok_VrokServices_joinThreads
 }
 
 JNIEXPORT void JNICALL Java_com_mx_vrok_VrokServices_setSamplerate
-(JNIEnv *, jobject, int samplerate)
+(JNIEnv *, jobject, int thread, int samplerate)
 {
     Vrok::PropertyBase *p = Vrok::ComponentManager::GetSingleton()->GetProperty(
-                                pResampler,
+                                pResampler[thread],
                                 "output_samplerate"
                             );
-    Vrok::ComponentManager::GetSingleton()->SetProperty(pResampler, p, std::to_string(samplerate));
+    Vrok::ComponentManager::GetSingleton()->SetProperty(pResampler[thread], p, std::to_string(samplerate));
     //out->SetOutputSamplerate(samplerate);
 }

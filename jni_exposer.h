@@ -30,10 +30,10 @@ JNIEXPORT void JNICALL Java_com_mx_vrok_VrokServices_open
   (JNIEnv *, jobject, jstring);
 
 JNIEXPORT void JNICALL Java_com_mx_vrok_VrokServices_openSingleThread
-  (JNIEnv *, jobject, jstring, bool);
+  (JNIEnv *, jobject, jstring, int, bool);
 
 JNIEXPORT void JNICALL Java_com_mx_vrok_VrokServices_setSamplerate
-  (JNIEnv *, jobject, int);
+  (JNIEnv *, jobject, int, int);
   
 JNIEXPORT void JNICALL Java_com_mx_vrok_VrokServices_close
   (JNIEnv *, jobject);
@@ -45,6 +45,6 @@ JNIEXPORT void JNICALL Java_com_mx_vrok_VrokServices_joinThreads
   (JNIEnv *, jobject);
 
 JNIEXPORT void JNICALL Java_com_mx_vrok_VrokServices_setupCallbacks
-  (JNIEnv *, jobject , jobject);
+  (JNIEnv *, jobject , int, jobject);
 
 }

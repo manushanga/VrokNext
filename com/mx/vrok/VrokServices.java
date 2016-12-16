@@ -8,15 +8,15 @@ public class VrokServices
     public native void createThreads();
     public native void joinThreads();
     public native void open(String url);
-    public native void openSingleThread(String url, boolean withOutputPlayback);
+    public native void openSingleThread(String url, int thread, boolean withOutputPlayback);
     public native void close();
-    public native void setupCallbacks(EventCallback callback);
-    public native void setSamplerate(int samplerate);
+    public native void setupCallbacks(int thread, EventCallback callback);
+    public native void setSamplerate(int thread, int samplerate);
     
-    public VrokServices(EventCallback callback)
+    public VrokServices(int thread, EventCallback callback)
     {
         m_callback = callback;
-        setupCallbacks(callback);
+        setupCallbacks(thread, callback);
     }
     private void onBufferConfigChange(int frames, int samplerate, int channels)
     {
