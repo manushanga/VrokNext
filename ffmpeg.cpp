@@ -27,10 +27,11 @@ Vrok::DecoderFFMPEG::DecoderFFMPEG() :
     ctx(nullptr),
     container(nullptr)
 {
-    static long s=0;
+    static __thread long s=0;
     if (s==0) {
         avformat_network_init();
         av_register_all();
+        DBG(0, "ffmpeg init");
     }
     s++;
     container=avformat_alloc_context();

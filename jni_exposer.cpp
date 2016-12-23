@@ -138,6 +138,12 @@ private:
     std::mutex _guard;
 };
 
+void CreateThreadContext(int thread)
+{
+    pPlayer[thread] = new Vrok::Player;
+    pJavaOut[thread] = new Vrok::DriverJBufferOut;
+    pResampler[thread] = new Vrok::Resampler;
+}
 void CreateContext()
 {
     Vrok::Notify::GetInstance()->SetNotifier(new CNotifier());
@@ -280,12 +286,12 @@ void PlaySingleThread(Vrok::Resource *resource, int thread, bool withOutputPlayb
 
         if (bcOld1 != *bout->GetBufferConfig())
         {
-            pJavaOut[0]->BufferConfigChange(bout->GetBufferConfig());
-            pJavaOut[0]->SetOldBufferConfig(*bout->GetBufferConfig());
+            pJavaOut[thread]->BufferConfigChange(bout->GetBufferConfig());
+            pJavaOut[thread]->SetOldBufferConfig(*bout->GetBufferConfig());
         }
         bcOld1 = *bout->GetBufferConfig();
 
-        pJavaOut[0]->DriverRun(bout);
+        pJavaOut[thread]->DriverRun(bout);
 
 
         if (withOutputPlayback && thread == 0)
@@ -403,6 +409,12 @@ JNIEXPORT void JNICALL Java_com_mx_vrok_VrokServices_openSingleThread
 
     env->ReleaseStringUTFChars(url, zPath);
 
+}
+
+JNIEXPORT void JNICALL Java_com_mx_vrok_VrokServices_initThread
+(JNIEnv *env, jobject th, int thread )
+{
+    CreateThreadContext(thread);
 }
 
 JNIEXPORT void JNICALL Java_com_mx_vrok_VrokServices_setupCallbacks
