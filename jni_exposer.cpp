@@ -310,6 +310,7 @@ void PlaySingleThread(Vrok::Resource *resource, int thread, bool withOutputPlayb
     delete b;
     delete bout;
     delete[] barray;
+    delete dec;
 }
 void PausePlayer()
 {
