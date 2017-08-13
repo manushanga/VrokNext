@@ -2,6 +2,8 @@ import os, random, sys
 import vrok
 import time
 import threading
+import numpy
+import pyaudio as pa
 
 def get_file_list(path):
     list = []
@@ -12,6 +14,9 @@ def get_file_list(path):
             if os.path.isfile(filepath) and (f.endswith("mp3") or f.endswith("MP3") or f.endswith("flac")):
                 list.append(filepath)
     return list
+p = pa.PyAudio()
+s = p.open(format=pa.paFloat32, channels=1, rate=48000, output=True)
+
 
 r = vrok.Resource()
 files = []
@@ -21,28 +26,55 @@ for path in sys.argv:
 pl = vrok.Player()
 fir = vrok.EffectFIR()
 out = vrok.DriverAlsa()
-dec = vrok.DecoderFFMPEG()
+outJ = vrok.DriverJBufferOut();
+outPy = vrok.DriverPyOut();
+dec = vrok.DecoderFFMPEG.Create()
+ff = open('test','bw+')
+def PyOutOnBuffer(ndarray):
+    data = ndarray[0].astype(numpy.float32)
+
+    
+    #ff.write(data.copy().tobytes())
+    s.write(data.tobytes())
+    
+
+def PyOutOnBufferConfigChange(frames, samplerate, channels):
+    global s
+    
+    print(frames, samplerate, channels)
+    s.close()
+    
+    s = p.open(format=pa.paFloat32, channels=1, rate=samplerate, output=True)
+    
+outPy.OnBuffer = PyOutOnBuffer
+outPy.OnBufferConfigChange = PyOutOnBufferConfigChange
+
+outJ.SetEvents(outPy)
 
 for device in out.GetDeviceInfo():
     print(device.name)
 
-out.SetDevice(out.GetDeviceInfo()[0].name)
+for device in outJ.GetDeviceInfo():
+    print(device.name)
 
-def worker(fir):
-    meter = fir.GetMeters().__getitem__(0)
-    print (meter.GetValue(0))
-    while (True):
-        time.sleep(0.1)
-        print (meter.GetValue(0))
-    print("end")
+out.SetDevice(out.GetDeviceInfo()[2].name)
 
-th = threading.Thread(target=worker,args=[out])
+#def worker(fir):
+#    meter = fir.GetMeters().__getitem__(0)
+#    print (meter.GetValue(0))
+#    while (True):
+#        time.sleep(0.1)
+#        #print (meter.GetValue(0))
+#    print("end")
 
-th.start()
+#th = threading.Thread(target=worker,args=[out])
+
+#th.start()
 
 events = vrok.PlayerEvents()
 def QueueNext():
     r.filename = random.choice(files)
+    dec = vrok.DecoderFFMPEG.Create()
     print(r.filename)
     print(dec.Open(r))
     pl.SubmitForPlayback(dec)
@@ -56,24 +88,23 @@ comp = compman.GetComponent("FIR filter:0");
 if (comp != None):
     prop = compman.GetProperty(comp,"wet_vol");
     compman.SetProperty(comp,prop, "2.0"); 
+    
 print(dec.Open(r))
 
-pl.RegisterSink(fir)
-fir.RegisterSource(pl)
-fir.RegisterSink(out)
-out.RegisterSource(fir)
+outX = outJ
+pl.RegisterSink(outX)
+outX.RegisterSource(pl)
 
 pl.Preallocate()
-out.Preallocate()
-fir.Preallocate()
+outX.Preallocate()
 
-out.SetVolume(0.0)
+outX.SetVolume(0.0)
 pl.SetEvents(events)
 t = vrok.ThreadPool(2)
 
-t.RegisterWork(0, pl)
-t.RegisterWork(1, fir)
-t.RegisterWork(1, out)
+t.RegisterWork(1, pl)
+#t.RegisterWork(0, fir)
+t.RegisterWork(0, outX)
 
 pl.SubmitForPlayback(dec)
 
