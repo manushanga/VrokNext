@@ -27,12 +27,12 @@ bool Vrok::DriverJBufferOut::SetDevice(std::string device)
 
 void Vrok::DriverJBufferOut::ThreadStart()
 {
-
+    m_events->OnThreadStart();
 }
 
 void Vrok::DriverJBufferOut::ThreadEnd()
 {
-
+    m_events->OnThreadEnd();
 }
 
 Vrok::DriverJBufferOut::~DriverJBufferOut()
@@ -54,4 +54,14 @@ bool Vrok::DriverJBufferOut::DriverRun(Buffer *buffer)
     m_events->OnBuffer(buffer->GetData());
 
     return true;
+}
+
+void Vrok::DriverJBufferOut::Events::OnThreadStart()
+{
+
+}
+
+void Vrok::DriverJBufferOut::Events::OnThreadEnd()
+{
+
 }

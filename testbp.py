@@ -67,7 +67,7 @@ pl.Preallocate()
 out.Preallocate()
 fir.Preallocate()
 
-out.SetVolume(-10.0)
+out.SetVolume(0.0)
 pl.SetEvents(events)
 t = vrok.ThreadPool(2)
 

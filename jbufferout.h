@@ -16,6 +16,8 @@ public:
     public:
         virtual void OnBuffer(double* buffer) = 0;
         virtual void OnBufferConfigChange(int frames, int samplerate, int channels) = 0;
+        virtual void OnThreadStart();
+        virtual void OnThreadEnd();
     };
 
     std::vector<DeviceInfo> GetDeviceInfo();

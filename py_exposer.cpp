@@ -6,6 +6,7 @@
 #include <boost/ref.hpp>
 #include <boost/utility.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include <boost/python/numpy.hpp>
 
 #include "common.h"
 #include "player.h"
@@ -18,16 +19,31 @@
 #include "ffmpeg.h"
 #include "threadpool.h"
 #include "componentmanager.h"
+#include "jbufferout.h"
+#include "notifier_impl.h"
 
 using namespace boost::python;
+
+namespace p = boost::python;
+namespace np = boost::python::numpy;
 
 class GILLock
 {
 public:
     GILLock()  { state_ = PyGILState_Ensure(); }
-    ~GILLock() { PyGILState_Release(state_);   }
+    void release()
+    {
+        if (!released_)
+        {
+            PyGILState_Release(state_);
+            released_ = true;
+        }
+    }
+
+    ~GILLock() {  release();  }
 private:
     PyGILState_STATE state_;
+    bool released_ = false;
 };
 
 class PlayerEventsImpl : public Vrok::Player::Events, public wrapper<Vrok::Player::Events>
@@ -67,15 +83,88 @@ public:
 
     void JoinThreads()
     {
-        std::cout<<"542352"<<std::endl;
         ScopedGILRelease scope;
         Vrok::ThreadPool::JoinThreads();
     }
 
 };
+int arr[] = {1,2,3,4};
+class DriverPyOutImpl : public Vrok::DriverJBufferOut::Events, public wrapper<Vrok::DriverJBufferOut::Events>
+{
+public:
+    void OnThreadStart()
+    {
+        Vrok::Notify::GetInstance()->NotifyInformation("onTh start");
+
+    }
+    void OnThreadEnd()
+    {
+        Vrok::Notify::GetInstance()->NotifyInformation("onTh end");
+    }
+    void OnBuffer(double * buffer) override
+    {
+
+        for (int f=0;f<_frames;f++)
+        {
+            for (int i=0;i<_channels;i++)
+            {
+                _buffer[_frames*i + f] = buffer[_channels * f + i];
+            }
+        }
+
+
+        GILLock lock;
+        try {
+        np::ndarray ndArray = np::from_data(_buffer,
+                                        np::dtype::get_builtin<double>(),
+                                        p::make_tuple(_channels, _frames),
+                                        p::make_tuple(_frames * sizeof(double), sizeof(double)),
+                                        p::object());
+          this->get_override("OnBuffer")(ndArray);
+        }
+        catch (boost::python::error_already_set& e)
+        {
+            PyErr_Print();
+        }
+
+
+    }
+    void OnBufferConfigChange(int frames, int samplerate, int channels) override
+    {
+
+        _channels = channels;
+        _frames = frames;
+        _samplerate = samplerate;
+        delete[] _buffer;
+        _buffer = new double[_channels * _frames];
+
+        GILLock lock;
+        try
+        {
+            this->get_override("OnBufferConfigChange")(frames, samplerate, channels);
+        }
+        catch (boost::python::error_already_set& e)
+        {
+            PyErr_Print();
+        }
+
+    }
+private:
+    int _channels=0;
+    int _frames=0;
+    int _samplerate=0;
+    double* _buffer=nullptr;
+};
+
 BOOST_PYTHON_MODULE(vrok)
 {
+
+    np::initialize();
+
     PyEval_InitThreads();
+
+
+    Vrok::Notify::GetInstance()->SetNotifier(new CNotifier());
 
     class_<std::vector<Vrok::VUMeter*>>("VUMeterList")
             .def(vector_indexing_suite<std::vector<Vrok::VUMeter*>>());
@@ -85,6 +174,10 @@ BOOST_PYTHON_MODULE(vrok)
     class_<Vrok::Decoder, boost::noncopyable>("Decoder",boost::python::no_init);
     class_<PlayerEventsImpl, boost::noncopyable>("PlayerEvents" ,boost::python::init<>())
             .def("QueueNext", pure_virtual(&Vrok::Player::Events::QueueNext));
+
+    class_<DriverPyOutImpl, boost::noncopyable>("DriverPyOut" ,boost::python::init<>())
+            .def("OnBuffer", pure_virtual(&Vrok::DriverJBufferOut::Events::OnBuffer))
+            .def("OnBufferConfigChange", pure_virtual(&Vrok::DriverJBufferOut::Events::OnBufferConfigChange));
 
     class_<Vrok::Component,  boost::noncopyable>("Component" ,boost::python::no_init);
     class_<Vrok::PropertyBase,boost::noncopyable>("PropertyBase" ,boost::python::no_init);
@@ -155,6 +248,18 @@ BOOST_PYTHON_MODULE(vrok)
             .def("SetDevice", &Vrok::DriverAlsa::SetDevice)
             .def("GetDeviceInfo", &Vrok::DriverAlsa::GetDeviceInfo)
             .def("GetDefaultDevice", &Vrok::DriverAlsa::GetDefaultDevice);
+
+    class_<Vrok::DriverJBufferOut, bases<BufferGraph::Point, Vrok::Component, Runnable>, boost::noncopyable>("DriverJBufferOut",boost::python::init<>())
+            .def("Flush", &Vrok::DriverJBufferOut::Flush)
+            .def("Preallocate",&Vrok::DriverJBufferOut::Preallocate)
+            .def("SetVolume",&Vrok::DriverJBufferOut::SetVolume)
+            .def("RegisterSource", &Vrok::DriverJBufferOut::RegisterSource)
+            .def("SetVolume",&Vrok::DriverJBufferOut::SetVolume)
+            .def("SetDevice", &Vrok::DriverJBufferOut::SetDevice)
+            .def("GetDeviceInfo", &Vrok::DriverJBufferOut::GetDeviceInfo)
+            .def("GetDefaultDevice", &Vrok::DriverJBufferOut::GetDefaultDevice)
+            .def("SetEvents", &Vrok::DriverJBufferOut::SetEvents);
+
 
 //    class_<Vrok::VUMeter>("VUMeter");
 

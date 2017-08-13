@@ -14,6 +14,7 @@
 #include "resampler.h"
 #include "threadpool.h"
 #include "componentmanager.h"
+#include "notifier_impl.h"
 
 JavaVM* g_VM=nullptr;
 
@@ -98,36 +99,7 @@ private:
     int m_channels;
     int m_frames;
 };
-class CNotifier : public Vrok::Notify::Notifier
-{
-public:
-    void OnError(int level, std::string msg)
-    {
-        _guard.lock();
-        std::cout<< "ERR: "<< msg << std::endl;
-        _guard.unlock();
-    }
-    void OnWarning(int level, std::string msg)
-    {
-        _guard.lock();
-        std::cout<< "WRN: "<< msg << std::endl;
-        _guard.unlock();
-    }
-    void OnDebug(int level, std::string msg)
-    {
-        _guard.lock();
-        std::cout<< "DBG: "<< msg << std::endl;
-        _guard.unlock();
-    }
-    void OnInformation(std::string msg)
-    {
-        _guard.lock();
-        std::cout<< "INF: "<< msg << std::endl;
-        _guard.unlock();
-    }
-private:
-    std::mutex _guard;
-};
+
 
 void CreateContext()
 {
