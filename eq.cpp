@@ -80,7 +80,7 @@ void Vrok::EffectSSEQ::PropertyChanged(PropertyBase *property)
 bool Vrok::EffectSSEQ::BufferConfigChange(BufferConfig *config)
 {
     DBG(0,"000000000oo");
-    config->Print();
+    //*config->Print();
     void *params = paramlist_alloc ();
     float sb_bands_copy[BAR_COUNT];
 
@@ -97,4 +97,5 @@ bool Vrok::EffectSSEQ::BufferConfigChange(BufferConfig *config)
         paramlist_free (_sb_paramsroot);
     _sb_paramsroot = params;
 
+    return true;
 }

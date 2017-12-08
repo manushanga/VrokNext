@@ -56,6 +56,7 @@ void Vrok::Driver::Run()
         ReleaseAllSources(buffers);
     } else
     {
+        DBG(0, "output drv sleep");
         std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
 }

@@ -26,6 +26,16 @@ std::string PropertyBase::GetName()
     return _name;
 }
 
+void PropertyBase::SetPropertyInfo(const PropertyInfo &info)
+{
+    _info = info;
+}
+
+const PropertyInfo& PropertyBase::GetPropertyInfo()
+{
+    return _info;
+}
+
 }
 
 Vrok::Component::Component()

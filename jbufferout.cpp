@@ -44,15 +44,14 @@ bool Vrok::DriverJBufferOut::BufferConfigChange(BufferConfig *config)
 {
     m_events->OnBufferConfigChange(config->frames, config->samplerate, config->channels);
 
-            std::this_thread::sleep_for(std::chrono::microseconds(10));
+    std::this_thread::sleep_for(std::chrono::microseconds(10));
 
     return true;
 }
 
 bool Vrok::DriverJBufferOut::DriverRun(Buffer *buffer)
 {
-    m_events->OnBuffer(buffer->GetData());
-
+    m_events->OnBuffer(buffer->GetData(), buffer->GetBufferConfig()->frames);
     return true;
 }
 

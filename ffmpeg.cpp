@@ -68,7 +68,7 @@ bool Vrok::DecoderFFMPEG::Open(Vrok::Resource *resource)
 
     audio_stream_id = -1;
     if(avformat_open_input(&container,resource->_filename.c_str(),NULL,NULL)<0){
-        WARN(9,"Can't open file");
+        WARN(9,"Can't open file " << resource->_filename);
         Close();
         return false;
     }

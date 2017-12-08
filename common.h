@@ -36,10 +36,7 @@ namespace Vrok {
     template<typename T>
     void Clip(T& value, T low, T high)
     {
-        if (value < low)
-            value = low;
-        else if (value > high)
-            value = high;
+        value = std::max(low, std::min(value, high));
     }
 
     template<typename T>

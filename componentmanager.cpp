@@ -1,4 +1,7 @@
+#include "debug.h"
 #include "componentmanager.h"
+
+#include <cstdlib>
 
 using namespace std;
 
@@ -128,5 +131,49 @@ Vrok::ComponentManager *Vrok::ComponentManager::GetSingleton()
 Vrok::ComponentManager::~ComponentManager()
 {
 
+}
+
+Vrok::PropertyBase *Vrok::ComponentManager::GetProperty(std::string component,
+                                                        std::string prop_name)
+{
+    Component* comp = GetComponent(component);
+
+    if (comp)
+    {
+        return GetProperty(comp, prop_name);
+    }
+
+    return nullptr;
+}
+
+void Vrok::ComponentManager::SetProperty(std::string component,
+                                         std::string prop_name,
+                                         std::string value)
+{
+    Component* comp = GetComponent(component);
+    if (comp == nullptr)
+        return;
+
+    PropertyBase* prop = GetProperty(comp, prop_name);
+    if (prop == nullptr)
+        return;
+
+    if (prop->GetType() == PropertyType::FLT)
+    {
+        float val = atof(value.c_str());
+        prop->Set(&val);
+    } else if (prop->GetType() == PropertyType::DBL)
+    {
+        double val = atof(value.c_str());
+        prop->Set(&val);
+    } else if (prop->GetType() == PropertyType::INT)
+    {
+        int val = atoi(value.c_str());
+        prop->Set(&val);
+    }
+    DBG(0, "Property set, comp="<< component
+                                <<", prop=" << prop_name
+                                <<", value=" << value);
+    comp->PropertyChanged(prop);
 }
 

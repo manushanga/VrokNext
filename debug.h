@@ -10,12 +10,12 @@ extern std::mutex __global_console_lock;
 
 
 #ifdef __ANDROID_API__
-#ifdef DEBUG
 #include <android/log.h>
-#include <sstream>
-#define DBG(...) \
+
+#ifdef DEBUG
+#define DBG(__level, ...) \
     {\
-        stringstream ss; \
+        std::stringstream ss; \
         __global_console_lock.lock(); \
         ss<<__VA_ARGS__; \
         __android_log_print(ANDROID_LOG_INFO,"vrok","%s",ss.str().c_str()); \
@@ -26,9 +26,9 @@ extern std::mutex __global_console_lock;
 #define DBG(...)
 #endif
 
-#define WARN(...) \
+#define WARN(__level, ...) \
     {\
-        stringstream ss; \
+        std::stringstream ss; \
         __global_console_lock.lock(); \
         ss<<__VA_ARGS__; \
         __android_log_print(ANDROID_LOG_INFO,"vrok","%s",ss.str().c_str()); \

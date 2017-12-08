@@ -36,7 +36,14 @@ public:
     {
 
     }
-
+    bool IsWritable(size_t n)
+    {
+        return (_used + n <= _size);
+    }
+    bool IsReadable(size_t n)
+    {
+        return (n <= _used);
+    }
     bool Write(T *source, size_t n)
     {
         if (_used + n <= _size)
@@ -74,6 +81,10 @@ public:
         _front = 0;
         _rear = 0;
         _used = 0;
+    }
+    std::size_t Size()
+    {
+        return _size;
     }
     ~Ringbuffer()
     {

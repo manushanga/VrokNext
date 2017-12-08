@@ -23,6 +23,7 @@
 
 #include "common.h"
 #include "effect.h"
+#include "ringbuffer.h"
 
 
 namespace Vrok {
@@ -32,11 +33,14 @@ private:
     static const int INTERNAL_BUFFER_SIZE = 8192;
 
     Property<int> _out_samplerate;
+    Property<int> _mode;
     SRC_STATE *_current_state;
     SRC_DATA _sr_data;
 
     float _buffer[INTERNAL_BUFFER_SIZE];
     float _out_buffer[INTERNAL_BUFFER_SIZE];
+
+    Ringbuffer<float> *_ring_buffer;
 public:
     Resampler();
     bool EffectRun(Buffer *out_buffer,
@@ -60,7 +64,7 @@ public:
     }
     const char *ComponentName()
     {
-        return "FIR filter";
+        return "Resampler";
     }
     const char *Description()
     {

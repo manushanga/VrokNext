@@ -21,22 +21,48 @@
 
 #include <atomic>
 #include <string>
+#include <vector>
 
 namespace Vrok {
 
 enum class ComponentType{Decoder, Effect, Driver, Player, None};
 enum class PropertyType{INT,FLT,DBL};
 
+struct PropertyInfo
+{
+    double range_from = 0.0;
+    double range_to = 0.0;
+    double increment = 0.0; // 0.0 means any
+    double default_value = 0.0;
+    std::vector<std::string> enum_names;
+    PropertyInfo() = default;
+    PropertyInfo(double range_from_,
+                 double range_to_,
+                 double increment_,
+                 double default_value_,
+                 std::initializer_list<std::string> enum_names_)
+    {
+        range_from = range_from_;
+        range_to = range_to_;
+        increment = increment_;
+        default_value = default_value_;
+        enum_names.insert(enum_names.end(), enum_names_.begin(), enum_names_.end());
+    }
+};
+
 class PropertyBase
 {
 protected:
     std::string _name;
+    PropertyInfo _info;
 public:
     void SetName(std::string name);
     std::string GetName();
     virtual PropertyType GetType()=0;
     virtual void Get(void *ptr)=0;
     virtual void Set(void *ptr)=0;
+    void SetPropertyInfo(const PropertyInfo& info);
+    const PropertyInfo& GetPropertyInfo();
 };
 
 template<typename T>

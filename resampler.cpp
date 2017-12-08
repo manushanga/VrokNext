@@ -4,10 +4,23 @@
 Vrok::Resampler::Resampler()
 {
     _out_samplerate.Set(44100);
+    _out_samplerate.SetPropertyInfo(PropertyInfo{
+            0.0, 192000.0,
+            1.0,
+            44100.0,
+            {} });
+
+    _mode.Set(0);
+    _mode.SetPropertyInfo(PropertyInfo{
+            0.0, 2.0,
+            1.0,
+            0.0,
+            {"SincFast","SincBest","SincMedium"} });
 
     ComponentManager *c=ComponentManager::GetSingleton();
     c->RegisterComponent(this);
-    c->RegisterProperty(this, "output_samplerate", &_out_samplerate);
+    c->RegisterProperty(this, "OutputSamplerate", &_out_samplerate);
+    c->RegisterProperty(this, "InterpolatorMode", &_mode);
 }
 
 bool Vrok::Resampler::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int buffer_count)
@@ -18,6 +31,7 @@ bool Vrok::Resampler::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int 
     SRC_DATA data_copy = _sr_data;
 
     assert(INTERNAL_BUFFER_SIZE >= src->GetBufferConfig()->channels * src->GetBufferConfig()->frames);
+    int src_len = src->GetBufferConfig()->channels * src->GetBufferConfig()->frames;
     int len = src->GetBufferConfig()->channels * src->GetBufferConfig()->frames;
     for (int i=0;i<len;i++)
     {
@@ -45,7 +59,6 @@ bool Vrok::Resampler::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int 
         data_copy.input_frames -= data_copy.input_frames_used;
         data_copy.data_in += data_copy.input_frames_used* src->GetBufferConfig()->channels;
         out_frames+=data_copy.output_frames_gen;
-        //std::cout<< out_frames << data_copy.output_frames  <<std::endl;
     }
 
 
@@ -58,14 +71,11 @@ bool Vrok::Resampler::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int 
     cfg.samplerate = _out_samplerate.Get();
     out_buffer->Reset(&cfg);
 
-    //int len = src->GetBufferConfig()->frames *  src->GetBufferConfig()->channels;
-    for (int i=0;i<len;i++)
+    for (std::size_t i=0;i<len;i++)
     {
-        out_buffer->GetData()[i] = double(_out_buffer[i]);
-        //out_buffer->GetData()[i] = src->GetData()[i];
-
+        out_buffer->GetData()[i] = _out_buffer[i] * 0.99;
+        Clip<double>(out_buffer->GetData()[i],-1.0,1.0);
     }
-
     return true;
 }
 
@@ -75,10 +85,25 @@ void Vrok::Resampler::PropertyChanged(Vrok::PropertyBase *property)
 
 bool Vrok::Resampler::BufferConfigChange(BufferConfig *config)
 {
-    DBG(0,"-----changed resamplere");
+    DBG(0,"-----changed resampler rate ");
     _sr_data.src_ratio = double(_out_samplerate.Get())/ double(config->samplerate);
     int err=0;
-    _current_state = src_new(SRC_SINC_FASTEST, config->channels, &err);
+    if (_mode.Get() == 0 /* SincFast */)
+    {
+        _current_state = src_new(SRC_SINC_FASTEST, config->channels, &err);
+        DBG(0,"SRC_SINC_FASTEST");
+    }
+    else if (_mode.Get() == 1 /* SincBest */)
+    {
+        _current_state = src_new(SRC_SINC_BEST_QUALITY, config->channels, &err);
+        DBG(0,"SRC_SINC_BEST_QUALITY");
+    }
+    else
+    {
+        _current_state = src_new(SRC_SINC_MEDIUM_QUALITY, config->channels, &err);
+        DBG(0,"SRC_SINC_MEDIUM_QUALITY");
+    }
+
 
     return true;
 }
