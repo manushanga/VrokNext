@@ -35,12 +35,12 @@ static JNIEnv* GetEnv()
 		int err = javaVM->AttachCurrentThread( &jenv, NULL);
 		if (err != 0)
 		{
-			DBG("Attach failed");
+            DBG("Attach failed");
 		}
 	}
 	else if (err != JNI_OK)
 	{
-		DBG("Can't get JNI env");
+        DBG("Can't get JNI env");
 	}
 	return jenv;
 }
@@ -162,9 +162,9 @@ bool Vrok::DriverAudioTrack::BufferConfigChange(BufferConfig *config)
     if (*GetBufferConfig() != *config) {
         finiAudioTrack(config);
         initAudioTrack(config);
-        DBG("o "<<config->channels);
+        DBG("o " << config->channels);
 
-        DBG("o "<<config->samplerate);
+        DBG("o " << config->samplerate);
     }
     return true;
 }
@@ -182,7 +182,7 @@ bool Vrok::DriverAudioTrack::DriverRun(Buffer *buffer)
         jenv->ReleasePrimitiveArrayCritical(jbuffer, pBuffer, 0);
         jenv->CallNonvirtualIntMethod(jtrack, cAudioTrack, mWrite, jbuffer, 0, samples * sizeof(short));
     } else {
-            DBG("Can't get buffer pointer");
+        DBG("Can't get buffer pointer");
     }
 
     javaVM->DetachCurrentThread();

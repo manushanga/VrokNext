@@ -85,14 +85,14 @@ extern "C"
         pl->RegisterSink(pFIR);
 
         out->RegisterSource(pSSEQ);
-        
+
         DBG("Reg");
 
         out->Preallocate();
         pl->Preallocate();
         pSSEQ->Preallocate();
         pFIR->Preallocate();
-        
+
 
         DBG("pre");
         pool->RegisterWork(0,pl);
@@ -212,7 +212,7 @@ void NextTrackCallback(void *user) {
         }
         jstring str = (jstring) g_env->CallNonvirtualObjectMethod(hookObject, hookClass, hookMethod );
         //strcpy(url, g_env->GetStringUTFChars( str , NULL ) );
-        DBG(g_env->GetStringUTFChars( str , NULL ));
+        DBG(g_env->GetStringUTFChars(str, NULL));
         plx->SubmitForPlaybackNow(CreateResource(g_env->GetStringUTFChars( str , NULL )));
 
         if (g_env->ExceptionCheck()) {

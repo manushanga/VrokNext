@@ -1,6 +1,76 @@
 
 #include "resampler.h"
 
+#define L_A 1
+
+inline float sinc(float x)
+{
+    if (x == 0.0)
+        return 1.0;
+
+    return sin(x)/x;
+}
+inline float L(float x)
+{
+    if ( -L_A < x && x < L_A)
+        return sinc(x) * sinc(x/L_A);
+    else
+        return 0.0;
+}
+
+inline float GetLSampleAt(float* buff, int ch, int nch, float at)
+{
+    float _at = std::floor(at);
+    int start =_at - L_A + 1;
+
+    if (_at < L_A)
+        start = 0;
+
+    int end = _at + L_A;
+    float accum = 0.0;
+
+    for (int i=start; i<= end;++i)
+    {
+        accum += buff[nch*i + ch] * L(at - i);
+    }
+    return accum;
+
+}
+#define L0(x, x0, x1, x2, x3) \
+    ((x-x1) * (x-x2) * (x-x3))
+
+#define L0_() \
+    (-1 * -2 * -3)  /* (x0-x1) * (x0-x2) * (x0-x3) */
+
+#define L1(x, x0, x1, x2, x3) \
+    ((x-x0) * (x-x2) * (x-x3))
+
+#define L1_() \
+    (1 * -1 * -2) /* (x1-x0) * (x1-x2) * (x1-x3) */
+
+#define L2(x, x0, x1, x2, x3) \
+    ((x-x0) * (x-x1) * (x-x3))
+
+#define L2_() \
+    (2 * 1 * -1) /* (x2-x0) * (x2-x1) * (x2-x3) */
+
+#define L3(x, x0, x1, x2, x3) \
+    ((x-x0) * (x-x1) * (x-x2))
+
+#define L3_() \
+    (3 * 2 * 1) /* (x3-x0) * (x3-x1) * (x3-x2) */
+
+float Lagrange(float tsrc, float tdest, float* tsrc_V)
+{
+    float tdest_V =
+            L0(tdest, tsrc, tsrc+1, tsrc+2, tsrc+3) / L0_() * tsrc_V[0] +
+                    L1(tdest, tsrc, tsrc+1, tsrc+2, tsrc+3) / L1_() * tsrc_V[1] +
+                    L2(tdest, tsrc, tsrc+1, tsrc+2, tsrc+3) / L2_() * tsrc_V[2] +
+                    L3(tdest, tsrc, tsrc+1, tsrc+2, tsrc+3) / L3_() * tsrc_V[3];
+
+    return tdest_V;
+}
+
 Vrok::Resampler::Resampler()
 {
     _out_samplerate.Set(44100);
@@ -10,17 +80,23 @@ Vrok::Resampler::Resampler()
             44100.0,
             {} });
 
-    _mode.Set(0);
+    _mode.Set(5);
+
     _mode.SetPropertyInfo(PropertyInfo{
-            0.0, 2.0,
+            0.0, 5.0,
             1.0,
-            0.0,
-            {"SincFast","SincBest","SincMedium"} });
+            3.0,
+            {"ZOH(low)","BLEP","Linear","BLAM","CUBIC","Sinc(best)"} });
 
     ComponentManager *c=ComponentManager::GetSingleton();
     c->RegisterComponent(this);
     c->RegisterProperty(this, "OutputSamplerate", &_out_samplerate);
     c->RegisterProperty(this, "InterpolatorMode", &_mode);
+    _last = 0.0;
+    _resamplers = nullptr;
+
+    resampler_init();
+
 }
 
 bool Vrok::Resampler::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int buffer_count)
@@ -28,53 +104,53 @@ bool Vrok::Resampler::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int 
     assert(buffer_count == 1);
 
     Buffer *src = in_buffer_set[0];
-    SRC_DATA data_copy = _sr_data;
 
     assert(INTERNAL_BUFFER_SIZE >= src->GetBufferConfig()->channels * src->GetBufferConfig()->frames);
     int src_len = src->GetBufferConfig()->channels * src->GetBufferConfig()->frames;
-    int len = src->GetBufferConfig()->channels * src->GetBufferConfig()->frames;
-    for (int i=0;i<len;i++)
+    int src_flen = src->GetBufferConfig()->frames;
+    int flen = _ratio * src->GetBufferConfig()->frames;
+
+    int nch = src->GetBufferConfig()->channels;
+
+    int sample_count = src->GetBufferConfig()->frames;
+    int channel_count = nch;
+    float *current_out = _buffer;
+    float *current = src->GetData();
+    int samples_out = 0;
+
+    while( ( sample_count && resampler_get_free_count( _resamplers[0] ) ) || resampler_get_sample_count( _resamplers[0] ) )
     {
-        _buffer[i] = float(src->GetData()[i]);
+        while ( sample_count && resampler_get_free_count( _resamplers[0] ) )
+        {
+            for (int i = 0; i < channel_count; ++i)
+                resampler_write_sample_float(_resamplers[i], current[i]);
+            current += channel_count;
+            --sample_count;
+        }
+
+        while (resampler_get_sample_count(_resamplers[0]))
+        {
+            for (int i = 0; i < channel_count; ++i)
+            {
+                current_out[i] = resampler_get_sample_float(_resamplers[i]);
+                resampler_remove_sample(_resamplers[i], 1);
+            }
+            current_out += channel_count;
+            samples_out ++;
+        }
     }
 
-    data_copy.data_in = &_buffer[0];
-    data_copy.data_out = &_out_buffer[0];
-
-    data_copy.end_of_input = 0;
-    data_copy.output_frames = src->GetBufferConfig()->frames * _sr_data.src_ratio *2;
-
-    assert(INTERNAL_BUFFER_SIZE >= data_copy.output_frames);
-
-    data_copy.output_frames_gen = 1;
-    int out_frames=0;
-
-    data_copy.input_frames = src->GetBufferConfig()->frames ;
-
-    while (data_copy.output_frames_gen > 0) {
-        int ret = src_process(_current_state,&data_copy);
-        if (ret != 0)
-            WARN(0, src_strerror(ret));
-
-        data_copy.input_frames -= data_copy.input_frames_used;
-        data_copy.data_in += data_copy.input_frames_used* src->GetBufferConfig()->channels;
-        out_frames+=data_copy.output_frames_gen;
-    }
-
-
-    len = out_frames * src->GetBufferConfig()->channels;
-    assert( len < INTERNAL_BUFFER_SIZE);
 
     BufferConfig cfg;
     cfg.channels = src->GetBufferConfig()->channels;
-    cfg.frames = out_frames;
+    cfg.frames = samples_out;//flen;// out_frames;
     cfg.samplerate = _out_samplerate.Get();
     out_buffer->Reset(&cfg);
 
-    for (std::size_t i=0;i<len;i++)
+    for (std::size_t i=0;i<samples_out * nch;i++)
     {
-        out_buffer->GetData()[i] = _out_buffer[i] * 0.99;
-        Clip<double>(out_buffer->GetData()[i],-1.0,1.0);
+        out_buffer->GetData()[i] = _buffer[i] * 0.95;
+        Clip<real_t>(out_buffer->GetData()[i],-1.0,1.0);
     }
     return true;
 }
@@ -85,25 +161,28 @@ void Vrok::Resampler::PropertyChanged(Vrok::PropertyBase *property)
 
 bool Vrok::Resampler::BufferConfigChange(BufferConfig *config)
 {
-    DBG(0,"-----changed resampler rate ");
-    _sr_data.src_ratio = double(_out_samplerate.Get())/ double(config->samplerate);
-    int err=0;
-    if (_mode.Get() == 0 /* SincFast */)
-    {
-        _current_state = src_new(SRC_SINC_FASTEST, config->channels, &err);
-        DBG(0,"SRC_SINC_FASTEST");
-    }
-    else if (_mode.Get() == 1 /* SincBest */)
-    {
-        _current_state = src_new(SRC_SINC_BEST_QUALITY, config->channels, &err);
-        DBG(0,"SRC_SINC_BEST_QUALITY");
-    }
-    else
-    {
-        _current_state = src_new(SRC_SINC_MEDIUM_QUALITY, config->channels, &err);
-        DBG(0,"SRC_SINC_MEDIUM_QUALITY");
-    }
+    DBG(0, "-----changed resampler rate " << _out_samplerate.Get() << " " << config->samplerate);
+    _ratio =  double(config->samplerate) / double(_out_samplerate.Get())  ;
 
 
+    if (_resamplers)
+    {
+        for (int i=0;i<config->channels;i++)
+        {
+            resampler_clear( _resamplers[i] );
+            resampler_delete( _resamplers[i] );
+        }
+    }
+
+    delete[] _resamplers;
+
+    _resamplers = new void*[config->channels];
+
+    for (int i=0;i<config->channels;i++)
+    {
+        _resamplers[i] = resampler_create();
+        resampler_set_quality(_resamplers[i], RESAMPLER_QUALITY_MAX);
+        resampler_set_rate(_resamplers[i], _ratio );
+    }
     return true;
 }

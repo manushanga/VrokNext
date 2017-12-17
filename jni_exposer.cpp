@@ -73,7 +73,7 @@ public:
     {}
     void OnBuffer(double* buffer)
     {
-        DBG(0,"onBuffer");
+        DBG(0, "onBuffer");
         assert(m_frames != 0 && m_channels != 0);
         JNIInvoker invoker;
 
@@ -85,10 +85,10 @@ public:
     }
     void OnBufferConfigChange(int frames, int samplerate, int channels)
     {
-        DBG(0,"onBufferConfigChange");
+        DBG(0, "onBufferConfigChange");
         JNIInvoker invoker;
         DBG(0, invoker.getEnv());
-        DBG(0, frames  << " "<< samplerate <<" "<< channels);
+        DBG(0, frames << " " << samplerate << " " << channels);
         m_samplerate = samplerate;
         m_frames = frames;
         m_channels = channels;
@@ -105,7 +105,7 @@ void CreateContext()
 {
     Vrok::Notify::GetInstance()->SetNotifier(new CNotifier());
 
-    DBG(0,"Creating Context");
+    DBG(0, "Creating Context");
     pl = new Vrok::Player;
     outAlsa = new Vrok::DriverAlsa;
     out = new Vrok::DriverJBufferOut;
@@ -153,7 +153,7 @@ void RegisterSink(BufferGraph::Point *parent, BufferGraph::Point *sink)
 
 void CreateThreads()
 {
-    DBG(0,"player");
+    DBG(0, "player");
     //pFIR->RegisterSource(pl);
     //pl->RegisterSink(pFIR);
 
@@ -180,8 +180,7 @@ void CreateThreads()
     out->RegisterSource(pResampler);
 
 
-
-    DBG(0,"Reg");
+    DBG(0, "Reg");
 
     out->Preallocate();
     pl->Preallocate();
@@ -191,16 +190,16 @@ void CreateThreads()
     pFIR->Preallocate();
 
 
-    DBG(0,"pre");
+    DBG(0, "pre");
     pool->RegisterWork(0,pl);
     pool->RegisterWork(1,pResampler);
     pool->RegisterWork(2,out);
     pool->RegisterWork(3,outAlsa);
-    DBG(0,"reg");
+    DBG(0, "reg");
     //setEvents
-    DBG(0,"regxx");
+    DBG(0, "regxx");
     pool->CreateThreads();
-    DBG(0,"player done");
+    DBG(0, "player done");
 }
 
 void JoinThreads()
@@ -254,7 +253,7 @@ float GetSSEQBand(int band)
     snprintf(bandname,32,"band_%d",band);
     std::string sband=std::string(bandname);
     float val=0;
-    DBG(0,bandname);
+    DBG(0, bandname);
     Vrok::PropertyBase *p = Vrok::ComponentManager::GetSingleton()->GetProperty(
                                 pSSEQ,
                                 sband
@@ -304,14 +303,14 @@ JNIEXPORT void JNICALL Java_com_mx_vrok_VrokServices_open
 JNIEXPORT void JNICALL Java_com_mx_vrok_VrokServices_setupCallbacks
 (JNIEnv *env, jobject th, jobject callback)
 {
-    DBG(0,"setting up");
+    DBG(0, "setting up");
     objEventCallback = env->NewGlobalRef(callback);
     jclass cls = (jclass) env->NewGlobalRef( (jobject) env->GetObjectClass(objEventCallback) );// env->GetObjectClass(callback);
     onBuffer = env->GetMethodID(cls, "onBuffer", "([D)V");
     onBufferConfigChange = env->GetMethodID(cls, "onBufferConfigChange", "(III)V");
 
-    DBG(0, "onBuffer "<< (void*) onBuffer);
-    DBG(0, "onBufferConfigChange "<< (void*) onBufferConfigChange);
+    DBG(0, "onBuffer " << (void *) onBuffer);
+    DBG(0, "onBufferConfigChange " << (void *) onBufferConfigChange);
 
     dynamic_cast<Vrok::DriverJBufferOut*>(out)->SetEvents(new CBufferEvents);
 

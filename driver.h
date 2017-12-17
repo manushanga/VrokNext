@@ -29,7 +29,7 @@ namespace Vrok {
         std::atomic<bool> _new_resource;
     protected:
         std::atomic<bool> _work;
-        std::atomic<double> _volume;
+        std::atomic<real_t> _volume;
         VUMeter _meter;
         BufferConfig _input_bc;
         bool _first_run;
@@ -58,7 +58,7 @@ namespace Vrok {
         virtual bool SetDevice(std::string device) = 0;
         virtual bool BufferConfigChange(BufferConfig *config)=0;
         virtual bool DriverRun(Buffer *buffer) = 0;
-        virtual void SetVolume(double volume);
+        virtual void SetVolume(real_t volume);
         virtual std::vector<VUMeter *> GetMeters();
         void Run();
 

@@ -24,14 +24,14 @@
 #include "shibatch/equ.h"
 #include "shibatch/paramlist.hpp"
 
-#define BAR_COUNT 18
+#define BAND_COUNT 18
 
 namespace Vrok {
 class EffectSSEQ : public Effect
 {
 private:
 
-    Property<float> _bands[BAR_COUNT];
+    Property<float> _bands[BAND_COUNT];
     Property<float> _preamp;
     SuperEqState _sb_state;
     void *_sb_paramsroot;
@@ -53,7 +53,7 @@ public:
     }
     const char *ComponentName()
     {
-        return "SSEQ";
+        return "ShibachSuperEQ";
     }
     const char *Description()
     {

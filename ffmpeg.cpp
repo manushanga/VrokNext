@@ -34,7 +34,7 @@ Vrok::DecoderFFMPEG::DecoderFFMPEG() :
     }
     s++;
     container=avformat_alloc_context();
-    _ringbuffer = new Ringbuffer<double>(
+    _ringbuffer = new Ringbuffer<real_t>(
                 2*FFMPEG_MAX_BUF_SIZE +
                 2*FF_INPUT_BUFFER_PADDING_SIZE);
     //container->interrupt_callback.callback = FFMPEGDecoder::ff_avio_interrupt;
@@ -68,13 +68,13 @@ bool Vrok::DecoderFFMPEG::Open(Vrok::Resource *resource)
 
     audio_stream_id = -1;
     if(avformat_open_input(&container,resource->_filename.c_str(),NULL,NULL)<0){
-        WARN(9,"Can't open file " << resource->_filename);
+        WARN(9, "Can't open file " << resource->_filename);
         Close();
         return false;
     }
 
     if(avformat_find_stream_info(container, NULL)<0){
-        WARN(9,"Stream info load failed");
+        WARN(9, "Stream info load failed");
         return false;
     }
 
@@ -86,7 +86,7 @@ bool Vrok::DecoderFFMPEG::Open(Vrok::Resource *resource)
         }
     }
     if(audio_stream_id==-1){
-        WARN(9,"No audio stream");
+        WARN(9, "No audio stream");
         Close();
         return false;
     }
@@ -98,15 +98,15 @@ bool Vrok::DecoderFFMPEG::Open(Vrok::Resource *resource)
     av_opt_set_int(ctx, "refcounted_frames", 0, 0);
     //codec=avcodec_find_decoder(ctx->codec_id);
 
-    DBG(1,"codec: "<<codec->long_name);
+    DBG(1, "codec: " << codec->long_name);
     if(codec==NULL){
-        WARN(9,"Cannot find codec");
+        WARN(9, "Cannot find codec");
         Close();
         return false;
     }
 
     if(avcodec_open2(ctx,codec,NULL)<0){
-        WARN(9,"Codec cannot be opened");
+        WARN(9, "Codec cannot be opened");
         Close();
         return false;
     }
@@ -127,7 +127,7 @@ bool Vrok::DecoderFFMPEG::Open(Vrok::Resource *resource)
     frame=av_frame_alloc();
 
     current_in_seconds=0;
-    DBG(1,"opend");
+    DBG(1, "opend");
 
     return true;
 }
@@ -136,9 +136,9 @@ bool Vrok::DecoderFFMPEG::GetBufferConfig(BufferConfig *config)
 {
     config->channels = ctx->channels;
     config->samplerate=ctx->sample_rate;
-    DBG(1,"p "<<config->channels);
+    DBG(1, "p " << config->channels);
 
-    DBG(1,"p "<<config->samplerate);
+    DBG(1, "p " << config->samplerate);
 
     return true;
 }
@@ -173,7 +173,6 @@ bool Vrok::DecoderFFMPEG::Close()
 */
 bool Vrok::DecoderFFMPEG::DecoderRun(Buffer *buffer,  BufferConfig *config)
 {
-
     while (!_ringbuffer->Read(buffer->GetData(),config->channels*config->frames))
     {
         int ret=0;
@@ -253,33 +252,32 @@ bool Vrok::DecoderFFMPEG::DecoderRun(Buffer *buffer,  BufferConfig *config)
                 case AV_SAMPLE_FMT_U8P:
                     for (size_t nb=0;nb<plane_size/sizeof(uint8_t);nb++){
                         for (int ch = 0; ch < ctx->channels; ch++) {
-                            temp[temp_write] = ( ( ((uint8_t *) frame->extended_data[0])[nb] - 127) * 32768 )/ 127 ;
+                            temp[temp_write] = ( ( ((uint8_t *) frame->extended_data[0])[nb] - 127) * 32767 )/ 127 ;
                             temp_write++;
                         }
                     }
                     break;
                 case AV_SAMPLE_FMT_U8:
                     for (size_t nb=0;nb<plane_size/sizeof(uint8_t);nb++){
-                        temp[temp_write] = ( ( ((uint8_t *) frame->extended_data[0])[nb] - 127) * 32768 )/ 127 ;
+                        temp[temp_write] = ( ( ((uint8_t *) frame->extended_data[0])[nb] - 127) * 32767 )/ 127 ;
                         temp_write++;
                     }
                     break;
-                default:
-                   WARN(9,"PCM type not supported");
+                default: WARN(9, "PCM type not supported");
                    return false;
             }
         } else {
 
-            WARN(5,"frame failed");
+            WARN(5, "frame failed");
             return false;
         }
 
         if (!_ringbuffer->Write(temp,temp_write))
         {
-
-            WARN(9,"Write buffer not enough!");
+            WARN(9, "Write buffer not enough!");
             return false;
         }
+
         av_free_packet(&packet);
     }
 

@@ -65,7 +65,7 @@ public:
             std::cout <<"-----------"<<std::endl;
 
             res->_filename = files[rand() % files.size()];
-            DBG(0,res->_filename);
+            DBG(0, res->_filename);
 
 
             if (decoder->Open(res))
@@ -142,7 +142,7 @@ void process(QString query)
                 pl->SubmitForPlayback(decoder);
         } else
         {
-            WARN(9,"invalid index");
+            WARN(9, "invalid index");
         }
     } else if (command.compare("pause")==0 || command.compare("p")==0)
     {
@@ -166,7 +166,7 @@ void process(QString query)
         } else
         {
 
-            WARN(9,"invalid index");
+            WARN(9, "invalid index");
         }
 
     } else if (command.compare("open")==0)
@@ -184,7 +184,7 @@ void process(QString query)
                            query.section(' ', 1).toStdString());
         if (!current_comp)
         {
-            WARN(9,"component not found!");
+            WARN(9, "component not found!");
         }
     } else if (command.compare("setp")==0)
     {
@@ -196,7 +196,7 @@ void process(QString query)
             Vrok::ComponentManager::GetSingleton()->SetProperty(current_comp,p,query.section(' ',2,2).toStdString());
         } else
         {
-            WARN(9,"no property found");
+            WARN(9, "no property found");
         }
 
     } else if (command.compare("ls")==0)
@@ -334,7 +334,7 @@ int main(int argc, char *argv[])
        {
 
           QString line = in.readLine();
-          DBG(0, line.toStdString());
+           DBG(0, line.toStdString());
           process(line);
        }
        inputFile.close();

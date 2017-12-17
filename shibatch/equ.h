@@ -63,3 +63,7 @@ void equ_quit(SuperEqState *state);
 #endif
 
 #endif
+
+
+template <typename REAL_T>
+int equ_modifySamples_real (SuperEqState *state, char *buf,int nsamples,int nch);

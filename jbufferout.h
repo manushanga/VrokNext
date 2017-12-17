@@ -56,6 +56,7 @@ public:
     }
 private:
     Events* m_events;
+    std::vector<double> m_tempBuffer;
 };
 
 }

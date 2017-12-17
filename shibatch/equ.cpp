@@ -582,3 +582,14 @@ extern "C" void paramlist_free (void *pl) {
     delete ((paramlist *)pl);
 }
 
+template<>
+int equ_modifySamples_real<float>(SuperEqState *state, char *buf, int nsamples, int nch)
+{
+    return equ_modifySamples_float(state, buf, nsamples, nch);
+}
+
+template<>
+int equ_modifySamples_real<double>(SuperEqState *state, char *buf, int nsamples, int nch)
+{
+    return equ_modifySamples_double(state, buf, nsamples, nch);
+}

@@ -1,5 +1,6 @@
 #include "threadpool.h"
 #include "debug.h"
+
 Vrok::ThreadPool::ThreadPool(size_t thread_count)
 {
 
@@ -67,6 +68,9 @@ Vrok::ThreadPool::~ThreadPool()
 
 void Vrok::ThreadPool::Work(ThreadData *th)
 {
+    std::stringstream sstr;
+    sstr << "vrok:" << th->thread_id ;
+    __set_thread_name(sstr.str());
 
     for (size_t i=0;i<(*th->runnables)[th->thread_id].size();i++)
     {

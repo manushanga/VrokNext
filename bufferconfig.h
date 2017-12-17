@@ -23,7 +23,7 @@ struct BufferConfig
 {
     int frames,channels,samplerate;
 
-    BufferConfig(int frames_=1024, int channels_=2, int samplerate_=44100) :
+    BufferConfig(int frames_=2048, int channels_=2, int samplerate_=44100) :
         frames(frames_),
         channels(channels_),
         samplerate(samplerate_)
@@ -38,7 +38,7 @@ struct BufferConfig
     }
     void Print()
     {
-        DBG(1,frames<<" "<<channels<<" "<<samplerate);
+        DBG(1, frames << " " << channels << " " << samplerate);
     }
 };
 

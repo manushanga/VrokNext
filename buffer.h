@@ -25,7 +25,7 @@ class Buffer
 {
 private:
     BufferConfig _config;
-    double *_buffer;
+    real_t *_buffer;
     int _size;
     int _id;
     StopWatch _watch;
@@ -37,7 +37,7 @@ public:
     {
         _config= config;
         _size=config.channels*config.frames;
-        _buffer = new double[_size];
+        _buffer = new real_t[_size];
     }
 
     BufferConfig *GetBufferConfig()
@@ -48,18 +48,18 @@ public:
     {
         _config = *config;
 
-        if (_size != _config.frames * _config.channels)
+        if (_size < _config.frames * _config.channels)
         {
-            _size=_config.channels*_config.frames;
             delete[] _buffer;
-            _buffer = new double[_size];
+            _buffer = new real_t[_size];
         }
+        _size=_config.channels*_config.frames;
     }
     int GetId()
     {
         return _id;
     }
-    double *GetData()
+    real_t *GetData()
     {
         return _buffer;
     }

@@ -30,6 +30,8 @@
 
 #include <mutex>
 
+typedef float real_t;
+
 namespace Vrok {
     const int MAX_CHANNELS=8;
 
@@ -44,6 +46,7 @@ namespace Vrok {
         return 0;
     }
 
+    void Sleep(int microseconds);
 
     /// 'Small value' for floats (2^-24) - used for primitive underrun prevention. The value is pretty much arbitrary (allowing for 24-bit signals normalized to 1.0).
     template<>

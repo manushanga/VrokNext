@@ -19,28 +19,27 @@
  */
 #pragma once
 
-#include <samplerate.h>
-
 #include "common.h"
 #include "effect.h"
 #include "ringbuffer.h"
 
+#include "resampler/resampler.h"
 
 namespace Vrok {
 class Resampler : public Effect
 {
 private:
-    static const int INTERNAL_BUFFER_SIZE = 8192;
+    static const int INTERNAL_BUFFER_SIZE = 8192*4;
 
     Property<int> _out_samplerate;
     Property<int> _mode;
-    SRC_STATE *_current_state;
-    SRC_DATA _sr_data;
 
+    void** _resamplers;
+
+    float _ratio;
     float _buffer[INTERNAL_BUFFER_SIZE];
     float _out_buffer[INTERNAL_BUFFER_SIZE];
-
-    Ringbuffer<float> *_ring_buffer;
+    float _last;
 public:
     Resampler();
     bool EffectRun(Buffer *out_buffer,

@@ -32,6 +32,7 @@
 #include <chrono>
 
 #include "debug.h"
+#include "common.h"
 
 template<typename T>
 class Queue
@@ -43,9 +44,9 @@ private:
     T *_container;
     std::mutex _guard;
     std::atomic<bool> _bpop,_bpush;
-    const int _max_tries=500;
+    const int _max_tries=50;
     // sleep for some amount of micro seconds
-    const int _sleep_for=1000;
+    const int _sleep_for=10000;
 public:
     Queue(int size) :
         _size(size),
@@ -123,8 +124,6 @@ public:
         t = _container[cr];
         _rear.store((cr+1)%_size,std::memory_order_release);
         return true;
-
-
     }
     bool Push(T t)
     {
@@ -144,18 +143,18 @@ public:
     bool PeakBlocking(T& t)
     {
         int i=0;
-        while (!Peak(t) && i<_max_tries) { i++; std::this_thread::sleep_for(std::chrono::microseconds(_sleep_for +1)); }
+        while (!Peak(t) && i<_max_tries) { i++; Vrok::Sleep(_sleep_for +1); }
 #ifdef DEBUG
-        if (i==_max_tries) DBG(6,"drop");
+        if (i==_max_tries) DBG(6, "drop");
 #endif
         return i<_max_tries;
     }
     bool PopBlocking(T& t)
     {
         int i=0;
-        while (!Pop(t) && i<_max_tries) {  i++; std::this_thread::sleep_for(std::chrono::microseconds(_sleep_for));  }
+        while (!Pop(t) && i<_max_tries) {  i++; Vrok::Sleep(_sleep_for);  }
 #ifdef DEBUG
-        if (i==_max_tries) DBG(6,"drop");
+        if (i==_max_tries) DBG(6, "drop");
 #endif
         return i<_max_tries;
  
@@ -163,9 +162,9 @@ public:
     bool PushBlocking(T t)
     {
         int i=0;
-        while (!Push(t) && i<_max_tries) {  i++; std::this_thread::sleep_for(std::chrono::microseconds(_sleep_for -1)); }
+        while (!Push(t) && i<_max_tries) {  i++; Vrok::Sleep(_sleep_for -1); }
 #ifdef DEBUG
-        if (i==_max_tries) DBG(6,"drop");
+        if (i==_max_tries) DBG(6, "drop");
 #endif
         return i<_max_tries;
     }

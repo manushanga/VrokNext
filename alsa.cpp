@@ -75,7 +75,7 @@ bool Vrok::DriverAlsa::BufferConfigChange(BufferConfig *config)
         }
         if (snd_pcm_open(&_handle, _device.c_str(), SND_PCM_STREAM_PLAYBACK, 0) < 0)
         {
-            WARN(0,"alsa:init: failed to open pcm");
+            WARN(0, "alsa:init: failed to open pcm");
             return false;
         }
 
@@ -104,34 +104,34 @@ bool Vrok::DriverAlsa::BufferConfigChange(BufferConfig *config)
 
     if (snd_pcm_format_mask_test(mask, SND_PCM_FORMAT_S32))
     {
-        DBG(1,"bit depth is 32");
+        DBG(1, "bit depth is 32");
         snd_pcm_hw_params_set_format(_handle, _params, SND_PCM_FORMAT_S32);
         _buffer = new char[ 4 * config->frames * config->channels ];
         _multiplier = X32MUL;
     }
     else if (snd_pcm_format_mask_test(mask, SND_PCM_FORMAT_S24))
     {
-        DBG(1,"bit depth is 24");
+        DBG(1, "bit depth is 24");
         snd_pcm_hw_params_set_format(_handle, _params, SND_PCM_FORMAT_S24);
         _buffer = new char[ 3 * config->frames * config->channels ];
         _multiplier = X24MUL;
     }
     else if (snd_pcm_format_mask_test(mask, SND_PCM_FORMAT_S16))
     {
-        DBG(1,"bit depth is 16");
+        DBG(1, "bit depth is 16");
         snd_pcm_hw_params_set_format(_handle, _params, SND_PCM_FORMAT_S16);
         _buffer = new char[ 2 * config->frames * config->channels ];
         _multiplier = X16MUL;
     }
     else if (snd_pcm_format_mask_test(mask, SND_PCM_FORMAT_S8))
     {
-        DBG(1,"bit depth is 8");
+        DBG(1, "bit depth is 8");
         snd_pcm_hw_params_set_format(_handle, _params, SND_PCM_FORMAT_S8);
         _buffer = new char[ 1 * config->frames * config->channels ];
         _multiplier = X8MUL;
     } else
     {
-        WARN(0,"unsupported native hardware format");
+        WARN(0, "unsupported native hardware format");
 		return false;
     }
 
@@ -146,7 +146,7 @@ bool Vrok::DriverAlsa::BufferConfigChange(BufferConfig *config)
 
         if (snd_pcm_hw_params(_handle, _params) < 0)
         {
-            WARN(0,"alsa:init: failed to set pcm params");
+            WARN(0, "alsa:init: failed to set pcm params");
             return false;
         }
 
@@ -174,7 +174,7 @@ bool Vrok::DriverAlsa::DriverRun(Buffer *buffer)
         int32_t *ibuffer = (int32_t *) _buffer;
         for (int i=0;i< frames;i++)
         {
-            double val = buffer->GetData()[i];
+            real_t val = buffer->GetData()[i];
             Vrok::Clip(val,-1.0,1.0);
             ibuffer[i] = val * _multiplier;
         }
@@ -185,7 +185,7 @@ bool Vrok::DriverAlsa::DriverRun(Buffer *buffer)
 
         for (int i=0;i< frames;i++)
         {
-            double val = buffer->GetData()[i];
+            real_t val = buffer->GetData()[i];
             Vrok::Clip(val,-1.0,1.0);
             int ival = val * _multiplier;
             X24_WRITE(_buffer, i, ival);
@@ -197,7 +197,7 @@ bool Vrok::DriverAlsa::DriverRun(Buffer *buffer)
         int16_t *ibuffer = (int16_t *) _buffer;
         for (int i=0;i< frames;i++)
         {
-            double val = buffer->GetData()[i];
+            real_t val = buffer->GetData()[i];
             Vrok::Clip(val,-1.0,1.0);
             ibuffer[i] = val * _multiplier;
         }
@@ -208,14 +208,13 @@ bool Vrok::DriverAlsa::DriverRun(Buffer *buffer)
         int8_t *ibuffer = (int8_t *) _buffer;
         for (int i=0;i< frames;i++)
         {
-            double val = buffer->GetData()[i];
+            real_t val = buffer->GetData()[i];
             Vrok::Clip(val,-1.0,1.0);
             ibuffer[i] = val * _multiplier;
         }
         break;
     }
-    default:
-        WARN(0,"invalid hardware format");
+    default: WARN(0, "invalid hardware format");
 		return false;
     }
 
@@ -223,14 +222,14 @@ bool Vrok::DriverAlsa::DriverRun(Buffer *buffer)
 
     if (ret == -EPIPE || ret == -EINTR || ret == -ESTRPIPE)
     {
-        DBG(1,"trying to recover");
+        DBG(1, "trying to recover");
         if ( snd_pcm_recover(_handle, ret, 0) < 0 )
         {
-            WARN(9,"recover failed for "<<ret);
+            WARN(9, "recover failed for " << ret);
         }
     } else if (ret < 0 && ret != -EAGAIN)
     {
-        WARN(9,"write error "<<ret);
+        WARN(9, "write error " << ret);
     }
 
     return true;

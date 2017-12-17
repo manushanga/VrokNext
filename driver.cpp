@@ -13,7 +13,7 @@ Vrok::Driver::Driver() :
 
 }
 
-void Vrok::Driver::SetVolume(double volume)
+void Vrok::Driver::SetVolume(real_t volume)
 {
     _volume = DB_TO_A(volume);
 }
@@ -36,7 +36,7 @@ void Vrok::Driver::Run()
         {
             if (BufferConfigChange(c) == false)
             {
-                WARN(0,"BufferConfig failed");
+                WARN(0, "BufferConfig failed");
                 return ;
             }
             _first_run = false;
@@ -47,16 +47,17 @@ void Vrok::Driver::Run()
         {
             for (int j=0;j<c->frames * c->channels;j++)
             {
-                double val = 0.5*buffers[0]->GetData()[j]+0.5*buffers[i]->GetData()[j];
+                real_t val = 0.5*buffers[0]->GetData()[j]+0.5*buffers[i]->GetData()[j];
                 buffers[0]->GetData()[j]=val*_volume;
             }
         }
         _meter.Process(buffers[0]);
         _work=DriverRun(buffers[0]);
         ReleaseAllSources(buffers);
-    } else
+    }
+    else
     {
         DBG(0, "output drv sleep");
-        std::this_thread::sleep_for(std::chrono::microseconds(100));
+        std::this_thread::sleep_for(std::chrono::microseconds(10));
     }
 }

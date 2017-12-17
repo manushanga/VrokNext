@@ -171,9 +171,9 @@ void Vrok::ComponentManager::SetProperty(std::string component,
         int val = atoi(value.c_str());
         prop->Set(&val);
     }
-    DBG(0, "Property set, comp="<< component
-                                <<", prop=" << prop_name
-                                <<", value=" << value);
+    DBG(0, "Property set, comp=" << component
+                                 << ", prop=" << prop_name
+                                 << ", value=" << value);
     comp->PropertyChanged(prop);
 }
 

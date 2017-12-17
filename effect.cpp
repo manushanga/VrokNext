@@ -25,7 +25,7 @@ void Vrok::Effect::Run()
             {
                 if (BufferConfigChange(c) == false)
                 {
-                    WARN(0,"BufferConfig failed");
+                    WARN(0, "BufferConfig failed");
                     return ;
                 }
                 _first_run = false;
@@ -46,6 +46,6 @@ void Vrok::Effect::Run()
     else
     {
         DBG(0, "effect drv sleep");
-        std::this_thread::sleep_for(std::chrono::microseconds(100));
+        std::this_thread::sleep_for(std::chrono::microseconds(10));
     }
 }
