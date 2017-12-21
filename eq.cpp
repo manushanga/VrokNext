@@ -3,8 +3,8 @@
 #include "eq.h"
 
 #define CLIP(__x) ((__x>1.0f)?1.0f:(__x<-1.0f?-1.0f:__x))
-#define DB_TO_A(__db) (std::pow(2,(__db/10.0)))
-#define A_TO_DB(__a) (10.0 * std::log(__a))
+#define DB_TO_A(__db) (std::pow(10,(__db/-20.0)))
+#define A_TO_DB(__a) (-20.0 * std::log(__a))
 
 Vrok::EffectSSEQ::EffectSSEQ() :
     _sb_paramsroot(nullptr)
@@ -26,9 +26,9 @@ Vrok::EffectSSEQ::EffectSSEQ() :
 
     for (int i=0;i<BAND_COUNT;i++)
     {
-        _bands[i].Set(0.0);
+        _bands[i].Set(1.0);
     }
-    _preamp.Set(0.0);
+    _preamp.Set(1.0);
 
     //BufferConfigChange(GetBufferConfig());
 }
@@ -62,6 +62,7 @@ void Vrok::EffectSSEQ::PropertyChanged(PropertyBase *property)
     if (_sb_paramsroot)
         paramlist_free (_sb_paramsroot);
     _sb_paramsroot = params;
+
 
 }
 

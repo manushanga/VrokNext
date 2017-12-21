@@ -42,6 +42,7 @@ void Vrok::Driver::Run()
             _first_run = false;
             _input_bc = *c;
         }
+
         // unchecked mixing
         for (size_t i=0;i<_sources.size();i++)
         {
@@ -51,13 +52,14 @@ void Vrok::Driver::Run()
                 buffers[0]->GetData()[j]=val*_volume;
             }
         }
+#ifdef VU_METERS
         _meter.Process(buffers[0]);
+#endif
         _work=DriverRun(buffers[0]);
         ReleaseAllSources(buffers);
     }
     else
     {
-        DBG(0, "output drv sleep");
-        std::this_thread::sleep_for(std::chrono::microseconds(10));
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
 }

@@ -181,7 +181,7 @@ bool Vrok::Resampler::BufferConfigChange(BufferConfig *config)
     for (int i=0;i<config->channels;i++)
     {
         _resamplers[i] = resampler_create();
-        resampler_set_quality(_resamplers[i], RESAMPLER_QUALITY_MAX);
+        resampler_set_quality(_resamplers[i], RESAMPLER_QUALITY_CUBIC);
         resampler_set_rate(_resamplers[i], _ratio );
     }
     return true;

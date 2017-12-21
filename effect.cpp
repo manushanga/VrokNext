@@ -45,7 +45,6 @@ void Vrok::Effect::Run()
     }
     else
     {
-        DBG(0, "effect drv sleep");
-        std::this_thread::sleep_for(std::chrono::microseconds(10));
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
 }
