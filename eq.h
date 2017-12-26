@@ -24,7 +24,7 @@
 #include "shibatch/equ.h"
 #include "shibatch/paramlist.hpp"
 
-#define BAND_COUNT 18
+#define BAND_COUNT 17
 
 namespace Vrok {
 class EffectSSEQ : public Effect
