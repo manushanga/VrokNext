@@ -38,6 +38,8 @@ void Vrok::Effect::Run()
 
             _work=EffectRun(buffer, buffers, _sources.size());
 
+            buffer->SetBufferType(buffers[0]->getBufferType());
+
             PushBuffer(buffer);
         }
 

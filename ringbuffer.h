@@ -82,6 +82,10 @@ public:
         _rear = 0;
         _used = 0;
     }
+    std::size_t Used()
+    {
+        return _used;
+    }
     std::size_t Size()
     {
         return _size;

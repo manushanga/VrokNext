@@ -23,11 +23,20 @@
 
 class Buffer
 {
+public:
+    enum class Type : int
+    {
+        StreamEnd = 0,
+        StreamStart,
+        StreamStop,
+        StreamBuffer
+    };
 private:
     BufferConfig _config;
     real_t *_buffer;
     int _size;
     int _id;
+    Type _type;
     StopWatch _watch;
     uint64_t _stream_id;
 public:
@@ -38,8 +47,18 @@ public:
         _config= config;
         _size=config.channels*config.frames;
         _buffer = new real_t[_size];
+        _type = Type::StreamBuffer;
     }
 
+    void SetBufferType(Type type)
+    {
+        _type = type;
+    }
+
+    Type getBufferType()
+    {
+        return _type;
+    }
     BufferConfig *GetBufferConfig()
     {
         return &_config;

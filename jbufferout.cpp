@@ -54,12 +54,16 @@ bool Vrok::DriverJBufferOut::BufferConfigChange(BufferConfig *config)
 
 bool Vrok::DriverJBufferOut::DriverRun(Buffer *buffer)
 {
+    if (buffer->getBufferType() == Buffer::Type::StreamEnd)
+    {
+        DBG(0,"stream end received");
+    }
     int len = buffer->GetBufferConfig()->frames * buffer->GetBufferConfig()->channels;
     for (int i=0;i<len;i++)
     {
         m_tempBuffer[i] = double( buffer->GetData()[i] );
     }
-    m_events->OnBuffer(m_tempBuffer.data(), buffer->GetBufferConfig()->frames);
+    m_events->OnBuffer(m_tempBuffer.data(), buffer->GetBufferConfig()->frames, buffer->getBufferType());
     return true;
 }
 

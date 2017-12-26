@@ -7,6 +7,7 @@ Vrok::Player::Player() :
     _new_resource(false),
     _work(true),
     _command_queue(new Queue<Command>(5)),
+    _queue_next(false),
     _command_now_queue(new Queue<Command>(5)),
     _decoder_work(false),
     _events(nullptr),
@@ -69,24 +70,33 @@ void Vrok::Player::Run()
 {
     Command cmd;
     bool got;
-
+    bool stream_start = false;
+    bool force_stop = false;
 
     got = _command_now_queue->Pop(cmd);
     if (got)
     {
         // we got something on the play queue
         // close playing song and start next
-        if (cmd.type == OPEN)
-        {
-            if (_decoder)
-            {
+        if (cmd.type == OPEN) {
+            if (_decoder) {
                 _decoder->Close();
                 delete _decoder;
             }
-            _decoder = (Vrok::Decoder*) cmd.data;
+            stream_start = true;
+            _decoder = (Vrok::Decoder *) cmd.data;
             BufferConfig config;
             _decoder->GetBufferConfig(&config);
             SetBufferConfig(&config);
+        } else if (cmd.type == STOP)
+        {
+            if (_decoder) {
+                _decoder->Close();
+                delete _decoder;
+            }
+            force_stop = true;
+            _decoder = nullptr;
+
         } else if (cmd.type == PAUSE)
         {
             _paused=true;
@@ -95,19 +105,24 @@ void Vrok::Player::Run()
             _paused=false;
         } else if (cmd.type == SKIP)
         {
-            if (_events)
+            if (_events  && _queue_next)
                 _events->QueueNext();
         }
     }
     else if (!_decoder)
     {
-        if (_events)
+        if (_events && _queue_next)
             _events->QueueNext();
     }
 
     if (_decoder && !_paused)
     {
         auto b=AcquireBuffer();
+        if (stream_start)
+            b->SetBufferType(Buffer::Type::StreamStart);
+        else
+            b->SetBufferType(Buffer::Type::StreamBuffer);
+
         if (b)
         {
             b->SetStreamId(_cur_stream_id);
@@ -125,9 +140,30 @@ void Vrok::Player::Run()
                 _decoder->Close();
                 delete _decoder;
                 _decoder = NULL;
+
+                if (_queue_next == false)
+                    b->SetBufferType(Buffer::Type::StreamStop);
+                else
+                    b->SetBufferType(Buffer::Type::StreamEnd);
             }
+
+            if (force_stop)
+            {
+                WARN(0, "force stop");
+                b->SetBufferType(Buffer::Type::StreamStop);
+            }
+
             PushBuffer(b);
         }
     }
+    else if (_decoder == nullptr && _queue_next == false)
+    {
+       Vrok::Sleep(100);
+    }
+}
+
+void Vrok::Player::SetQueueNext(bool queue_next)
+{
+    _queue_next = queue_next;
 }
 

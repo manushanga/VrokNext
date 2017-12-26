@@ -14,7 +14,9 @@ public:
     class Events
     {
     public:
-        virtual void OnBuffer(double* buffer, int frames) = 0;
+        typedef Buffer::Type StreamType;
+
+        virtual void OnBuffer(double* buffer, int frames, StreamType type) = 0;
         virtual void OnBufferConfigChange(int frames, int samplerate, int channels) = 0;
         virtual void OnThreadStart();
         virtual void OnThreadEnd();
