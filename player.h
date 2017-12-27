@@ -41,7 +41,23 @@ namespace Vrok {
         };
 
     private:
-        enum CommandType {OPEN, PAUSE, RESUME, STOP, SEEK, SKIP};
+        enum class CommandType
+        {
+            OPEN,
+            PAUSE,
+            RESUME,
+            STOP,
+            SEEK,
+            SKIP
+        };
+        enum class PlayerState
+        {
+            START,
+            PLAYING,
+            PLAYING_GAPLESS_DONE,
+            PAUSED,
+            STOPPED
+        };
         struct Command
         {
             CommandType type;
@@ -49,6 +65,7 @@ namespace Vrok {
         };
         atomic<bool> _new_resource;
         bool _paused;
+        PlayerState _state;
     protected:
 
         atomic<bool> _work;
@@ -63,6 +80,8 @@ namespace Vrok {
         Queue<Command> *_command_queue, *_command_now_queue;
 
         Decoder *_decoder;
+
+        void ResetDecoder();
 
 
     public:

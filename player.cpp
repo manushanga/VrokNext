@@ -14,7 +14,8 @@ Vrok::Player::Player() :
     _decoder_work(false),
     _events(nullptr),
     _paused(false),
-    _decoder(nullptr)
+    _decoder(nullptr),
+    _state(PlayerState::START)
 {
 }
 
@@ -22,7 +23,7 @@ bool Vrok::Player::SubmitForPlayback(Vrok::Decoder *decoder)
 {
     Command cmd;
     cmd.data = decoder;
-    cmd.type = OPEN;
+    cmd.type = CommandType::OPEN;
     _command_now_queue->PushBlocking(cmd);
     //_command_queue->Clear();
     return true;
@@ -32,7 +33,7 @@ bool Vrok::Player::Resume()
 {
     Command cmd;
     cmd.data = NULL;
-    cmd.type = RESUME;
+    cmd.type = CommandType::RESUME;
     _command_now_queue->PushBlocking(cmd);
     return true;
 }
@@ -41,7 +42,7 @@ bool Vrok::Player::Pause()
 {
     Command cmd;
     cmd.data = NULL;
-    cmd.type = PAUSE;
+    cmd.type = CommandType::PAUSE;
     _command_now_queue->PushBlocking(cmd);
     return true;
 }
@@ -49,7 +50,7 @@ bool Vrok::Player::Stop()
 {
     Command cmd;
     cmd.data = NULL;
-    cmd.type = STOP;
+    cmd.type = CommandType::STOP;
     _command_now_queue->PushBlocking(cmd);
     return true;
 }
@@ -58,7 +59,7 @@ bool Vrok::Player::Skip()
 {
     Command cmd;
     cmd.data = NULL;
-    cmd.type = SKIP;
+    cmd.type = CommandType::SKIP;
     _command_now_queue->PushBlocking(cmd);
     return true;
 }
@@ -72,110 +73,166 @@ void Vrok::Player::Run()
 {
     Command cmd;
     bool got;
-    bool stream_start = false;
-    bool force_stop = false;
-    bool gap_less_done = false;
 
-    got = _command_now_queue->Pop(cmd);
-    if (got)
-    {
-        // we got something on the play queue
-        // close playing song and start next
-        if (cmd.type == OPEN) {
-            if (_decoder) {
-                _decoder->Close();
-                delete _decoder;
-            }
-            stream_start = true;
-            gap_less_done = false;
-            _decoder = (Vrok::Decoder *) cmd.data;
-            BufferConfig config;
-            _decoder->GetBufferConfig(&config);
-            SetBufferConfig(&config);
-        } else if (cmd.type == STOP)
-        {
-            if (_decoder) {
-                _decoder->Close();
-                delete _decoder;
-            }
-            force_stop = true;
-            _decoder = nullptr;
 
-        } else if (cmd.type == PAUSE)
+    switch (_state) {
+        case PlayerState::START:
         {
-            _paused=true;
-        } else if (cmd.type == RESUME)
-        {
-            _paused=false;
-        } else if (cmd.type == SKIP)
-        {
-            if (_events  && _queue_next)
-                _events->QueueNext();
+            got = _command_now_queue->Pop(cmd);
+            if (got) {
+                if (cmd.type == CommandType::OPEN) {
+                    _command_now_queue->Push(cmd);
+                    _state = PlayerState::PLAYING;
+                }
+            }
+            break;
         }
-    }
-    else if (!_decoder)
-    {
-        if (_events && _queue_next)
-            _events->QueueNext();
-    }
+        case PlayerState::PLAYING:
+        {
+            got = _command_now_queue->Pop(cmd);
 
-    if (_decoder && !_paused)
-    {
-        auto b=AcquireBuffer();
-        if (stream_start)
-            b->SetBufferType(Buffer::Type::StreamStart);
-        else
+            auto b = AcquireBuffer();
             b->SetBufferType(Buffer::Type::StreamBuffer);
 
-        if (b)
-        {
-            b->SetStreamId(_cur_stream_id);
-            if (*b->GetBufferConfig() != *GetBufferConfig())
-            {
-                b->Reset(GetBufferConfig());
-            }
-            b->GetWatch().Reset();
-            _decoder_work = _decoder->DecoderRun(b, GetBufferConfig());
-            atomic_thread_fence(memory_order_seq_cst);
+            if (got) {
+                if (cmd.type == CommandType::OPEN) {
+                    ResetDecoder();
+                    b->SetBufferType(Buffer::Type::StreamStart);
 
-            if (_decoder->GetPositionInSeconds() + INIT_GAPLESS_SECS > _decoder->GetDurationInSeconds() && !gap_less_done)
-            {
-                DBG(0,"gapless request")
-                if (_events && _queue_next)
-                    _events->QueueNext();
+                    _decoder = (Vrok::Decoder *) cmd.data;
+                    BufferConfig config;
+                    _decoder->GetBufferConfig(&config);
+                    SetBufferConfig(&config);
 
-                gap_less_done = true;
-            }
-            // don't push out failed buffers
-            if (!_decoder_work)
-            {
-                _decoder->Close();
-                delete _decoder;
-                _decoder = NULL;
+                    _state = PlayerState::PLAYING;
+                } else if (cmd.type == CommandType::STOP) {
+                    ResetDecoder();
 
-                if (_queue_next == false)
                     b->SetBufferType(Buffer::Type::StreamStop);
-                else
-                    b->SetBufferType(Buffer::Type::StreamEnd);
+
+                    _state = PlayerState::STOPPED;
+                } else if (cmd.type == CommandType::PAUSE) {
+                    _state = PlayerState::PAUSED;
+                } else if (cmd.type == CommandType::SKIP) {
+
+                    if (_events && _queue_next) {
+                        _events->QueueNext();
+                    }
+                    _state = PlayerState::START;
+                }
             }
 
-            if (force_stop)
-            {
-                WARN(0, "force stop");
-                b->SetBufferType(Buffer::Type::StreamStop);
-            }
+            if (b) {
 
-            PushBuffer(b);
+                b->SetStreamId(_cur_stream_id);
+                if (*b->GetBufferConfig() != *GetBufferConfig()) {
+                    b->Reset(GetBufferConfig());
+                }
+                b->GetWatch().Reset();
+                _decoder_work = _decoder->DecoderRun(b, GetBufferConfig());
+
+                if (_decoder->GetPositionInSeconds() + INIT_GAPLESS_SECS > _decoder->GetDurationInSeconds()) {
+                    WARN(0, "gapless request")
+                    if (_events && _queue_next)
+                        _events->QueueNext();
+
+                    _state = PlayerState::PLAYING_GAPLESS_DONE;
+                }
+
+                if (!_decoder_work) {
+                    ResetDecoder();
+
+                    if (_queue_next == false)
+                    {
+                        b->SetBufferType(Buffer::Type::StreamStop);
+
+                        _state = PlayerState::STOPPED;
+                    }
+                    else
+                    {
+                        b->SetBufferType(Buffer::Type::StreamEnd);
+
+                        _state = PlayerState::PLAYING;
+                    }
+                }
+
+                PushBuffer(b);
+            }
+            break;
         }
-    }
-    else if (_decoder == nullptr && _queue_next == false)
-    {
-       Vrok::Sleep(100);
-    }
-}
+        case PlayerState::PLAYING_GAPLESS_DONE:
+        {
+            auto b = AcquireBuffer();
 
+            if (b) {
+                b->SetStreamId(_cur_stream_id);
+                if (*b->GetBufferConfig() != *GetBufferConfig()) {
+                    b->Reset(GetBufferConfig());
+                }
+                b->GetWatch().Reset();
+                _decoder_work = _decoder->DecoderRun(b, GetBufferConfig());
+
+                // don't push out failed buffers
+                if (!_decoder_work) {
+                    ResetDecoder();
+
+                    if (_queue_next == false)
+                    {
+                        b->SetBufferType(Buffer::Type::StreamStop);
+
+                        _state = PlayerState::STOPPED;
+                    }
+                    else
+                    {
+                        b->SetBufferType(Buffer::Type::StreamEnd);
+
+                        _state = PlayerState::PLAYING;
+                    }
+
+                }
+
+                PushBuffer(b);
+            }
+            break;
+        }
+        case PlayerState::PAUSED:
+        {
+            got = _command_now_queue->Pop(cmd);
+            if (got) {
+                if (cmd.type == CommandType::RESUME) {
+                    _state = PlayerState::PLAYING;
+                }
+            }
+            break;
+        }
+        case PlayerState::STOPPED:
+        {
+            got = _command_now_queue->Pop(cmd);
+            if (got) {
+                if (cmd.type == CommandType::OPEN) {
+                    _command_now_queue->Push(cmd);
+                    _state = PlayerState::PLAYING;
+                }
+            }
+            break;
+        }
+
+    }
+
+    Vrok::Sleep(100);
+
+}
 void Vrok::Player::SetQueueNext(bool queue_next)
 {
     _queue_next = queue_next;
+}
+
+void Vrok::Player::ResetDecoder()
+{
+    if (_decoder) {
+        _decoder->Close();
+        delete _decoder;
+    }
+    _decoder = nullptr;
 }
 
