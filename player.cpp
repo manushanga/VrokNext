@@ -2,6 +2,8 @@
 #include "player.h"
 #include "ffmpeg.h"
 
+#define INIT_GAPLESS_SECS 2
+
 Vrok::Player::Player() :
     BufferGraph::Point(),
     _new_resource(false),
@@ -72,6 +74,7 @@ void Vrok::Player::Run()
     bool got;
     bool stream_start = false;
     bool force_stop = false;
+    bool gap_less_done = false;
 
     got = _command_now_queue->Pop(cmd);
     if (got)
@@ -84,6 +87,7 @@ void Vrok::Player::Run()
                 delete _decoder;
             }
             stream_start = true;
+            gap_less_done = false;
             _decoder = (Vrok::Decoder *) cmd.data;
             BufferConfig config;
             _decoder->GetBufferConfig(&config);
@@ -134,6 +138,14 @@ void Vrok::Player::Run()
             _decoder_work = _decoder->DecoderRun(b, GetBufferConfig());
             atomic_thread_fence(memory_order_seq_cst);
 
+            if (_decoder->GetPositionInSeconds() + INIT_GAPLESS_SECS > _decoder->GetDurationInSeconds() && !gap_less_done)
+            {
+                DBG(0,"gapless request")
+                if (_events && _queue_next)
+                    _events->QueueNext();
+
+                gap_less_done = true;
+            }
             // don't push out failed buffers
             if (!_decoder_work)
             {

@@ -68,6 +68,12 @@ public:
     bool Pause() { return true; }
     bool Stop() { return true; }
 
+    uint64_t GetDurationInSeconds() override;
+
+    uint64_t GetPositionInSeconds() override;
+
+    void SetPositionInSeconds(uint64_t seconds) override;
+
 private:
     static int ff_avio_interrupt(void *user);
     Ringbuffer<real_t> *_ringbuffer;

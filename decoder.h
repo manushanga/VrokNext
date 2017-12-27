@@ -35,6 +35,9 @@ public:
     virtual bool Pause()=0;
     virtual bool Stop()=0;
     virtual bool DecoderRun(Buffer *buffer, BufferConfig *config)=0;
+    virtual uint64_t GetDurationInSeconds() = 0;
+    virtual uint64_t GetPositionInSeconds() = 0;
+    virtual void SetPositionInSeconds(uint64_t seconds) = 0;
 };
 }
 

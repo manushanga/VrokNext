@@ -214,7 +214,8 @@ bool Vrok::DecoderFFMPEG::DecoderRun(Buffer *buffer,  BufferConfig *config)
         temp_write=0;
 
         if(got_frame){
-            current_in_seconds = ( audio_st->time_base.num * frame->pkt_pts )/ audio_st->time_base.den ;
+            current_in_seconds = ( audio_st->time_base.num * frame->pts )/ audio_st->time_base.den * audio_st->time_base.num;
+
             switch (sfmt){
 
                 case AV_SAMPLE_FMT_S16P:
@@ -282,5 +283,20 @@ bool Vrok::DecoderFFMPEG::DecoderRun(Buffer *buffer,  BufferConfig *config)
     }
 
     return true;
+
+}
+
+uint64_t Vrok::DecoderFFMPEG::GetDurationInSeconds()
+{
+    return duration_in_seconds;
+}
+
+uint64_t Vrok::DecoderFFMPEG::GetPositionInSeconds()
+{
+    return current_in_seconds;
+}
+
+void Vrok::DecoderFFMPEG::SetPositionInSeconds(uint64_t seconds)
+{
 
 }
