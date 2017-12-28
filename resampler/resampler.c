@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #define _USE_MATH_DEFINES
-#include "fastmath.h"
+#include "resampler/fastmath.h"
 #if (defined(_M_IX86) || defined(__i386__) || defined(_M_X64) || defined(__amd64__))
 #include <xmmintrin.h>
 #define RESAMPLER_SSE
@@ -479,7 +479,7 @@ static int resampler_run_blep(resampler * r, float ** out_, float * out_end)
             
             out += (int)inv_phase;
             
-            inv_phase = FM_fractional(inv_phase); //FM_fmodf(inv_phase, 1.0f);
+            inv_phase = FM_fractionalf(inv_phase); //FM_fmodf(inv_phase, 1.0f);
         }
         while ( in < in_end );
         
@@ -558,7 +558,7 @@ static int resampler_run_blep_sse(resampler * r, float ** out_, float * out_end)
             
             out += (int)inv_phase;
             
-            inv_phase = FM_fractional(inv_phase); // FM_fmodf(inv_phase, 1.0f);
+            inv_phase = FM_fractionalf(inv_phase); // FM_fmodf(inv_phase, 1.0f);
         }
         while ( in < in_end );
         
@@ -636,7 +636,7 @@ static int resampler_run_blep(resampler * r, float ** out_, float * out_end)
             
             out += (int)inv_phase;
             
-            inv_phase = FM_fractional(inv_phase); //FM_fmodf(inv_phase, 1.0f);
+            inv_phase = FM_fractionalf(inv_phase); //FM_fmodf(inv_phase, 1.0f);
         }
         while ( in < in_end );
         
@@ -681,7 +681,7 @@ static int resampler_run_linear(resampler * r, float ** out_, float * out_end)
             
             in += (int)phase;
             
-            phase = FM_fractional(phase); //FM_fmodf(phase, 1.0f);
+            phase = FM_fractionalf(phase); //FM_fmodf(phase, 1.0f);
         }
         while ( in < in_end );
         
@@ -753,14 +753,14 @@ static int resampler_run_blam(resampler * r, float ** out_, float * out_end)
                 ++in;
                 inv_phase += inv_phase_inc;
                 out += (int)inv_phase;
-                inv_phase = FM_fractional(inv_phase); // FM_fmodf(inv_phase, 1.0f);
+                inv_phase = FM_fractionalf(inv_phase); // FM_fmodf(inv_phase, 1.0f);
             }
             else
             {
                 phase += phase_inc;
                 ++out;
                 in += (int)phase;
-                phase = FM_fractional(phase); //FM_fmodf(phase, 1.0f);
+                phase = FM_fractionalf(phase); //FM_fmodf(phase, 1.0f);
             }
         }
         while ( in < in_end );
@@ -849,7 +849,7 @@ static int resampler_run_blam_sse(resampler * r, float ** out_, float * out_end)
                 ++in;
                 inv_phase += inv_phase_inc;
                 out += (int)inv_phase;
-                inv_phase = FM_fractional(inv_phase);//FM_fmodf(inv_phase, 1.0f);
+                inv_phase = FM_fractionalf(inv_phase);//FM_fmodf(inv_phase, 1.0f);
             }
             else
             {
@@ -859,7 +859,7 @@ static int resampler_run_blam_sse(resampler * r, float ** out_, float * out_end)
                 if (phase >= 1.0f)
                 {
                     ++in;
-                    phase = FM_fractional(phase);//FM_fmodf(phase, 1.0f);
+                    phase = FM_fractionalf(phase);//FM_fmodf(phase, 1.0f);
                 }
             }
         }
@@ -946,7 +946,7 @@ static int resampler_run_blam(resampler * r, float ** out_, float * out_end)
                 ++in;
                 inv_phase += inv_phase_inc;
                 out += (int)inv_phase;
-                inv_phase = FM_fractional(inv_phase); //FM_fmodf(inv_phase, 1.0f);
+                inv_phase = FM_fractionalf(inv_phase); //FM_fmodf(inv_phase, 1.0f);
             }
             else
             {
@@ -956,7 +956,7 @@ static int resampler_run_blam(resampler * r, float ** out_, float * out_end)
                 if (phase >= 1.0f)
                 {
                     ++in;
-                    phase = FM_fractional(phase); //FM_fmodf(phase, 1.0f);
+                    phase = FM_fractionalf(phase); //FM_fmodf(phase, 1.0f);
                 }
             }
         }
@@ -1010,7 +1010,7 @@ static int resampler_run_cubic(resampler * r, float ** out_, float * out_end)
             
             in += (int)phase;
             
-            phase = FM_fractional(phase); //FM_fmodf(phase, 1.0f);
+            phase = FM_fractionalf(phase); //FM_fmodf(phase, 1.0f);
         }
         while ( in < in_end );
         
@@ -1065,7 +1065,7 @@ static int resampler_run_cubic_sse(resampler * r, float ** out_, float * out_end
             
             in += (int)phase;
             
-            phase = FM_fractional(phase); //FM_fmodf(phase, 1.0f);
+            phase = FM_fractionalf(phase); //FM_fmodf(phase, 1.0f);
         }
         while ( in < in_end );
         
@@ -1114,7 +1114,7 @@ static int resampler_run_cubic(resampler * r, float ** out_, float * out_end)
             
             in += (int)phase;
             
-            phase = FM_fractional(phase); // FM_fmodf(phase, 1.0f);
+            phase = FM_fractionalf(phase); // FM_fmodf(phase, 1.0f);
         }
         while ( in < in_end );
         
@@ -1173,7 +1173,7 @@ static int resampler_run_sinc(resampler * r, float ** out_, float * out_end)
 
             in += (int)phase;
 
-            phase = FM_fractional(phase); //FM_fmodf(phase, 1.0f);
+            phase = FM_fractionalf(phase); //FM_fmodf(phase, 1.0f);
         }
         while ( in < in_end );
 
@@ -1250,7 +1250,7 @@ static int resampler_run_sinc_sse(resampler * r, float ** out_, float * out_end)
             
             in += (int)phase;
             
-            phase = FM_fractional(phase); //FM_fmodf(phase, 1.0f);
+            phase = FM_fractionalf(phase); //FM_fmodf(phase, 1.0f);
         }
         while ( in < in_end );
         
@@ -1312,7 +1312,7 @@ static int resampler_run_sinc(resampler * r, float ** out_, float * out_end)
                 temp2 = vld1q_f32( (const float32_t *)( kernel + i ) );
                 samplex = vmlaq_f32( samplex, temp1, temp2 );
             }
-            kernel_sum = 1.0 / kernel_sum;
+            kernel_sum = FM_reciprocalf(kernel_sum); //1.0 / kernel_sum;
             samplex = vmulq_f32(samplex, vmovq_n_f32(kernel_sum));
             half = vadd_f32(vget_high_f32(samplex), vget_low_f32(samplex));
             *out++ = vget_lane_f32(vpadd_f32(half, half), 0);
@@ -1321,7 +1321,7 @@ static int resampler_run_sinc(resampler * r, float ** out_, float * out_end)
             
             in += (int)phase;
             
-            phase = FM_fractional(phase); //FM_fmodf(phase, 1.0f);
+            phase = FM_fractionalf(phase); //FM_fmodf(phase, 1.0f);
         }
         while ( in < in_end );
         

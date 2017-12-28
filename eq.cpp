@@ -43,6 +43,7 @@ bool Vrok::EffectSSEQ::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int
     real_t *proc_out=out_buffer->GetData();
     
     memcpy(proc_out, proc, sizeof(real_t) * len);
+
     equ_modifySamples_real<real_t>(&_sb_state, (char *)proc_out, bc->frames, bc->channels);
 
     return true;

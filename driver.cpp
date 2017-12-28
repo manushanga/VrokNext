@@ -60,6 +60,6 @@ void Vrok::Driver::Run()
     }
     else
     {
-        std::this_thread::sleep_for(std::chrono::microseconds(100));
+        Vrok::Sleep(100);
     }
 }

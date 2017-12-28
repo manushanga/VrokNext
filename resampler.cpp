@@ -143,20 +143,22 @@ bool Vrok::Resampler::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int 
 
     BufferConfig cfg;
     cfg.channels = src->GetBufferConfig()->channels;
-    cfg.frames = samples_out;//flen;// out_frames;
+    cfg.frames =/* src_flen;*/samples_out;//flen;// out_frames;
     cfg.samplerate = _out_samplerate.Get();
     out_buffer->Reset(&cfg);
 
-    for (std::size_t i=0;i<samples_out * nch;i++)
+    for (std::size_t i=0;i< /*src_len*/samples_out * nch;i++)
     {
-        out_buffer->GetData()[i] = _buffer[i] * 0.95;
-        Clip<real_t>(out_buffer->GetData()[i],-1.0,1.0);
+        out_buffer->GetData()[i] = _buffer[i];
     }
     return true;
 }
 
 void Vrok::Resampler::PropertyChanged(Vrok::PropertyBase *property)
 {
+    if (!_resamplers)
+        return;
+
     std::lock_guard<std::mutex> lg(_property_mutex);
     for (int i=0;i<_resamplers_count;i++)
     {
