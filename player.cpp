@@ -6,14 +6,11 @@
 
 Vrok::Player::Player() :
     BufferGraph::Point(),
-    _new_resource(false),
     _work(true),
-    _command_queue(new Queue<Command>(5)),
     _queue_next(false),
     _command_now_queue(new Queue<Command>(5)),
     _decoder_work(false),
     _events(nullptr),
-    _paused(false),
     _decoder(nullptr),
     _state(PlayerState::START)
 {

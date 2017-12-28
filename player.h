@@ -63,8 +63,6 @@ namespace Vrok {
             CommandType type;
             void *data;
         };
-        atomic<bool> _new_resource;
-        bool _paused;
         PlayerState _state;
     protected:
 
@@ -77,7 +75,7 @@ namespace Vrok {
         // _play_now_queue: queue tracks will interrupt
         // the playback here
 
-        Queue<Command> *_command_queue, *_command_now_queue;
+        Queue<Command> *_command_now_queue;
 
         Decoder *_decoder;
 

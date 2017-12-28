@@ -35,6 +35,8 @@ private:
     Property<int> _mode;
 
     void** _resamplers;
+    int _resamplers_count;
+    std::mutex _property_mutex;
 
     float _ratio;
     float _buffer[INTERNAL_BUFFER_SIZE];

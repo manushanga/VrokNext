@@ -157,17 +157,22 @@ bool Vrok::Resampler::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int 
 
 void Vrok::Resampler::PropertyChanged(Vrok::PropertyBase *property)
 {
+    std::lock_guard<std::mutex> lg(_property_mutex);
+    for (int i=0;i<_resamplers_count;i++)
+    {
+        resampler_set_quality(_resamplers[i], _mode.Get());
+    }
 }
 
 bool Vrok::Resampler::BufferConfigChange(BufferConfig *config)
 {
+    std::lock_guard<std::mutex> lg(_property_mutex);
     DBG(0, "-----changed resampler rate " << _out_samplerate.Get() << " " << config->samplerate);
     _ratio =  double(config->samplerate) / double(_out_samplerate.Get())  ;
 
-
     if (_resamplers)
     {
-        for (int i=0;i<config->channels;i++)
+        for (int i=0;i<_resamplers_count;i++)
         {
             resampler_clear( _resamplers[i] );
             resampler_delete( _resamplers[i] );
@@ -177,11 +182,12 @@ bool Vrok::Resampler::BufferConfigChange(BufferConfig *config)
     delete[] _resamplers;
 
     _resamplers = new void*[config->channels];
+    _resamplers_count = config->channels;
 
     for (int i=0;i<config->channels;i++)
     {
         _resamplers[i] = resampler_create();
-        resampler_set_quality(_resamplers[i], RESAMPLER_QUALITY_CUBIC);
+        resampler_set_quality(_resamplers[i], _mode.Get());
         resampler_set_rate(_resamplers[i], _ratio );
     }
     return true;
