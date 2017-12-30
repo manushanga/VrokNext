@@ -27,6 +27,7 @@
 
 #include "component.h"
 #include "componentmanager.h"
+#include "util/fastmath.h"
 
 #include <mutex>
 
@@ -41,6 +42,16 @@ namespace Vrok {
         value = std::max(low, std::min(value, high));
     }
 
+    template <>
+    inline void Clip<float>(float& value, float low, float high)
+    {
+        value = FM_clampf(value, low, high);
+    }
+    template <>
+    inline void Clip<double>(double& value, double low, double high)
+    {
+        value = FM_clampd(value, low, high);
+    }
     template<typename T>
     inline T SmallValue() {
         return 0;

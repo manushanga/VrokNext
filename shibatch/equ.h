@@ -29,16 +29,34 @@
 extern "C" {
 #endif
 
+#ifdef USE_NE10
+#include <NE10.h>
+#endif
+
 typedef float REAL;
+
+#ifdef USE_NE10
+typedef ne10_fft_cpx_float32_t NE_CPX;
+typedef ne10_float32_t NE_REAL;
+typedef ne10_fft_r2c_cfg_float32_t NE_CPX_CFG;
+#define ne10_rfft ne10_fft_r2c_1d_float32
+#define ne10_rifft ne10_fft_c2r_1d_float32
+#define ne10_alloc ne10_fft_alloc_r2c_float32
+#endif
 
 typedef struct {
     REAL *lires,*lires1,*lires2;
     REAL *irest;
     REAL *fsamples;
+#ifdef USE_NE10
+    NE_CPX_CFG cfg;
+    NE_REAL *fsamples_in;
+    NE_CPX *fsamples_out;
+#endif
     REAL *ditherbuf;
     int ditherptr;
     volatile int chg_ires,cur_ires;
-    int winlen,winlenbit,tabsize,nbufsamples;
+    int winlen,winlenbit,tabsize,tabsizeH,nbufsamples;
     REAL *finbuf;
     REAL *outbuf;
     int dither;

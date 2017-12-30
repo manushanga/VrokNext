@@ -1,5 +1,7 @@
 
+#include "util/fastmath.h"
 #include "resampler.h"
+
 
 #define L_A 1
 
@@ -149,7 +151,8 @@ bool Vrok::Resampler::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int 
 
     for (std::size_t i=0;i< /*src_len*/samples_out * nch;i++)
     {
-        out_buffer->GetData()[i] = _buffer[i];
+        out_buffer->GetData()[i] =  _buffer[i];
+        Vrok::Clip(out_buffer->GetData()[i], -1.0f, 1.0f);
     }
     return true;
 }

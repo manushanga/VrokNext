@@ -35,6 +35,8 @@ Vrok::EffectSSEQ::EffectSSEQ() :
 
 bool Vrok::EffectSSEQ::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int buffer_count)
 {
+    std::lock_guard<std::mutex> lg(_eq_setting_guard);
+
     BufferConfig *bc=GetBufferConfig();
     int len=bc->frames*bc->channels;
 
@@ -45,12 +47,12 @@ bool Vrok::EffectSSEQ::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int
     memcpy(proc_out, proc, sizeof(real_t) * len);
 
     equ_modifySamples_real<real_t>(&_sb_state, (char *)proc_out, bc->frames, bc->channels);
-
     return true;
 }
 
 void Vrok::EffectSSEQ::PropertyChanged(PropertyBase *property)
 {
+    std::lock_guard<std::mutex> lg(_eq_setting_guard);
     BufferConfig *bc=GetBufferConfig();
     void *params = paramlist_alloc ();
     float sb_bands_copy[BAND_COUNT];
@@ -69,6 +71,8 @@ void Vrok::EffectSSEQ::PropertyChanged(PropertyBase *property)
 
 bool Vrok::EffectSSEQ::BufferConfigChange(BufferConfig *config)
 {
+    std::lock_guard<std::mutex> lg(_eq_setting_guard);
+    
     DBG(0, "000000000oo");
     //*config->Print();
     void *params = paramlist_alloc ();
@@ -79,8 +83,8 @@ bool Vrok::EffectSSEQ::BufferConfigChange(BufferConfig *config)
     }
 
     //equ_quit();
-    //equ_clearbuf()
-    equ_init (&_sb_state, 14, config->channels);
+    equ_clearbuf(&_sb_state);
+    equ_init (&_sb_state, 12, config->channels);
 
     equ_makeTable (&_sb_state, sb_bands_copy, params, config->samplerate);
     if (_sb_paramsroot)
@@ -88,4 +92,9 @@ bool Vrok::EffectSSEQ::BufferConfigChange(BufferConfig *config)
     _sb_paramsroot = params;
 
     return true;
+}
+
+Vrok::EffectSSEQ::~EffectSSEQ()
+{
+    equ_quit(&_sb_state);
 }

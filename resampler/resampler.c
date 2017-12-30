@@ -1,7 +1,9 @@
 #include <stdlib.h>
 #include <string.h>
 #define _USE_MATH_DEFINES
-#include "resampler/fastmath.h"
+
+#include "util/fastmath.h"
+
 #if (defined(_M_IX86) || defined(__i386__) || defined(_M_X64) || defined(__amd64__))
 #include <xmmintrin.h>
 #define RESAMPLER_SSE

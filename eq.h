@@ -35,9 +35,10 @@ private:
     Property<float> _preamp;
     SuperEqState _sb_state;
     void *_sb_paramsroot;
-
+    std::mutex _eq_setting_guard;
 public:
     EffectSSEQ();
+    ~EffectSSEQ();
     bool EffectRun(Buffer *out_buffer,
                    Buffer **in_buffer_set,
                    int buffer_count);
