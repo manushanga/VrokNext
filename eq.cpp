@@ -5,6 +5,11 @@
 #define CLIP(__x) ((__x>1.0f)?1.0f:(__x<-1.0f?-1.0f:__x))
 #define DB_TO_A(__db) (std::pow(10,(__db/-20.0)))
 #define A_TO_DB(__a) (-20.0 * std::log(__a))
+const char* g_eq_desc_temp =
+        "cpu: %s\n"
+        "fft hw accel: %s\n"
+        "fft impl: %s\n";
+#define DESC_BUF_LEN 64
 
 Vrok::EffectSSEQ::EffectSSEQ() :
     _sb_paramsroot(nullptr)
@@ -29,7 +34,7 @@ Vrok::EffectSSEQ::EffectSSEQ() :
         _bands[i].Set(1.0);
     }
     _preamp.Set(1.0);
-
+    _desc_buffer.resize(DESC_BUF_LEN);
     //BufferConfigChange(GetBufferConfig());
 }
 
@@ -72,7 +77,7 @@ void Vrok::EffectSSEQ::PropertyChanged(PropertyBase *property)
 bool Vrok::EffectSSEQ::BufferConfigChange(BufferConfig *config)
 {
     std::lock_guard<std::mutex> lg(_eq_setting_guard);
-    
+
     DBG(0, "000000000oo");
     //*config->Print();
     void *params = paramlist_alloc ();
@@ -97,4 +102,23 @@ bool Vrok::EffectSSEQ::BufferConfigChange(BufferConfig *config)
 Vrok::EffectSSEQ::~EffectSSEQ()
 {
     equ_quit(&_sb_state);
+}
+
+const char *Vrok::EffectSSEQ::Description()
+{
+    std::string cpu;
+#if defined(__arm__)
+    cpu = "arm";
+#elif defined(__aarch64__)
+    cpu = "aarch64";
+#elif defined(__x86_64__)
+    cpu = "x86_64";
+#else
+    cpu = "generic";
+#endif
+
+    snprintf(_desc_buffer.data(), DESC_BUF_LEN, g_eq_desc_temp,
+             cpu.c_str(),equ_fftAccel(&_sb_state),equ_fftImpl(&_sb_state) );
+
+    return _desc_buffer.data();
 }

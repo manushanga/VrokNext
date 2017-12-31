@@ -94,7 +94,6 @@ Vrok::Resampler::Resampler()
     c->RegisterComponent(this);
     c->RegisterProperty(this, "OutputSamplerate", &_out_samplerate);
     c->RegisterProperty(this, "InterpolatorMode", &_mode);
-    _last = 0.0;
     _resamplers = nullptr;
 
     resampler_init();

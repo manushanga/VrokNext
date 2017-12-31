@@ -56,7 +56,7 @@ typedef struct {
     REAL *ditherbuf;
     int ditherptr;
     volatile int chg_ires,cur_ires;
-    int winlen,winlenbit,tabsize,tabsizeH,nbufsamples;
+    int winlen,winlenbit,tabsize,nbufsamples;
     REAL *finbuf;
     REAL *outbuf;
     int dither;
@@ -76,6 +76,8 @@ void equ_clearbuf(SuperEqState *state);
 void equ_init(SuperEqState *state, int wb, int channels);
 void equ_quit(SuperEqState *state);
 
+const char* equ_fftImpl(SuperEqState *state);
+const char* equ_fftAccel(SuperEqState *state);
 #ifdef __cplusplus
 }
 #endif

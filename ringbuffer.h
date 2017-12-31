@@ -19,6 +19,7 @@
 #pragma once
 
 #include <cstdlib>
+#include <util/mutil.h>
 
 template<typename T>
 class Ringbuffer
@@ -28,23 +29,22 @@ private:
     size_t _size,_front,_rear,_used;
 public:
     Ringbuffer(size_t size) :
-        _buffer(new T[size]),
         _size(size),
         _front(0),
         _rear(0),
         _used(0)
     {
-
+        _buffer = (T*)mutil_aligned_alloc(size * sizeof(T));
     }
-    bool IsWritable(size_t n)
+    inline bool IsWritable(size_t n) const
     {
         return (_used + n <= _size);
     }
-    bool IsReadable(size_t n)
+    inline bool IsReadable(size_t n) const
     {
         return (n <= _used);
     }
-    bool Write(T *source, size_t n)
+    inline bool Write(T *source, size_t n)
     {
         if (_used + n <= _size)
         {
@@ -60,7 +60,7 @@ public:
         }
     }
 
-    bool Read(T *dest, size_t n)
+    inline bool Read(T *dest, size_t n)
     {
         if (n <= _used)
         {
@@ -92,7 +92,7 @@ public:
     }
     ~Ringbuffer()
     {
-        delete[] _buffer;
+        mutil_aligned_free(_buffer);
     }
 
 };

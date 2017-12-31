@@ -36,6 +36,7 @@ private:
     SuperEqState _sb_state;
     void *_sb_paramsroot;
     std::mutex _eq_setting_guard;
+    std::vector<char> _desc_buffer;
 public:
     EffectSSEQ();
     ~EffectSSEQ();
@@ -54,12 +55,11 @@ public:
     }
     const char *ComponentName()
     {
-        return "ShibachSuperEQ";
+        return "ShibatchSuperEQ";
     }
-    const char *Description()
-    {
-        return "Shibach Super EQ";
-    }
+
+    const char *Description();
+
     const char *Author()
     {
         return "Naoki Shibata, Madura A.";

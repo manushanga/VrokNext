@@ -40,58 +40,45 @@ private:
     StopWatch _watch;
     uint64_t _stream_id;
 public:
-    Buffer(BufferConfig& config, int id) :
-        _id(id),
-        _stream_id(0UL)
-    {
-        _config= config;
-        _size=config.channels*config.frames;
-        _buffer = new real_t[_size];
-        _type = Type::StreamBuffer;
-    }
+    Buffer(BufferConfig& config, int id);
 
-    void SetBufferType(Type type)
+    ~Buffer();
+
+    inline void SetBufferType(Type type)
     {
         _type = type;
     }
 
-    Type getBufferType()
+    inline Type getBufferType() const
     {
         return _type;
     }
-    BufferConfig *GetBufferConfig()
+    inline BufferConfig *GetBufferConfig()
     {
         return &_config;
     }
-    void Reset(BufferConfig* config)
-    {
-        _config = *config;
 
-        if (_size < _config.frames * _config.channels)
-        {
-            delete[] _buffer;
-            _buffer = new real_t[_size];
-        }
-        _size=_config.channels*_config.frames;
-    }
-    int GetId()
+    void Reset(BufferConfig* config);
+
+    inline int GetId() const
     {
         return _id;
     }
-    real_t *GetData()
+    inline real_t *GetData()
     {
         return _buffer;
     }
-    StopWatch& GetWatch()
+    inline StopWatch& GetWatch()
     {
         return _watch;
     }
 
-    void SetStreamId(uint64_t stream_id)
+    inline void SetStreamId(uint64_t stream_id)
     {
         _stream_id = stream_id;
     }
-    uint64_t GetStreamId()
+
+    inline uint64_t GetStreamId() const
     {
         return _stream_id;
     }

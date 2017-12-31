@@ -31,6 +31,7 @@
 #include "paramlist.hpp"
 #include "equ.h"
 #include "util/fastmath.h"
+#include "util/mutil.h"
 #include "../../android_debug.h"
 
 // int _Unwind_Resume_or_Rethrow;
@@ -59,7 +60,6 @@ void rfft(int n,int isign,REAL *x)
     }
 
     n = 1 << n;
-
 
     newipsize = 2+sqrt((double)n/2);
     if (newipsize > ipsize) {
@@ -129,23 +129,11 @@ static REAL izero(REAL x)
 }
 
 void *equ_malloc (int size) {
-#ifdef USE_SHIBATCH
-    return SIMDBase_alignedMalloc (size);
-#elif USE_NE10
-    return malloc (size);
-#else
-    return malloc (size);
-#endif
+    return mutil_aligned_alloc(size);
 }
 
 void equ_free (void *mem) {
-#ifdef USE_SHIBATCH
-    SIMDBase_alignedFree (mem);
-#elif USE_NE10
-    free (mem);
-#else
-    free (mem);
-#endif
+    return mutil_aligned_free(mem);
 }
 
 extern "C" void equ_init(SuperEqState *state, int wb, int channels)
@@ -169,7 +157,6 @@ extern "C" void equ_init(SuperEqState *state, int wb, int channels)
   state->winlenbit = wb;
 
   state->tabsize  = 1 << wb;
-    state->tabsizeH = state->tabsize >> 1;
   state->fft_bits = wb;
 
   state->lires1   = (REAL *)equ_malloc(sizeof(REAL)*state->tabsize * state->channels);
@@ -657,6 +644,31 @@ template<>
 int equ_modifySamples_real<float>(SuperEqState *state, char *buf, int nsamples, int nch)
 {
     return equ_modifySamples_float(state, buf, nsamples, nch);
+}
+
+const char *equ_fftAccel(SuperEqState *state)
+{
+#ifdef USE_NE10
+    ne10_init();
+    if (ne10_HasNEON() == NE10_OK)
+    {
+#ifdef __TARGET_FPU_VFP
+        return "ARM Neon and VFP";
+#else
+        return "ARM Neon";
+#endif
+    }
+#endif
+    return "None";
+}
+
+const char *equ_fftImpl(SuperEqState *state)
+{
+#ifdef USE_NE10
+    return "NE10";
+#else
+    return "OOURA";
+#endif
 }
 
 template<>

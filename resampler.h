@@ -39,9 +39,8 @@ private:
     std::mutex _property_mutex;
 
     float _ratio;
-    float _buffer[INTERNAL_BUFFER_SIZE];
-    float _out_buffer[INTERNAL_BUFFER_SIZE];
-    float _last;
+    alignas(64) float _buffer[INTERNAL_BUFFER_SIZE];
+
 public:
     Resampler();
     bool EffectRun(Buffer *out_buffer,
@@ -56,7 +55,6 @@ public:
     std::vector<VUMeter *> GetMeters()
     {
         std::vector<VUMeter *> meters;
-        //meters.push_back(&_meter);
         return meters;
     }
     Component *CreateSelf()
