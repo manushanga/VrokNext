@@ -1,6 +1,8 @@
 #include "threadpool.h"
 #include "debug.h"
-
+#include "common.h"
+// interval in usec
+#define TIMEOUT 10000
 Vrok::ThreadPool::ThreadPool(size_t thread_count)
 {
 
@@ -82,8 +84,16 @@ void Vrok::ThreadPool::Work(ThreadData *th)
     {
         for (size_t i=0;i<(*th->runnables)[th->thread_id].size();i++)
         {
-            //DBG(th->thread_id<<" "<<i);
+            auto start = std::chrono::steady_clock::now();
             (*th->runnables)[th->thread_id][i]->Run();
+            auto end = std::chrono::steady_clock::now();
+
+            long time = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+
+            if (time < TIMEOUT)
+            {
+                Vrok::Sleep((int) (TIMEOUT-time) );
+            }
         }
     }
     

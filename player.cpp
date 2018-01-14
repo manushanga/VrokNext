@@ -89,12 +89,14 @@ void Vrok::Player::Run()
             got = _command_now_queue->Pop(cmd);
 
             auto b = AcquireBuffer();
-            b->SetBufferType(Buffer::Type::StreamBuffer);
+            if (b)
+                b->SetBufferType(Buffer::Type::StreamBuffer);
 
             if (got) {
                 if (cmd.type == CommandType::OPEN) {
                     ResetDecoder();
-                    b->SetBufferType(Buffer::Type::StreamStart);
+                    if (b)
+                        b->SetBufferType(Buffer::Type::StreamStart);
 
                     _decoder = (Vrok::Decoder *) cmd.data;
                     BufferConfig config;
@@ -104,8 +106,8 @@ void Vrok::Player::Run()
                     _state = PlayerState::PLAYING;
                 } else if (cmd.type == CommandType::STOP) {
                     ResetDecoder();
-
-                    b->SetBufferType(Buffer::Type::StreamStop);
+                    if (b)
+                        b->SetBufferType(Buffer::Type::StreamStop);
 
                     _state = PlayerState::STOPPED;
                 } else if (cmd.type == CommandType::PAUSE) {
@@ -215,9 +217,6 @@ void Vrok::Player::Run()
         }
 
     }
-
-    Vrok::Sleep(100);
-
 }
 void Vrok::Player::SetQueueNext(bool queue_next)
 {

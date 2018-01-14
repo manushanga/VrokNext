@@ -47,7 +47,7 @@ bool Vrok::DriverJBufferOut::BufferConfigChange(BufferConfig *config)
     if (m_tempBuffer.size() < len)
         m_tempBuffer.resize(len);
 
-    std::this_thread::sleep_for(std::chrono::microseconds(10));
+    Sleep(10);
 
     return true;
 }

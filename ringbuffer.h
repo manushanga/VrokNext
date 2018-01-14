@@ -1,4 +1,5 @@
 /** RingBuffer
+ * Single Producer Single Consumer
  * Copyright (C) Madura A.
  *
  * This program is free software; you can redistribute it and/or
@@ -26,7 +27,8 @@ class Ringbuffer
 {
 private:
     T *_buffer;
-    size_t _size,_front,_rear,_used;
+    size_t _size,_front,_rear;
+    std::atomic<size_t> _used;
 public:
     Ringbuffer(size_t size) :
         _size(size),
@@ -46,14 +48,14 @@ public:
     }
     inline bool Write(T *source, size_t n)
     {
-        if (_used + n <= _size)
+        if (_used.load(std::memory_order_acquire) + n <= _size)
         {
             for (size_t i=0;i<n;i++)
             {
                 _buffer[(_front + i)%_size] = source[i];
             }
             _front = (_front + n) % _size;
-            _used += n;
+            _used.fetch_add(n, std::memory_order_release);
             return true;
         } else {
             return false;
@@ -62,14 +64,14 @@ public:
 
     inline bool Read(T *dest, size_t n)
     {
-        if (n <= _used)
+        if (n <= _used.load(std::memory_order_acquire))
         {
             for (size_t i=0;i<n;i++)
             {
                 dest[i] = _buffer[(_rear + i)%_size];
             }
             _rear = (_rear + n) % _size;
-            _used -= n;
+            _used.fetch_add(-n, std::memory_order_release);
             return true;
         } else
         {

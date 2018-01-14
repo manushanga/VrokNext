@@ -58,8 +58,4 @@ void Vrok::Driver::Run()
         _work=DriverRun(buffers[0]);
         ReleaseAllSources(buffers);
     }
-    else
-    {
-        Vrok::Sleep(100);
-    }
 }

@@ -45,8 +45,4 @@ void Vrok::Effect::Run()
 
         ReleaseAllSources(buffers);
     }
-    else
-    {
-        std::this_thread::sleep_for(std::chrono::microseconds(100));
-    }
 }

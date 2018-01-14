@@ -34,6 +34,11 @@
 #include "debug.h"
 #include "common.h"
 
+
+void wait_for(bool &condition, bool wait_while,
+              std::unique_lock<std::mutex> &lock, std::condition_variable &cv,
+              unsigned int microseconds);
+
 template<typename T>
 class Queue
 {
@@ -44,9 +49,14 @@ private:
     T *_container;
     std::mutex _guard;
     std::atomic<bool> _bpop,_bpush;
-    const int _max_tries=50;
-    // sleep for some amount of micro seconds
-    const int _sleep_for=10000;
+
+    std::mutex _lock_on_empty;
+    std::mutex _lock_on_full;
+    std::condition_variable _cv_empty;
+    std::condition_variable _cv_full;
+
+    bool _is_empty;
+    bool _is_full;
 public:
     Queue(int size) :
         _size(size),
@@ -116,7 +126,7 @@ public:
     bool Pop(T& t)
     {
         int cr=_rear.load(std::memory_order_relaxed);
-        //std::cout<<cr<<" "<<cf<<std::endl;
+
         if (cr == _front.load(std::memory_order_acquire))
         {
             return false;
@@ -142,31 +152,56 @@ public:
     }
     bool PeakBlocking(T& t)
     {
-        int i=0;
-        while (!Peak(t) && i<_max_tries) { i++; Vrok::Sleep(_sleep_for +1); }
-#ifdef DEBUG
-        if (i==_max_tries) DBG(6, "drop");
-#endif
-        return i<_max_tries;
+        if (Peak(t) == false)
+        {
+            std::unique_lock<std::mutex> lk(_lock_on_empty);
+            _is_empty = false;
+            wait_for(_is_empty, false, lk, _cv_empty, 100);
+        }
+
+        return true;
     }
     bool PopBlocking(T& t)
     {
-        int i=0;
-        while (!Pop(t) && i<_max_tries) {  i++; Vrok::Sleep(_sleep_for);  }
-#ifdef DEBUG
-        if (i==_max_tries) DBG(6, "drop");
-#endif
-        return i<_max_tries;
+        bool ret = Pop(t);
+
+        if (ret)
+        {
+            {
+                std::unique_lock<std::mutex> lk(_lock_on_full);
+                _is_full = false;
+            }
+            _cv_full.notify_all();
+        } else
+        {
+            std::unique_lock<std::mutex> lk(_lock_on_empty);
+            _is_empty = false;
+            wait_for(_is_empty, false, lk, _cv_empty, 100);
+        }
+
+        return true;
  
     }
     bool PushBlocking(T t)
     {
-        int i=0;
-        while (!Push(t) && i<_max_tries) {  i++; Vrok::Sleep(_sleep_for -1); }
-#ifdef DEBUG
-        if (i==_max_tries) DBG(6, "drop");
-#endif
-        return i<_max_tries;
+        bool ret = Push(t);
+
+        if (ret)
+        {
+            {
+                std::unique_lock<std::mutex> lk(_lock_on_empty);
+                _is_empty = true;
+            }
+            _cv_empty.notify_all();
+        }
+        else
+        {
+            std::unique_lock<std::mutex> lk(_lock_on_full);
+            _is_full = true;
+            wait_for(_is_full, true, lk, _cv_full, 100);
+        }
+
+        return true;
     }
 
 
@@ -183,6 +218,8 @@ public:
     {
         free(_container);
     }
+private:
+
 };
 
 #endif // QUEUE_H
