@@ -22,6 +22,8 @@
 #include <cstdlib>
 #include <cmath>
 #include <cassert>
+#include <NE10_types.h>
+
 #else
 #include <stdio.h>
 #include <stdlib.h>
@@ -115,17 +117,17 @@ static REAL alpha(REAL a)
 
 static REAL izero(REAL x)
 {
-  REAL ret = 1;
-  int m;
+    REAL ret = 1;
+    int m;
 
-  for(m=1;m<=M;m++)
+    for(m=1;m<=M;m++)
     {
       REAL t;
       t = pow(x/2,m)/fact[m];
       ret += t*t;
     }
 
-  return ret;
+    return ret;
 }
 
 void *equ_malloc (int size) {
@@ -138,31 +140,39 @@ void equ_free (void *mem) {
 
 extern "C" void equ_init(SuperEqState *state, int wb, int channels)
 {
-  int i,j;
+    int i,j;
 
-  if (state->lires1 != NULL)   free(state->lires1);
-  if (state->lires2 != NULL)   free(state->lires2);
-  if (state->irest != NULL)    free(state->irest);
-  if (state->fsamples != NULL) free(state->fsamples);
-  if (state->finbuf != NULL)    free(state->finbuf);
-  if (state->outbuf != NULL)   free(state->outbuf);
-  if (state->ditherbuf != NULL) free(state->ditherbuf);
+    if (state->lires1 != NULL)    equ_free(state->lires1);
+    if (state->lires2 != NULL)    equ_free(state->lires2);
+    if (state->irest != NULL)     equ_free(state->irest);
+    if (state->fsamples != NULL)  equ_free(state->fsamples);
+    if (state->finbuf != NULL)    equ_free(state->finbuf);
+    if (state->outbuf != NULL)    equ_free(state->outbuf);
+    if (state->ditherbuf != NULL) equ_free(state->ditherbuf);
 
+    if (state->eq_bands_amp != NULL) equ_free(state->eq_bands_amp);
 
-  memset (state, 0, sizeof (SuperEqState));
-  state->channels = channels;
-  state->enable = 1;
+    memset (state, 0, sizeof (SuperEqState));
 
-  state->winlen = (1 << (wb-1))-1;
-  state->winlenbit = wb;
+    state->eq_bands_amp = (REAL *)equ_malloc(NBANDS * sizeof(REAL));
+    for (i=0;i<NBANDS;i++)
+    {
+        state->eq_bands_amp[i] = 0.0f;
+    }
 
-  state->tabsize  = 1 << wb;
-  state->fft_bits = wb;
+    state->channels = channels;
+    state->enable = 1;
 
-  state->lires1   = (REAL *)equ_malloc(sizeof(REAL)*state->tabsize * state->channels);
-  state->lires2   = (REAL *)equ_malloc(sizeof(REAL)*state->tabsize * state->channels);
-  state->irest    = (REAL *)equ_malloc(sizeof(REAL)*state->tabsize);
-  state->fsamples = (REAL *)equ_malloc(sizeof(REAL)*state->tabsize);
+    state->winlen = (1 << (wb-1))-1;
+    state->winlenbit = wb;
+
+    state->tabsize  = 1 << wb;
+    state->fft_bits = wb;
+
+    state->lires1   = (REAL *)equ_malloc(sizeof(REAL)*state->tabsize * state->channels);
+    state->lires2   = (REAL *)equ_malloc(sizeof(REAL)*state->tabsize * state->channels);
+    state->irest    = (REAL *)equ_malloc(sizeof(REAL)*state->tabsize);
+    state->fsamples = (REAL *)equ_malloc(sizeof(REAL)*state->tabsize);
 #ifdef USE_NE10
     ne10_init();
     ne10_init_dsp(1);
@@ -170,33 +180,33 @@ extern "C" void equ_init(SuperEqState *state, int wb, int channels)
     state->fsamples_in = (NE_REAL *)equ_malloc((state->tabsize*2 ) * sizeof(NE_REAL));
     state->fsamples_out = (NE_CPX *)equ_malloc((state->tabsize*2 ) * sizeof(NE_CPX));
 #endif
-  state->finbuf    = (REAL *)equ_malloc(state->winlen*state->channels*sizeof(REAL));
-  state->outbuf   = (REAL *)equ_malloc(state->tabsize*state->channels*sizeof(REAL));
-  state->ditherbuf = (REAL *)equ_malloc(sizeof(REAL)*DITHERLEN);
+    state->finbuf    = (REAL *)equ_malloc(state->winlen*state->channels*sizeof(REAL));
+    state->outbuf   = (REAL *)equ_malloc(state->tabsize*state->channels*sizeof(REAL));
+    state->ditherbuf = (REAL *)equ_malloc(sizeof(REAL)*DITHERLEN);
 
-  memset (state->lires1, 0, sizeof(REAL)*state->tabsize * state->channels);
-  memset (state->lires2, 0, sizeof(REAL)*state->tabsize * state->channels);
-  memset (state->irest, 0, sizeof(REAL)*state->tabsize);
-  memset (state->fsamples, 0, sizeof(REAL)*state->tabsize);
-  memset (state->finbuf, 0, state->winlen*state->channels*sizeof(REAL));
-  memset (state->outbuf, 0, state->tabsize*state->channels*sizeof(REAL));
-  memset (state->ditherbuf, 0, sizeof(REAL)*DITHERLEN);
+    memset (state->lires1, 0, sizeof(REAL)*state->tabsize * state->channels);
+    memset (state->lires2, 0, sizeof(REAL)*state->tabsize * state->channels);
+    memset (state->irest, 0, sizeof(REAL)*state->tabsize);
+    memset (state->fsamples, 0, sizeof(REAL)*state->tabsize);
+    memset (state->finbuf, 0, state->winlen*state->channels*sizeof(REAL));
+    memset (state->outbuf, 0, state->tabsize*state->channels*sizeof(REAL));
+    memset (state->ditherbuf, 0, sizeof(REAL)*DITHERLEN);
 
-  state->lires = state->lires1;
-  state->cur_ires = 1;
-  state->chg_ires = 1;
+    state->lires = state->lires1;
+    state->cur_ires = 1;
+    state->chg_ires = 1;
 
-  for(i=0;i<DITHERLEN;i++)
+    for(i=0;i<DITHERLEN;i++)
     state->ditherbuf[i] = (REAL(rand())/RAND_MAX-0.5);
 
-  if (fact[0] < 1) {
-      for(i=0;i<=M;i++)
-      {
-          fact[i] = 1;
-          for(j=1;j<=i;j++) fact[i] *= j;
-      }
-      iza = izero(alpha(aa));
-  }
+    if (fact[0] < 1) {
+        for(i=0;i<=M;i++)
+        {
+            fact[i] = 1;
+            for(j=1;j<=i;j++) fact[i] *= j;
+        }
+        iza = izero(alpha(aa));
+    }
 }
 
 // -(N-1)/2 <= n <= (N-1)/2
@@ -393,7 +403,17 @@ extern "C" void equ_clearbuf(SuperEqState *state)
 	state->nbufsamples = 0;
 	for(i=0;i<state->tabsize*state->channels;i++) state->outbuf[i] = 0;
 }
-
+#ifdef USE_NE10
+static REAL mag(NE_CPX cpx)
+{
+    return cpx.r * cpx.r + cpx.i * cpx.i;
+}
+#else
+static REAL mag(REAL a, REAL b)
+{
+    return a*a + b*b;
+}
+#endif
 extern "C" int equ_modifySamples_float (SuperEqState *state, char *buf,int nsamples,int nch)
 {
   int i,p,ch;
@@ -468,6 +488,12 @@ extern "C" int equ_modifySamples_float (SuperEqState *state, char *buf,int nsamp
                     state->fsamples_in[i]=0;
                 }
 
+                if (ch == 0) {
+                    for (i = 0; i < NBANDS; i++) {
+                        state->eq_bands_amp[i] = mag(state->fsamples_out[(int) (state->winlen * i * 1.0 / NBANDS)]);
+                    }
+                }
+
                 ne10_rifft(state->fsamples_in, state->fsamples_out, state->cfg);
 #else
                 rfft(state->fft_bits,1,state->fsamples);
@@ -486,6 +512,12 @@ extern "C" int equ_modifySamples_float (SuperEqState *state, char *buf,int nsamp
                     state->fsamples[i*2+1] = im;
                 }
 
+                if (ch == 0) {
+                    for (i = 0; i < NBANDS; i++) {
+                        int j = (int) (state->winlen * i * 1.0 / NBANDS);
+                        state->eq_bands_amp[i] = mag(state->fsamples[j*2],state->fsamples[j*2+1]);
+                    }
+                }
                 rfft(state->fft_bits,-1,state->fsamples);
 #endif
 
@@ -669,6 +701,11 @@ const char *equ_fftImpl(SuperEqState *state)
 #else
     return "OOURA";
 #endif
+}
+
+REAL *equ_band_amplitudes(SuperEqState *state)
+{
+    return state->eq_bands_amp;
 }
 
 template<>

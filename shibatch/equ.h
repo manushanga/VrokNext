@@ -48,6 +48,7 @@ typedef struct {
     REAL *lires,*lires1,*lires2;
     REAL *irest;
     REAL *fsamples;
+    REAL *eq_bands_amp;
 #ifdef USE_NE10
     NE_CPX_CFG cfg;
     NE_REAL *fsamples_in;
@@ -67,6 +68,7 @@ typedef struct {
 
 void *paramlist_alloc (void);
 void paramlist_free (void *);
+REAL* equ_band_amplitudes(SuperEqState *state);
 void equ_makeTable(SuperEqState *state, REAL *lbc,void *param,REAL fs);
 int equ_modifySamples(SuperEqState *state, char *buf,int nsamples,int nch,int bps);
 int equ_modifySamples_float (SuperEqState *state, char *buf,int nsamples,int nch);

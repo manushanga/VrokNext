@@ -28,13 +28,19 @@ namespace Vrok {
 class ComponentManager
 {
 public:
-    class ComponentConfig
+    class ConfigIO
     {
     public:
-        virtual bool Read(void **data, size_t *size)=0;
-        virtual bool Write(void *data, size_t size)=0;
+        virtual ~ConfigIO() {}
+        virtual void ReadOpen() = 0;
+        virtual void WriteOpen() = 0;
+        virtual void Close() = 0;
+        virtual bool ReadLine(std::vector<std::string>& line) = 0;
+        virtual bool WriteLine(const std::vector<std::string>& line) = 0;
+
     };
-    ComponentManager(ComponentConfig *comp_config = nullptr);
+    ComponentManager();
+    void SetConfigIO(ConfigIO* configIO);
     static ComponentManager *GetSingleton();
     bool RegisterComponent(Component *component);
     bool RegisterProperty(Component *component,
@@ -47,15 +53,18 @@ public:
     PropertyBase *GetProperty(std::string component, std::string prop_name);
     PropertyBase *GetProperty(Component *component, std::string prop_name);
 
+    void Serialize();
+    void Deserialize();
+
     ~ComponentManager();
 private:
+    std::mutex _lock_write;
     std::map<std::string, int> _used_names;
     std::map<std::string, Component *> _component_map;
     std::map<Component *, std::map<std::string, PropertyBase *> > _property_map;
-    ComponentConfig *_component_config;
+    ConfigIO *_configIO;
 
-    bool Load();
-    bool Save();
+
 
 };
 }

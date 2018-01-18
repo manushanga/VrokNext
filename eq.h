@@ -21,8 +21,10 @@
 
 #include "common.h"
 #include "effect.h"
+#include "util/sharedmem.h"
 #include "shibatch/equ.h"
 #include "shibatch/paramlist.hpp"
+
 
 #define BAND_COUNT 17
 
@@ -36,6 +38,9 @@ private:
     SuperEqState _sb_state;
     void *_sb_paramsroot;
     std::mutex _eq_setting_guard;
+    float* _eq_amp;
+    shared_memory* _shm;
+    float* _eq_amp_shm;
     std::vector<char> _desc_buffer;
 public:
     EffectSSEQ();
@@ -45,6 +50,9 @@ public:
                    int buffer_count);
     void PropertyChanged(PropertyBase *property);
     bool BufferConfigChange(BufferConfig *config);
+
+    shared_memory* GetSharedMem() { return _shm; }
+
     Vrok::ComponentType ComponentType()
     {
         return Vrok::ComponentType::Effect;

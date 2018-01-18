@@ -35,6 +35,9 @@ Vrok::EffectSSEQ::EffectSSEQ() :
     }
     _preamp.Set(1.0);
     _desc_buffer.resize(DESC_BUF_LEN);
+    _eq_amp = nullptr;
+    _shm = sharedmem_create("vrok.eq.band.values", BAND_COUNT * sizeof(float));
+    _eq_amp_shm = (float*)_shm->buffer;
     //BufferConfigChange(GetBufferConfig());
 }
 
@@ -52,6 +55,11 @@ bool Vrok::EffectSSEQ::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int
     memcpy(proc_out, proc, sizeof(real_t) * len);
 
     equ_modifySamples_real<real_t>(&_sb_state, (char *)proc_out, bc->frames, bc->channels);
+
+    for (int i=0;i<BAND_COUNT;i++)
+    {
+        _eq_amp_shm[i] = _eq_amp[i];
+    }
     return true;
 }
 
@@ -90,6 +98,7 @@ bool Vrok::EffectSSEQ::BufferConfigChange(BufferConfig *config)
     //equ_quit();
     equ_clearbuf(&_sb_state);
     equ_init (&_sb_state, 12, config->channels);
+    _eq_amp = equ_band_amplitudes(&_sb_state);
 
     equ_makeTable (&_sb_state, sb_bands_copy, params, config->samplerate);
     if (_sb_paramsroot)
@@ -102,6 +111,7 @@ bool Vrok::EffectSSEQ::BufferConfigChange(BufferConfig *config)
 Vrok::EffectSSEQ::~EffectSSEQ()
 {
     equ_quit(&_sb_state);
+    sharedmem_destroy(_shm);
 }
 
 const char *Vrok::EffectSSEQ::Description()

@@ -61,6 +61,8 @@ public:
     virtual PropertyType GetType()=0;
     virtual void Get(void *ptr)=0;
     virtual void Set(void *ptr)=0;
+
+    uint32_t Size();
     void SetPropertyInfo(const PropertyInfo& info);
     const PropertyInfo& GetPropertyInfo();
 };

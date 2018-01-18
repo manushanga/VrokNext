@@ -36,6 +36,19 @@ const PropertyInfo& PropertyBase::GetPropertyInfo()
     return _info;
 }
 
+uint32_t PropertyBase::Size()
+{
+    switch (GetType())
+    {
+        case PropertyType::INT:
+            return sizeof(int);
+        case PropertyType::DBL:
+            return sizeof(double);
+        case PropertyType::FLT:
+            return sizeof(float);
+    }
+}
+
 }
 
 Vrok::Component::Component()

@@ -2,6 +2,9 @@
 #include "componentmanager.h"
 
 #include <cstdlib>
+#include <string>
+
+#define VERSION "1.0beta"
 
 using namespace std;
 
@@ -78,6 +81,7 @@ void Vrok::ComponentManager::SetProperty(Vrok::Component *component, PropertyBas
 
 Vrok::PropertyBase *Vrok::ComponentManager::GetProperty(Vrok::Component *component, string prop_name)
 {
+
     auto it=_property_map.find(component);
     if (it != _property_map.end())
     {
@@ -86,40 +90,16 @@ Vrok::PropertyBase *Vrok::ComponentManager::GetProperty(Vrok::Component *compone
         {
             PropertyBase *p=it1->second;
             return p;
-        } else
-        {
-            return nullptr;
         }
-    } else
-    {
-        return nullptr;
     }
-}
-bool Vrok::ComponentManager::Load()
-{
-    void *data;
-    size_t size;
-    _component_config->Read(&data,&size);
-    return true;
+
+    return nullptr;
 }
 
-bool Vrok::ComponentManager::Save()
+
+Vrok::ComponentManager::ComponentManager()
 {
-    void *data;
-    size_t size;
-    _component_config->Read(&data,&size);
-
-    auto it = _component_map.begin();
-    for (;it!=_component_map.end();it++)
-    {
-
-    }
-    return true;
-}
-
-Vrok::ComponentManager::ComponentManager(ComponentConfig *comp_config) :
-    _component_config(comp_config)
-{
+    _configIO = nullptr;
 }
 
 Vrok::ComponentManager *Vrok::ComponentManager::GetSingleton()
@@ -136,6 +116,7 @@ Vrok::ComponentManager::~ComponentManager()
 Vrok::PropertyBase *Vrok::ComponentManager::GetProperty(std::string component,
                                                         std::string prop_name)
 {
+
     Component* comp = GetComponent(component);
 
     if (comp)
@@ -150,6 +131,7 @@ void Vrok::ComponentManager::SetProperty(std::string component,
                                          std::string prop_name,
                                          std::string value)
 {
+
     Component* comp = GetComponent(component);
     if (comp == nullptr)
         return;
@@ -175,5 +157,109 @@ void Vrok::ComponentManager::SetProperty(std::string component,
                                  << ", prop=" << prop_name
                                  << ", value=" << value);
     comp->PropertyChanged(prop);
+}
+
+void Vrok::ComponentManager::Deserialize()
+{
+    std::lock_guard<std::mutex> lg(_lock_write);
+
+    _configIO->ReadOpen();
+
+    std::vector<std::string> line;
+
+    _configIO->ReadLine(line);
+    if (line.size() != 1)
+        throw std::runtime_error("invalid config");
+
+    if (line[0] != VERSION)
+    {
+        _configIO->Close();
+        return;
+    }
+
+    _configIO->ReadLine(line);
+    if (line.size() != 1)
+        throw std::runtime_error("invalid config");
+
+    int components = atoi(line[0].c_str());
+
+    for (int i=0;i<components;i++)
+    {
+        line.clear();
+        _configIO->ReadLine(line);
+        if (line.size() != 2)
+            throw std::runtime_error("invalid config");
+        std::string comp = line[0];
+        int properties = atoi(line[1].c_str());
+        for (int j=0;j<properties;j++)
+        {
+            line.clear();
+            _configIO->ReadLine(line);
+            if (line.size() != 2)
+                throw std::runtime_error("invalid config");
+            SetProperty(comp, line[0], line[1]);
+        }
+    }
+    _configIO->Close();
+}
+
+void Vrok::ComponentManager::Serialize()
+{
+    std::lock_guard<std::mutex> lg(_lock_write);
+    _configIO->WriteOpen();
+
+    _configIO->WriteLine({VERSION});
+
+    char temp_buffer[32] = {0};
+    int size = (int) _component_map.size();
+    std::vector<std::string> line;
+
+    snprintf(temp_buffer, 31, "%d", size);
+    line = { std::string(temp_buffer) };
+    _configIO->WriteLine(line);
+
+    for (auto& comp_pair : _component_map)
+    {
+        size = _property_map[comp_pair.second].size();
+        snprintf(temp_buffer, 31, "%d", size);
+        _configIO->WriteLine({ comp_pair.first, std::string(temp_buffer)});
+
+        for (auto& prop_pair : _property_map[comp_pair.second])
+        {
+            switch (prop_pair.second->GetType())
+            {
+                case PropertyType ::INT:
+                {
+                    int val=0;
+                    prop_pair.second->Get(&val);
+                    snprintf(temp_buffer, 31, "%d", val);
+                    break;
+                }
+                case PropertyType ::FLT:
+                {
+                    float val=0.f;
+                    prop_pair.second->Get(&val);
+                    snprintf(temp_buffer, 31, "%f", val);
+                    break;
+                }
+                case PropertyType ::DBL:
+                {
+                    double val=0.0;
+                    prop_pair.second->Get(&val);
+                    snprintf(temp_buffer, 31, "%lf", val);
+                    break;
+                }
+            }
+
+            _configIO->WriteLine({prop_pair.first, std::string(temp_buffer)});
+
+        }
+    }
+    _configIO->Close();
+}
+
+void Vrok::ComponentManager::SetConfigIO(Vrok::ComponentManager::ConfigIO *configIO)
+{
+    _configIO = configIO;
 }
 
