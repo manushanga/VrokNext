@@ -19,7 +19,7 @@ Vrok::EffectSSEQ::EffectSSEQ() :
     c->RegisterComponent(this);
     std::vector<char> bandname;
     bandname.resize(16);
-    for (int i=0;i<BAND_COUNT;i++)
+    for (int i=0;i<EQ_BAND_COUNT;i++)
     {
         snprintf(bandname.data(), 16, "Band%02d", i);
         c->RegisterProperty(this, bandname.data(), &_bands[i]);
@@ -29,14 +29,14 @@ Vrok::EffectSSEQ::EffectSSEQ() :
     
     c->RegisterProperty(this,"Preamp",&_preamp);
 
-    for (int i=0;i<BAND_COUNT;i++)
+    for (int i=0;i<EQ_BAND_COUNT;i++)
     {
         _bands[i].Set(1.0);
     }
     _preamp.Set(1.0);
     _desc_buffer.resize(DESC_BUF_LEN);
     _eq_amp = nullptr;
-    _shm = sharedmem_create("vrok.eq.band.values", BAND_COUNT * sizeof(float));
+    _shm = sharedmem_create("vrok.eq.band.values", EQ_BAND_COUNT * sizeof(float));
     _eq_amp_shm = (float*)_shm->buffer;
     //BufferConfigChange(GetBufferConfig());
 }
@@ -56,7 +56,7 @@ bool Vrok::EffectSSEQ::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int
 
     equ_modifySamples_real<real_t>(&_sb_state, (char *)proc_out, bc->frames, bc->channels);
 
-    for (int i=0;i<BAND_COUNT;i++)
+    for (int i=0;i<EQ_BAND_COUNT;i++)
     {
         _eq_amp_shm[i] = _eq_amp[i];
     }
@@ -68,9 +68,9 @@ void Vrok::EffectSSEQ::PropertyChanged(PropertyBase *property)
     std::lock_guard<std::mutex> lg(_eq_setting_guard);
     BufferConfig *bc=GetBufferConfig();
     void *params = paramlist_alloc ();
-    float sb_bands_copy[BAND_COUNT];
+    float sb_bands_copy[EQ_BAND_COUNT];
     
-    for (int i=0;i<BAND_COUNT;i++){
+    for (int i=0;i<EQ_BAND_COUNT;i++){
         sb_bands_copy[i]=DB_TO_A(_bands[i].Get())* DB_TO_A(_preamp.Get());
     }
 
@@ -89,9 +89,9 @@ bool Vrok::EffectSSEQ::BufferConfigChange(BufferConfig *config)
     DBG(0, "000000000oo");
     //*config->Print();
     void *params = paramlist_alloc ();
-    float sb_bands_copy[BAND_COUNT];
+    float sb_bands_copy[EQ_BAND_COUNT];
 
-    for (int i=0;i<BAND_COUNT;i++){
+    for (int i=0;i<EQ_BAND_COUNT;i++){
         sb_bands_copy[i]=DB_TO_A(_bands[i].Get())* DB_TO_A(_preamp.Get());
     }
 

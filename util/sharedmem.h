@@ -20,7 +20,7 @@ struct shared_memory *sharedmem_create(const char *name, size_t size);
 void sharedmem_destroy(struct shared_memory *shm);
 
 void* sharemem_pin(int fd, size_t size);
-
+void sharemem_unpin(void* ptr, size_t size);
 #ifdef __cplusplus
 }
 #endif

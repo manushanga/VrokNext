@@ -26,14 +26,14 @@
 #include "shibatch/paramlist.hpp"
 
 
-#define BAND_COUNT 17
+#define EQ_BAND_COUNT 17
 
 namespace Vrok {
 class EffectSSEQ : public Effect
 {
 private:
 
-    Property<float> _bands[BAND_COUNT];
+    Property<float> _bands[EQ_BAND_COUNT];
     Property<float> _preamp;
     SuperEqState _sb_state;
     void *_sb_paramsroot;

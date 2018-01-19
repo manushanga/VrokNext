@@ -490,7 +490,7 @@ extern "C" int equ_modifySamples_float (SuperEqState *state, char *buf,int nsamp
 
                 if (ch == 0) {
                     for (i = 0; i < NBANDS; i++) {
-                        state->eq_bands_amp[i] = mag(state->fsamples_out[(int) (state->winlen * i * 1.0 / NBANDS)]);
+                        state->eq_bands_amp[i] = mag(state->fsamples_out[(int) (state->winlen * bands[i] / 20000.0)]);
                     }
                 }
 
@@ -514,7 +514,7 @@ extern "C" int equ_modifySamples_float (SuperEqState *state, char *buf,int nsamp
 
                 if (ch == 0) {
                     for (i = 0; i < NBANDS; i++) {
-                        int j = (int) (state->winlen * i * 1.0 / NBANDS);
+                        int j = (int) (state->winlen * bands[i] / 20000.0);
                         state->eq_bands_amp[i] = mag(state->fsamples[j*2],state->fsamples[j*2+1]);
                     }
                 }

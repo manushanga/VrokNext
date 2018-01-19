@@ -36,3 +36,8 @@ void *sharemem_pin(int fd, size_t size)
 {
     return mmap( NULL, size , PROT_READ|PROT_WRITE,MAP_SHARED,fd,0);
 }
+
+void sharemem_unpin(void *ptr, size_t size)
+{
+    munmap(ptr, size);
+}
