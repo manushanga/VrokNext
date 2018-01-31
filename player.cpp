@@ -88,15 +88,12 @@ void Vrok::Player::Run()
         {
             got = _command_now_queue->Pop(cmd);
 
-            auto b = AcquireBuffer();
-            if (b)
-                b->SetBufferType(Buffer::Type::StreamBuffer);
+            Buffer::Type bType = Buffer::Type::StreamBuffer;
 
             if (got) {
                 if (cmd.type == CommandType::OPEN) {
                     ResetDecoder();
-                    if (b)
-                        b->SetBufferType(Buffer::Type::StreamStart);
+                    bType = Buffer::Type::StreamStart;
 
                     _decoder = (Vrok::Decoder *) cmd.data;
                     BufferConfig config;
@@ -106,8 +103,7 @@ void Vrok::Player::Run()
                     _state = PlayerState::PLAYING;
                 } else if (cmd.type == CommandType::STOP) {
                     ResetDecoder();
-                    if (b)
-                        b->SetBufferType(Buffer::Type::StreamStop);
+                    bType = Buffer::Type::StreamStop;
 
                     _state = PlayerState::STOPPED;
                 } else if (cmd.type == CommandType::PAUSE) {
@@ -121,7 +117,13 @@ void Vrok::Player::Run()
                 }
             }
 
-            if (b) {
+            auto b = AcquireBuffer();
+            if (b == nullptr)
+                break;
+
+            b->SetBufferType(bType);
+            /* _decoder might be not set if the track ends before next track is quequed */
+            if (_decoder != nullptr) {
 
                 b->SetStreamId(_cur_stream_id);
                 if (*b->GetBufferConfig() != *GetBufferConfig()) {
@@ -132,10 +134,11 @@ void Vrok::Player::Run()
 
                 if (_decoder->GetPositionInSeconds() + INIT_GAPLESS_SECS > _decoder->GetDurationInSeconds()) {
                     WARN(0, "gapless request")
-                    if (_events && _queue_next)
+                    if (_events && _queue_next) {
                         _events->QueueNext();
 
-                    _state = PlayerState::PLAYING_GAPLESS_DONE;
+                        _state = PlayerState::PLAYING_GAPLESS_DONE;
+                    }
                 }
 
                 if (!_decoder_work) {
@@ -154,9 +157,9 @@ void Vrok::Player::Run()
                         _state = PlayerState::PLAYING;
                     }
                 }
-
-                PushBuffer(b);
             }
+
+            PushBuffer(b);
             break;
         }
         case PlayerState::PLAYING_GAPLESS_DONE:
