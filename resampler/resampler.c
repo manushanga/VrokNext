@@ -2,7 +2,7 @@
 #include <string.h>
 #define _USE_MATH_DEFINES
 
-#include "util/fastmath.h"
+#include "../util/fastmath.h"
 
 #if (defined(_M_IX86) || defined(__i386__) || defined(_M_X64) || defined(__amd64__))
 #include <xmmintrin.h>
@@ -37,7 +37,7 @@ enum { RESAMPLER_SHIFT = 10 };
 enum { RESAMPLER_SHIFT_EXTRA = 8 };
 enum { RESAMPLER_RESOLUTION = 1 << RESAMPLER_SHIFT };
 enum { RESAMPLER_RESOLUTION_EXTRA = 1 << (RESAMPLER_SHIFT + RESAMPLER_SHIFT_EXTRA) };
-enum { SINC_WIDTH = 16 };
+enum { SINC_WIDTH = 32 };
 enum { SINC_SAMPLES = RESAMPLER_RESOLUTION * SINC_WIDTH };
 enum { CUBIC_SAMPLES = RESAMPLER_RESOLUTION * 4 };
 

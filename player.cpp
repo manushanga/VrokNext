@@ -71,7 +71,6 @@ void Vrok::Player::Run()
     Command cmd;
     bool got;
 
-
     switch (_state) {
         case PlayerState::START:
         {
@@ -124,7 +123,6 @@ void Vrok::Player::Run()
             b->SetBufferType(bType);
             /* _decoder might be not set if the track ends before next track is quequed */
             if (_decoder != nullptr) {
-
                 b->SetStreamId(_cur_stream_id);
                 if (*b->GetBufferConfig() != *GetBufferConfig()) {
                     b->Reset(GetBufferConfig());
@@ -158,7 +156,6 @@ void Vrok::Player::Run()
                     }
                 }
             }
-
             PushBuffer(b);
             break;
         }

@@ -162,8 +162,6 @@ bool Vrok::DriverAlsa::BufferConfigChange(BufferConfig *config)
 bool Vrok::DriverAlsa::DriverRun(Buffer *buffer)
 {
     assert(_buffer);
-    //buffer->GetBufferConfig()->Print();
-
     int ret;
     int frames = buffer->GetBufferConfig()->frames * buffer->GetBufferConfig()->channels;
 
@@ -175,7 +173,7 @@ bool Vrok::DriverAlsa::DriverRun(Buffer *buffer)
         for (int i=0;i< frames;i++)
         {
             real_t val = buffer->GetData()[i];
-            Vrok::Clip(val,-1.0,1.0);
+            Vrok::Clip<real_t>(val,-1.0,1.0);
             ibuffer[i] = val * _multiplier;
         }
         break;
@@ -186,7 +184,7 @@ bool Vrok::DriverAlsa::DriverRun(Buffer *buffer)
         for (int i=0;i< frames;i++)
         {
             real_t val = buffer->GetData()[i];
-            Vrok::Clip(val,-1.0,1.0);
+            Vrok::Clip<real_t>(val,-1.0,1.0);
             int ival = val * _multiplier;
             X24_WRITE(_buffer, i, ival);
         }
@@ -198,7 +196,7 @@ bool Vrok::DriverAlsa::DriverRun(Buffer *buffer)
         for (int i=0;i< frames;i++)
         {
             real_t val = buffer->GetData()[i];
-            Vrok::Clip(val,-1.0,1.0);
+            Vrok::Clip<real_t >(val,-1.0,1.0);
             ibuffer[i] = val * _multiplier;
         }
         break;
@@ -209,7 +207,7 @@ bool Vrok::DriverAlsa::DriverRun(Buffer *buffer)
         for (int i=0;i< frames;i++)
         {
             real_t val = buffer->GetData()[i];
-            Vrok::Clip(val,-1.0,1.0);
+            Vrok::Clip<real_t>(val,-1.0,1.0);
             ibuffer[i] = val * _multiplier;
         }
         break;

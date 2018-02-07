@@ -14,7 +14,7 @@ Buffer *BufferGraph::Point::AcquireBuffer()
 
 void BufferGraph::Point::ReleaseBuffer(Buffer *buffer)
 {
-    lock.lock();
+    _lock.lock();
 
     _buffer_refs[buffer->GetId()]++;
     if (_buffer_refs[buffer->GetId()] == _sinks.size())
@@ -28,7 +28,7 @@ void BufferGraph::Point::ReleaseBuffer(Buffer *buffer)
         _buffer_refs[buffer->GetId()]=0;
     }
 
-    lock.unlock();
+    _lock.unlock();
 }
 
 void BufferGraph::Point::PushBuffer(Buffer *buffer)
@@ -48,10 +48,10 @@ Buffer *BufferGraph::Point::PeakBuffer()
     // respect to ReleaseBuffer() any thread can
     // be releasing a buffer while another peaks
     // therefore a lock is used
-    lock.lock();
+    _lock.lock();
     Buffer *b=nullptr;
     _used_buffers->PeakBlocking(b);
-    lock.unlock();
+    _lock.unlock();
 
     //   __sync_synchronize ();
     return b;
@@ -79,7 +79,7 @@ Buffer **BufferGraph::Point::PeakAllSources()
                 break;
             } else if ((b && b->GetStreamId() < _cur_stream_id))
             {
-                std::cout<<"drop"<<b->GetStreamId() <<" "<<_cur_stream_id<<std::endl;
+                WARN(0,"drop"<<b->GetStreamId() <<" "<<_cur_stream_id);
                 _sources[i]->ReleaseBuffer(b);
             } else if (buffers_on_peak[i] != b)
             {

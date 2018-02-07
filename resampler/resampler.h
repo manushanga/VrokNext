@@ -54,14 +54,14 @@ int resampler_latency(void *);
 int resampler_get_free_count(void *);
 void resampler_write_sample(void *, short sample);
 void resampler_write_sample_fixed(void *, int sample, unsigned char depth);
-inline void resampler_write_sample_float(void *, float sample);
+void resampler_write_sample_float(void *, float sample);
 void resampler_set_rate(void *, double new_factor);
 int resampler_ready(void *);
 void resampler_clear(void *);
-inline int resampler_get_sample_count(void *);
+int resampler_get_sample_count(void *);
 int resampler_get_sample(void *);
-inline float resampler_get_sample_float(void *);
-inline void resampler_remove_sample(void *, int decay);
+float resampler_get_sample_float(void *);
+void resampler_remove_sample(void *, int decay);
 
 #ifdef __cplusplus
 }

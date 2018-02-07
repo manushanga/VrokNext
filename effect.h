@@ -40,7 +40,7 @@ public:
                            int buffer_count)=0;
     virtual bool BufferConfigChange(BufferConfig *config) { return true; }
     void Run();
-    const BufferConfig& GetOldBufferConfig() { return _input_bc; };
+    const BufferConfig& GetOldBufferConfig() { return _input_bc; }
     std::vector<VUMeter *> GetMeters()
     {
         return std::vector<VUMeter *>();

@@ -22,7 +22,6 @@
 #include <cstdlib>
 #include <cmath>
 #include <cassert>
-#include <NE10_types.h>
 
 #else
 #include <stdio.h>
@@ -30,11 +29,11 @@
 #include <math.h>
 #include <assert.h>
 #endif
+
 #include "paramlist.hpp"
 #include "equ.h"
-#include "util/fastmath.h"
-#include "util/mutil.h"
-#include "../../android_debug.h"
+#include "../util/mutil.h"
+#include "../util/fastmath.h"
 
 // int _Unwind_Resume_or_Rethrow;
 // int _Unwind_RaiseException;
@@ -47,6 +46,10 @@
 // int _Unwind_GetRegionStart;
 // int _Unwind_SetGR;
 // int _Unwind_GetIPInfo;
+
+#ifdef USE_NE10
+#include <NE10_types.h>
+#endif
 
 extern "C" void rdft(int, int, REAL *, int *, REAL *);
 void rfft(int n,int isign,REAL *x)
@@ -260,7 +263,7 @@ void process_param(REAL *bc,paramlist *param,paramlist &param2,REAL fs,int ch)
   delete param2.elm;
   param2.elm = NULL;
 
-  for(i=0,pp=&param2.elm;i<=NBANDS;i++,pp = &(*pp)->next)
+  for(i=0,pp=&param2.elm;i<NBANDS;i++,pp = &(*pp)->next)
   {
     (*pp) = new paramlistelm;
 	(*pp)->lower = i == 0        ?  0 : bands[i-1];

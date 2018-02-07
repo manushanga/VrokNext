@@ -2,14 +2,13 @@
 #include "bufferconfig.h"
 #include "buffer.h"
 
-Buffer::Buffer(BufferConfig &config, int id)
-        :
-        _id(id),
-        _stream_id(0UL)
+Buffer::Buffer(BufferConfig &config, int id) :
+    _id(id),
+    _stream_id(0UL)
 {
     _config= config;
     _size=config.channels*config.frames;
-    _buffer = (real_t *)mutil_aligned_alloc(_size * sizeof(real_t)); //new real_t[_size];
+    _buffer = (real_t *)mutil_aligned_alloc(_size * sizeof(real_t));
     _type = Type::StreamBuffer;
 }
 
@@ -24,8 +23,8 @@ void Buffer::Reset(BufferConfig *config)
 
     if (_size < _config.frames * _config.channels)
     {
-        delete[] _buffer;
-        _buffer = (real_t *)mutil_aligned_alloc(_size * sizeof(real_t));
+        mutil_aligned_free( _buffer );
+        _buffer = (real_t *)mutil_aligned_alloc( _config.frames * _config.channels * sizeof(real_t));
     }
     _size=_config.channels*_config.frames;
 }

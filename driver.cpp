@@ -41,6 +41,7 @@ void Vrok::Driver::Run()
             }
             _first_run = false;
             _input_bc = *c;
+            SetBufferConfig(c);
         }
 
         // unchecked mixing

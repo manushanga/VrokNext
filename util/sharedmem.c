@@ -1,10 +1,12 @@
 
 #include <unistd.h>
 #include <sys/mman.h>
+#ifdef __ANDROID__
 #include <android/sharedmem.h>
+#endif
 #include <malloc.h>
 
-#include "util/sharedmem.h"
+#include "../util/sharedmem.h"
 
 struct shared_memory_impl
 {
@@ -16,11 +18,13 @@ struct shared_memory *sharedmem_create(const char *name, size_t size)
     struct shared_memory* shm = (struct shared_memory*) malloc(sizeof(struct shared_memory));
 #ifdef __ANDROID__
     shm->fd = ASharedMemory_create(name, size);
+    shm->buffer = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, shm->fd, 0);
 #else
     /* may be use posix shared mem? */
-    int fd = ;
+    shm->fd = -1;
+    shm->buffer = malloc(size);
 #endif
-    shm->buffer = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, shm->fd, 0);
+
     shm->size = size;
 
     return shm;

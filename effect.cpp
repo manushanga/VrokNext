@@ -28,6 +28,7 @@ void Vrok::Effect::Run()
                     WARN(0, "BufferConfig failed");
                     return ;
                 }
+                SetBufferConfig(c);
                 _first_run = false;
                 _input_bc = *c;
             }

@@ -8,12 +8,12 @@
 
 extern std::mutex __global_console_lock;
 
+std::string __get_thread_name();
+void __set_thread_name(std::string thread_name);
 
 #ifdef __ANDROID_API__
 #include <android/log.h>
 
-std::string __get_thread_name();
-void __set_thread_name(std::string thread_name);
 
 #ifdef DEBUG
 #define DBG(__level, ...) \

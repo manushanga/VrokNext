@@ -30,6 +30,7 @@ struct BufferConfig
     {
 
     }
+
     inline bool operator!=(const BufferConfig& lhs)
     {
         return !((lhs.channels == channels) &&

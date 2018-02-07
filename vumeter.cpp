@@ -54,7 +54,7 @@ void Vrok::VUMeter::Process(Buffer *buffer)
 
         for (int i=0;i<bc->frames;++i)
         {
-            double val = std::max(_value[ch].load(), fabs(buffer->GetData()[bc->channels * i+ch]));
+            double val = std::max<double>(_value[ch].load(), fabs(buffer->GetData()[bc->channels * i+ch]));
             _value[ch] = val;
             if (val > 1.0)
                 ++_count_over[ch];

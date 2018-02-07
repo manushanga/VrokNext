@@ -10,8 +10,9 @@ void *mutil_aligned_alloc(size_t size)
 #ifdef  __arm__
     return memalign(ARM_ALIGN, size);
 #elif __x86_64__
-    void *ptr = NULL;
-    return posix_memalign(&ptr, X86_64_ALIGN, size)
+    void *ptr = malloc(size);
+    //posix_memalign(&ptr, X86_64_ALIGN, size);
+    return ptr;
 #else
     return malloc(size);
 #endif

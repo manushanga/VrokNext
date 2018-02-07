@@ -253,14 +253,14 @@ bool Vrok::DecoderFFMPEG::DecoderRun(Buffer *buffer,  BufferConfig *config)
                 case AV_SAMPLE_FMT_U8P:
                     for (size_t nb=0;nb<plane_size/sizeof(uint8_t);nb++){
                         for (int ch = 0; ch < ctx->channels; ch++) {
-                            temp[temp_write] = ( ( ((uint8_t *) frame->extended_data[0])[nb] - 127) * 32767 )/ 127 ;
+                            temp[temp_write] = ( ( ((uint8_t *) frame->extended_data[ch])[nb] - 127)  )/ 127.0f ;
                             temp_write++;
                         }
                     }
                     break;
                 case AV_SAMPLE_FMT_U8:
                     for (size_t nb=0;nb<plane_size/sizeof(uint8_t);nb++){
-                        temp[temp_write] = ( ( ((uint8_t *) frame->extended_data[0])[nb] - 127) * 32767 )/ 127 ;
+                        temp[temp_write] = ( ( ((uint8_t *) frame->extended_data[0])[nb] - 127)  ) / 127.0f ;
                         temp_write++;
                     }
                     break;

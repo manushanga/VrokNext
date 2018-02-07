@@ -87,7 +87,7 @@ Vrok::Resampler::Resampler()
     _mode.SetPropertyInfo(PropertyInfo{
             0.0, 5.0,
             1.0,
-            3.0,
+            4.0,
             {"ZOH(low)","BLEP","Linear","BLAM","CUBIC","Sinc(best)"} });
 
     ComponentManager *c=ComponentManager::GetSingleton();
@@ -102,6 +102,8 @@ Vrok::Resampler::Resampler()
 
 bool Vrok::Resampler::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int buffer_count)
 {
+    std::lock_guard<std::mutex> lg(_property_mutex);
+
     assert(buffer_count == 1);
 
     Buffer *src = in_buffer_set[0];
@@ -119,9 +121,9 @@ bool Vrok::Resampler::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int 
     float *current = src->GetData();
     int samples_out = 0;
 
-    while( ( sample_count && resampler_get_free_count( _resamplers[0] ) ) || resampler_get_sample_count( _resamplers[0] ) )
+    while( ( sample_count > 0 && resampler_get_free_count( _resamplers[0] ) ) || resampler_get_sample_count( _resamplers[0] ) )
     {
-        while ( sample_count && resampler_get_free_count( _resamplers[0] ) )
+        while ( sample_count > 0 && resampler_get_free_count( _resamplers[0] ) )
         {
             for (int i = 0; i < channel_count; ++i)
                 resampler_write_sample_float(_resamplers[i], current[i]);
@@ -141,7 +143,6 @@ bool Vrok::Resampler::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int 
         }
     }
 
-
     BufferConfig cfg;
     cfg.channels = src->GetBufferConfig()->channels;
     cfg.frames =/* src_flen;*/samples_out;//flen;// out_frames;
@@ -150,8 +151,8 @@ bool Vrok::Resampler::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int 
 
     for (std::size_t i=0;i< /*src_len*/samples_out * nch;i++)
     {
-        out_buffer->GetData()[i] =  _buffer[i];
-        Vrok::Clip(out_buffer->GetData()[i], -1.0f, 1.0f);
+        out_buffer->GetData()[i] = _buffer[i];
+        Vrok::Clip<real_t>(out_buffer->GetData()[i], -1.0f, 1.0f);
     }
     return true;
 }
@@ -173,7 +174,7 @@ bool Vrok::Resampler::BufferConfigChange(BufferConfig *config)
     std::lock_guard<std::mutex> lg(_property_mutex);
     DBG(0, "-----changed resampler rate " << _out_samplerate.Get() << " " << config->samplerate);
     _ratio =  double(config->samplerate) / double(_out_samplerate.Get())  ;
-
+    DBG(0, "-----changed resampler ratio " << _ratio);
     if (_resamplers)
     {
         for (int i=0;i<_resamplers_count;i++)

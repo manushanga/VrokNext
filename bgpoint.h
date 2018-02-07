@@ -38,7 +38,7 @@ private:
     std::atomic<int> _ref_counter;
     std::vector<Buffer *> _buffers;
     Queue<Buffer *> *_free_buffers;
-    std::mutex lock;
+    std::mutex _lock;
     const int _max_retries=50;
 protected:
     std::vector<Point *> _sinks, _sources;
@@ -51,8 +51,6 @@ public:
     Point()
     {
         _cur_stream_id=0UL;
-        std::cout<<"xx"<<_cur_stream_id<<std::endl;
-
 
         auto _config=BufferConfig();
 
@@ -68,18 +66,8 @@ public:
         }
 
     }
-    //void CreateThread()
-    //{
-        //assert(_self == nullptr);
-        //_self = new thread(worker,this);
-   // }
-    //void JoinThread()
-    //{
-        //_self->join();
-        //delete _self;
-        //_self = nullptr;
-    //}
-    void SetBufferConfig(BufferConfig *config)
+
+    void SetBufferConfig(const BufferConfig *config)
     {
         _config = *config;
     }
