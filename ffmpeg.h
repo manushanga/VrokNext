@@ -42,7 +42,6 @@ extern "C" {
 #include <libavutil/opt.h>
 #include <libavformat/avformat.h>
 #include <libavformat/avio.h>
-#include <libswscale/swscale.h>
 }
 #define FFMPEG_MAX_BUF_SIZE 192000
 

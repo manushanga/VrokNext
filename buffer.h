@@ -83,4 +83,12 @@ public:
         return _stream_id;
     }
 
+    inline void Silence()
+    {
+        for (int i=0;i<_size;i++)
+        {
+            _buffer[i] = (real_t)0.0;
+        }
+    }
+
 };

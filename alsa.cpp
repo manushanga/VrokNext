@@ -24,6 +24,7 @@ Vrok::DriverAlsa::DriverAlsa() :
 bool Vrok::DriverAlsa::SetDevice(std::string device)
 {
     _device = device;
+    return true;
 }
 
 std::vector<Vrok::Driver::DeviceInfo> Vrok::DriverAlsa::GetDeviceInfo()

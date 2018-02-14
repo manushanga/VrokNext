@@ -43,8 +43,8 @@ template<typename T>
 class Queue
 {
 private:
-    alignas(64) std::atomic<int> _front,_rear;
-    alignas(64) int _g_front, _g_rear;
+    std::atomic<int> _front,_rear;
+    int _g_front, _g_rear;
     int _size;
     T *_container;
     std::mutex _guard;

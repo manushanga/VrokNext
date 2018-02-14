@@ -140,6 +140,7 @@ void Vrok::Player::Run()
                 }
 
                 if (!_decoder_work) {
+                    b->Silence();
                     ResetDecoder();
 
                     if (_queue_next == false)
@@ -153,6 +154,9 @@ void Vrok::Player::Run()
                         b->SetBufferType(Buffer::Type::StreamEnd);
 
                         _state = PlayerState::PLAYING;
+                        if (_events) {
+                            _events->QueueNext();
+                        }
                     }
                 }
             }
@@ -173,6 +177,7 @@ void Vrok::Player::Run()
 
                 // don't push out failed buffers
                 if (!_decoder_work) {
+                    b->Silence();
                     ResetDecoder();
 
                     if (_queue_next == false)
@@ -186,8 +191,9 @@ void Vrok::Player::Run()
                         b->SetBufferType(Buffer::Type::StreamEnd);
 
                         _state = PlayerState::PLAYING;
+                        // no need to re-submit, the gapless request already
+                        // loaded next track
                     }
-
                 }
 
                 PushBuffer(b);

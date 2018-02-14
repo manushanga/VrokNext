@@ -21,6 +21,9 @@
         return false; \
     }
 #define SHORTTOFL (1.0f/32768.0f)
+#define INT8TOFL (1.0f/127.0f)
+#define INT32TOFL (1.0f/2147483647.0f)
+#define INT64TOFL (1.0f/9223372036854775807.0f)
 #define SEEK_MAX 0xFFFFFFFFFFFFFFFFL
 
 Vrok::DecoderFFMPEG::DecoderFFMPEG() :
@@ -220,9 +223,27 @@ bool Vrok::DecoderFFMPEG::DecoderRun(Buffer *buffer,  BufferConfig *config)
 
                 case AV_SAMPLE_FMT_S16P:
 
-                    for (size_t nb=0;nb<plane_size/sizeof(uint16_t);nb++){
+                    for (size_t nb=0;nb<plane_size/sizeof(int16_t);nb++){
                         for (int ch = 0; ch < ctx->channels; ch++) {
                             temp[temp_write] = ((short *) frame->extended_data[ch])[nb] * SHORTTOFL;
+                            temp_write++;
+                        }
+                    }
+                    break;
+                case AV_SAMPLE_FMT_S32P:
+
+                    for (size_t nb=0;nb<plane_size/sizeof(int32_t);nb++){
+                        for (int ch = 0; ch < ctx->channels; ch++) {
+                            temp[temp_write] = ((int32_t *) frame->extended_data[ch])[nb] * INT32TOFL;
+                            temp_write++;
+                        }
+                    }
+                    break;
+                case AV_SAMPLE_FMT_S64P:
+
+                    for (size_t nb=0;nb<plane_size/sizeof(int64_t);nb++){
+                        for (int ch = 0; ch < ctx->channels; ch++) {
+                            temp[temp_write] = ((int64_t *) frame->extended_data[ch])[nb] * INT64TOFL;
                             temp_write++;
                         }
                     }
@@ -236,10 +257,33 @@ bool Vrok::DecoderFFMPEG::DecoderRun(Buffer *buffer,  BufferConfig *config)
                         }
                     }
                     break;
+                case AV_SAMPLE_FMT_DBLP:
+
+                    for (size_t nb=0;nb<plane_size/sizeof(double);nb++){
+                        for (int ch = 0; ch < ctx->channels; ch++) {
+                            temp[temp_write] = ((double *) frame->extended_data[ch])[nb];
+                            temp_write++;
+                        }
+                    }
+                    break;
                 case AV_SAMPLE_FMT_S16:
 
                     for (size_t nb=0;nb<plane_size/sizeof(short);nb++){
                         temp[temp_write] = ((short *) frame->extended_data[0])[nb] * SHORTTOFL;
+                        temp_write++;
+                    }
+                    break;
+                case AV_SAMPLE_FMT_S32:
+
+                    for (size_t nb=0;nb<plane_size/sizeof(int32_t);nb++){
+                        temp[temp_write] = ((int32_t *) frame->extended_data[0])[nb] * INT32TOFL;
+                        temp_write++;
+                    }
+                    break;
+                case AV_SAMPLE_FMT_S64:
+
+                    for (size_t nb=0;nb<plane_size/sizeof(int64_t);nb++){
+                        temp[temp_write] = ((int64_t *) frame->extended_data[0])[nb] * INT64TOFL;
                         temp_write++;
                     }
                     break;
@@ -250,22 +294,33 @@ bool Vrok::DecoderFFMPEG::DecoderRun(Buffer *buffer,  BufferConfig *config)
                         temp_write++;
                     }
                     break;
+                case AV_SAMPLE_FMT_DBL:
+
+                    for (size_t nb=0;nb<plane_size/sizeof(double);nb++){
+                        temp[temp_write] = ((double *) frame->extended_data[0])[nb];
+                        temp_write++;
+                    }
+                    break;
                 case AV_SAMPLE_FMT_U8P:
+
                     for (size_t nb=0;nb<plane_size/sizeof(uint8_t);nb++){
                         for (int ch = 0; ch < ctx->channels; ch++) {
-                            temp[temp_write] = ( ( ((uint8_t *) frame->extended_data[ch])[nb] - 127)  )/ 127.0f ;
+                            temp[temp_write] = ( ( ((uint8_t *) frame->extended_data[ch])[nb] - 127)  ) * INT8TOFL ;
                             temp_write++;
                         }
                     }
                     break;
                 case AV_SAMPLE_FMT_U8:
                     for (size_t nb=0;nb<plane_size/sizeof(uint8_t);nb++){
-                        temp[temp_write] = ( ( ((uint8_t *) frame->extended_data[0])[nb] - 127)  ) / 127.0f ;
+                        temp[temp_write] = ( ( ((uint8_t *) frame->extended_data[0])[nb] - 127)  ) * INT8TOFL ;
                         temp_write++;
                     }
                     break;
-                default: WARN(9, "PCM type not supported");
-                   return false;
+                default:
+                {
+                    WARN(9, "PCM type not supported : "<< av_get_sample_fmt_name(sfmt));
+                    return false;
+                }
             }
         } else {
 

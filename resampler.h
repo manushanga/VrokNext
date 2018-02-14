@@ -39,10 +39,11 @@ private:
     std::mutex _property_mutex;
 
     float _ratio;
-    alignas(64) float _buffer[INTERNAL_BUFFER_SIZE];
+    float *_buffer;
 
 public:
     Resampler();
+    virtual ~Resampler();
     bool EffectRun(Buffer *out_buffer,
                    Buffer **in_buffer_set,
                    int buffer_count);

@@ -96,8 +96,14 @@ Vrok::Resampler::Resampler()
     c->RegisterProperty(this, "InterpolatorMode", &_mode);
     _resamplers = nullptr;
 
+    _buffer = (float*) mutil_aligned_alloc(sizeof(float) * INTERNAL_BUFFER_SIZE);
     resampler_init();
 
+}
+
+Vrok::Resampler::~Resampler()
+{
+    mutil_aligned_free(_buffer);
 }
 
 bool Vrok::Resampler::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int buffer_count)
@@ -149,7 +155,7 @@ bool Vrok::Resampler::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int 
     cfg.samplerate = _out_samplerate.Get();
     out_buffer->Reset(&cfg);
 
-    for (std::size_t i=0;i< /*src_len*/samples_out * nch;i++)
+    for (int i=0;i< /*src_len*/samples_out * nch;i++)
     {
         out_buffer->GetData()[i] = _buffer[i];
         Vrok::Clip<real_t>(out_buffer->GetData()[i], -1.0f, 1.0f);

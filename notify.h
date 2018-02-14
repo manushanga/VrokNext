@@ -16,10 +16,10 @@ public:
         virtual void OnDebug(int level, std::string msg) {}
     };
     Notify() :
+        _notifier(nullptr),
         _elevel(0),
-        _wlevel(0),
         _dlevel(0),
-        _notifier(nullptr)
+        _wlevel(0)
     {}
     static Notify *GetInstance()
     {

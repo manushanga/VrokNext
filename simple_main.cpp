@@ -13,9 +13,26 @@ EffectSSEQ eq;
 DriverAlsa out;
 ThreadPool pool(2);
 
+std::string filename;
+
+void Play(const std::string& filename);
+
+class PlayerEv : public Player::Events
+{
+public:
+    void QueueNext()
+    {
+        Play(filename);
+    }
+
+};
+PlayerEv playerEv;
 void Setup()
 {
     Notify::GetInstance()->SetNotifier(new CNotifier);
+    player.SetEvents(&playerEv);
+    player.SetQueueNext(true);
+
     player.RegisterSink(&eq);
     eq.RegisterSource(&player);
     eq.RegisterSink(&resampler);
@@ -46,9 +63,10 @@ void Play(const std::string& filename)
         player.SubmitForPlayback(dec);
 
 }
-int main()
+int main(int argc, char** argv)
 {
     Setup();
-    Play("/media/madura/Data1/pramod/ALL/SIMPSONS.wav");
+    filename = argv[1];
+    Play(filename);
     pool.JoinThreads();
 }
