@@ -48,10 +48,10 @@ bool Vrok::EffectSSEQ::EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int
     BufferConfig *bc=in_buffer_set[0]->GetBufferConfig();
     int len=bc->frames*bc->channels;
 
+    out_buffer->Reset(bc);
     real_t *proc=in_buffer_set[0]->GetData();
     real_t *proc_out=out_buffer->GetData();
     
-    out_buffer->Reset(bc);
 
     memcpy(proc_out, proc, sizeof(real_t) * len);
 

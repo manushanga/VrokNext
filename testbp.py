@@ -82,7 +82,7 @@ def QueueNext():
     pl.SubmitForPlayback(dec)
     
 events.QueueNext = QueueNext
-
+pl.SetQueueNext(True)
 r.filename = random.choice(files)
 print(r.filename)
 compman = vrok.ComponentManager.GetSingleton()
@@ -94,9 +94,9 @@ print(dec.Open(r))
 
 outX = outJ
 pl.RegisterSink(outX)
-#fir.RegisterSource(pl)
-#fir.RegisterSink(outX)
-outX.RegisterSource(pl)
+fir.RegisterSource(pl)
+fir.RegisterSink(outX)
+outX.RegisterSource(fir)
 
 pl.Preallocate()
 outX.Preallocate()
@@ -107,7 +107,7 @@ pl.SetEvents(events)
 t = vrok.ThreadPool(2)
 
 t.RegisterWork(1, pl)
-#t.RegisterWork(0, fir)
+t.RegisterWork(0, fir)
 t.RegisterWork(0, outX)
 
 pl.SubmitForPlayback(dec)
