@@ -115,7 +115,10 @@ pl.SubmitForPlayback(dec)
 t.CreateThreads()
 
 while True:
-    nn = input("next?")
+    nn = input("next?").strip()
+    if nn == 'q':
+        t.StopThreads()
+        break
     QueueNext()
 t.JoinThreads()
 

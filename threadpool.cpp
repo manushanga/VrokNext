@@ -1,4 +1,5 @@
 #include "threadpool.h"
+#include "util/mutil.h"
 #include "debug.h"
 #include "common.h"
 // interval in usec
@@ -102,5 +103,6 @@ void Vrok::ThreadPool::Work(ThreadData *th)
         //DBG(th->thread_id<<" "<<i);
         (*th->runnables)[th->thread_id][i]->ThreadEnd();
     }
+    INFO("in use on thread:"<<th->thread_id<<" "<<mutil_get_in_use()<<" bytes");
 }
 

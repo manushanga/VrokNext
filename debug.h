@@ -14,7 +14,6 @@ void __set_thread_name(std::string thread_name);
 #ifdef __ANDROID_API__
 #include <android/log.h>
 
-
 #ifdef DEBUG
 #define DBG(__level, ...) \
     {\
@@ -59,6 +58,12 @@ void __set_thread_name(std::string thread_name);
         std::stringstream __sstream; \
         __sstream << __VA_ARGS__ ; \
         Vrok::Notify::GetInstance()->NotifyWarning(__level, __sstream.str()); \
+    }
+#define INFO(...) \
+    {\
+        std::stringstream __sstream; \
+        __sstream << __VA_ARGS__ ; \
+        Vrok::Notify::GetInstance()->NotifyInformation(__sstream.str()); \
     }
 
     
