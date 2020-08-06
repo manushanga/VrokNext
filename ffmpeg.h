@@ -85,7 +85,7 @@ private:
     AVFrame *frame;
     AVPacket packet;
     AVStream *audio_st;
-    real_t temp[2*FFMPEG_MAX_BUF_SIZE + FF_INPUT_BUFFER_PADDING_SIZE];
+    real_t temp[2*FFMPEG_MAX_BUF_SIZE + AV_INPUT_BUFFER_PADDING_SIZE];
     uint64_t current_in_seconds;
     uint64_t seek_to;
     uint64_t duration_in_seconds;

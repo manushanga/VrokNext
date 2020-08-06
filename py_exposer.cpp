@@ -101,7 +101,7 @@ public:
     {
         Vrok::Notify::GetInstance()->NotifyInformation("onTh end");
     }
-    void OnBuffer(double * buffer) override
+    void OnBuffer(double* buffer, int frames, StreamType type) override
     {
 
         for (int f=0;f<_frames;f++)
@@ -191,12 +191,18 @@ BOOST_PYTHON_MODULE(vrok)
 
     class_<std::vector<Vrok::Driver::DeviceInfo>>("DeviceInfoList")
             .def(vector_indexing_suite<std::vector<Vrok::Driver::DeviceInfo>>());
+    Vrok::PropertyBase* (Vrok::ComponentManager::*get_property_func)(Vrok::Component*, std::string);
+    get_property_func = &Vrok::ComponentManager::GetProperty;
+    //    void SetProperty(Component *component, PropertyBase *property, std::string value);
+    void (Vrok::ComponentManager::*set_property_func)(Vrok::Component*, Vrok::PropertyBase*, std::string);
+    set_property_func = &Vrok::ComponentManager::SetProperty;
+
 
     class_<Vrok::ComponentManager,boost::noncopyable >("ComponentManager", boost::python::no_init)
             .def("GetSingleton", &Vrok::ComponentManager::GetSingleton, return_value_policy<reference_existing_object>())
             .def("GetComponent", &Vrok::ComponentManager::GetComponent, return_value_policy<reference_existing_object>())
-            .def("SetProperty", &Vrok::ComponentManager::SetProperty, return_value_policy<reference_existing_object>())
-            .def("GetProperty", &Vrok::ComponentManager::GetProperty, return_value_policy<reference_existing_object>())
+            .def("SetProperty", set_property_func)
+            .def("GetProperty", get_property_func, return_value_policy<reference_existing_object>())
             .staticmethod("GetSingleton");
 
     class_<Vrok::Resource, boost::noncopyable>("Resource", boost::python::init<>())

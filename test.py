@@ -1,9 +1,9 @@
 import threading
 import sys
-from pytube import YouTube
+#from pytube import YouTube
 from ctypes import *
 
-lib = cdll.LoadLibrary('./libvrok.so')
+lib = cdll.LoadLibrary('./vrok.so')
 lib.CreateContext.argtypes = []
 lib.CreateContext.restypes = []
 
@@ -28,15 +28,15 @@ def worker():
 
 th=threading.Thread(target=worker)
 th.start()
-yt = YouTube()
+#yt = YouTube()
 
 while (True):
     filename=sys.stdin.readline()[:-1]
     
-    if (filename.startswith("https://www.youtube")):
-        yt.url = filename
-        filename = yt.videos[-1].url
-        print(filename)
+    #if (filename.startswith("https://www.youtube")):
+    #    yt.url = filename
+    #    filename = yt.videos[-1].url
+    #    print(filename)
     
     c_filename=create_string_buffer(filename.encode('utf-8'))
     o=lib.CreateResource(c_filename);

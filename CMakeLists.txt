@@ -45,8 +45,8 @@ add_definitions(-DUSE_OOURA)
 
 
 
-#add_library(vrok SHARED ${COMMON_SRC})
-add_executable(vrok ${COMMON_SRC})
+add_library(vrok SHARED ${COMMON_SRC})
+#add_executable(vrok ${COMMON_SRC})
 
 set_target_properties(vrok PROPERTIES PREFIX "" )
 target_link_libraries(vrok

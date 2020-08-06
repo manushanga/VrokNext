@@ -1,3 +1,5 @@
+
+print("sss")
 import os, random, sys
 import vrok
 import time
@@ -17,14 +19,14 @@ def get_file_list(path):
 p = pa.PyAudio()
 s = p.open(format=pa.paFloat32, channels=1, rate=48000, output=True)
 
-
+print("sasss")
 r = vrok.Resource()
 files = []
 for path in sys.argv:
     files.extend(get_file_list(path))
 
 pl = vrok.Player()
-fir = vrok.EffectFIR()
+fir = vrok.EffectSSEQ()
 out = vrok.DriverAlsa()
 outJ = vrok.DriverJBufferOut();
 outPy = vrok.DriverPyOut();
@@ -84,19 +86,21 @@ events.QueueNext = QueueNext
 r.filename = random.choice(files)
 print(r.filename)
 compman = vrok.ComponentManager.GetSingleton()
-comp = compman.GetComponent("FIR filter:0");
+comp = compman.GetComponent("SSEQ:0");
 if (comp != None):
-    prop = compman.GetProperty(comp,"wet_vol");
-    compman.SetProperty(comp,prop, "2.0"); 
+    print("FIRRRR")
     
 print(dec.Open(r))
 
 outX = outJ
 pl.RegisterSink(outX)
+#fir.RegisterSource(pl)
+#fir.RegisterSink(outX)
 outX.RegisterSource(pl)
 
 pl.Preallocate()
 outX.Preallocate()
+fir.Preallocate()
 
 outX.SetVolume(0.0)
 pl.SetEvents(events)
@@ -110,6 +114,9 @@ pl.SubmitForPlayback(dec)
 
 t.CreateThreads()
 
+while True:
+    nn = input("next?")
+    QueueNext()
 t.JoinThreads()
 
 

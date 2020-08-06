@@ -39,7 +39,7 @@ Vrok::DecoderFFMPEG::DecoderFFMPEG() :
     container=avformat_alloc_context();
     _ringbuffer = new Ringbuffer<real_t>(
                 2*FFMPEG_MAX_BUF_SIZE +
-                2*FF_INPUT_BUFFER_PADDING_SIZE);
+                2*AV_INPUT_BUFFER_PADDING_SIZE);
     //container->interrupt_callback.callback = FFMPEGDecoder::ff_avio_interrupt;
     //container->interrupt_callback.opaque = this;
     //last_read = time(NULL);
