@@ -219,6 +219,7 @@ BOOST_PYTHON_MODULE(vrok)
 
     class_<Vrok::Player, bases<BufferGraph::Point,Vrok::Component, Runnable>,boost::noncopyable>("Player",boost::python::init<>())
             .def("SubmitForPlayback",&Vrok::Player::SubmitForPlayback)
+            .def("SubmitForPlaybackNow",&Vrok::Player::SubmitForPlaybackNow)
             .def("Resume",&Vrok::Player::Resume)
             .def("Pause",&Vrok::Player::Pause)
             .def("Stop",&Vrok::Player::Stop)

@@ -27,6 +27,16 @@ bool Vrok::Player::SubmitForPlayback(Vrok::Decoder *decoder)
     return true;
 }
 
+bool Vrok::Player::SubmitForPlaybackNow(Vrok::Decoder *decoder)
+{
+    Command cmd;
+    cmd.data = decoder;
+    cmd.type = CommandType::OPEN_NOW;
+    _command_now_queue->PushBlocking(cmd);
+    //_command_queue->Clear();
+    return true;
+}
+
 bool Vrok::Player::Resume()
 {
     Command cmd;
@@ -77,7 +87,7 @@ void Vrok::Player::Run()
         {
             got = _command_now_queue->Pop(cmd);
             if (got) {
-                if (cmd.type == CommandType::OPEN) {
+                if (cmd.type == CommandType::OPEN || cmd.type == CommandType::OPEN_NOW) {
                     _command_now_queue->Push(cmd);
                     _state = PlayerState::PLAYING;
                 }
@@ -104,7 +114,7 @@ void Vrok::Player::Run()
                     }
                 } while (b == nullptr);
 
-                if (cmd.type == CommandType::OPEN) {
+                if (cmd.type == CommandType::OPEN_NOW) {
                     ResetDecoder();
                     bType = Buffer::Type::StreamStart;
                     _decoder = (Vrok::Decoder *) cmd.data;
@@ -113,6 +123,16 @@ void Vrok::Player::Run()
                     SetBufferConfig(&config);
 
                     _state = PlayerState::PLAYING;
+                } else if (cmd.type == CommandType::OPEN) {
+                    ResetDecoder();
+                    bType = Buffer::Type::StreamBuffer;
+                    _decoder = (Vrok::Decoder *) cmd.data;
+                    BufferConfig config;
+                    _decoder->GetBufferConfig(&config);
+                    SetBufferConfig(&config);
+
+                    _state = PlayerState::PLAYING;
+
                 } else if (cmd.type == CommandType::STOP) {
                     ResetDecoder();
                     bType = Buffer::Type::StreamStop;
@@ -244,7 +264,7 @@ void Vrok::Player::Run()
         {
             got = _command_now_queue->Pop(cmd);
             if (got) {
-                if (cmd.type == CommandType::OPEN) {
+                if (cmd.type == CommandType::OPEN || cmd.type == CommandType::OPEN_NOW) {
                     _command_now_queue->Push(cmd);
                     _state = PlayerState::PLAYING;
                 }

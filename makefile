@@ -18,6 +18,7 @@ OBJECTS= \
     shibatch/ooura_fft.o \
     util/mutil.o \
     util/sharedmem.o \
+    util/backtrace.o \
     alsa.o \
     notify.o \
     notifier_impl.o \

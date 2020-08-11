@@ -44,6 +44,7 @@ namespace Vrok {
         enum class CommandType
         {
             OPEN,
+            OPEN_NOW,
             PAUSE,
             RESUME,
             STOP,
@@ -95,6 +96,7 @@ namespace Vrok {
         // next playable file
 
         bool SubmitForPlayback(Decoder* decoder);
+        bool SubmitForPlaybackNow(Decoder *decoder);
         bool Resume();
         bool Pause();
         bool Stop();

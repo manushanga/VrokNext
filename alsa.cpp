@@ -169,6 +169,7 @@ bool Vrok::DriverAlsa::DriverRun(Buffer *buffer)
     if (buffer->getBufferType() == Buffer::Type::StreamStart 
             || buffer->getBufferType() == Buffer::Type::StreamStop)
     {
+        DBG(0,"btype:start/end");
         snd_pcm_drop(_handle);
         snd_pcm_prepare(_handle);
     }

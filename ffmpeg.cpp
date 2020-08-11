@@ -13,11 +13,12 @@
 */
 #include <limits>
 #include "ffmpeg.h"
-
+#include "util/backtrace.h"
 #define DIE_ON_ERR(ret) \
     if (ret < 0) \
     { \
         DBG(0,"die on "<<__LINE__); \
+        backtrace_print(); \
         return false; \
     }
 #define SHORTTOFL (1.0f/32768.0f)
@@ -178,23 +179,21 @@ bool Vrok::DecoderFFMPEG::DecoderRun(Buffer *buffer,  BufferConfig *config)
 {
     while (!_ringbuffer->Read(buffer->GetData(),config->channels*config->frames))
     {
-        int ret=0;
+        int ret=0, read_ok=0;
         got_frame = 0;
+
         while (got_frame == 0)
         {
-            ret = av_read_frame(container,&packet);
-
-            DIE_ON_ERR(ret);
-
+            read_ok = av_read_frame(container,&packet);
+            DIE_ON_ERR(read_ok);
             // eat up video packets!
-            while (packet.stream_index!=audio_stream_id && ret == 0)
+            while (packet.stream_index!=audio_stream_id)
             {
                 av_free_packet(&packet);
                 ret = av_read_frame(container,&packet);
             }
 
             DIE_ON_ERR(ret);
-
 
             // process audio packets
             ret = avcodec_decode_audio4(ctx,frame,&got_frame,&packet);

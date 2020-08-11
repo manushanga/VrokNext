@@ -79,6 +79,13 @@ def QueueNext():
     print(r.filename)
     print(dec.Open(r))
     pl.SubmitForPlayback(dec)
+def QueueNextNow():
+    r.filename = random.choice(files)
+    dec = vrok.DecoderFFMPEG.Create()
+    print(r.filename)
+    print(dec.Open(r))
+    pl.SubmitForPlaybackNow(dec)
+
 
 
 def QueueFile(ffile):
@@ -88,7 +95,7 @@ def QueueFile(ffile):
     dec = vrok.DecoderFFMPEG.Create()
     print(r.filename)
     print(dec.Open(r))
-    pl.SubmitForPlayback(dec)
+    pl.SubmitForPlaybackNow(dec)
 
 
     
@@ -144,7 +151,7 @@ while True:
         print(xx)
         compman.SetProperty("ShibatchSuperEQ:0", xx, nn.split()[2])
     elif nn == '':
-        QueueNext()
+        QueueNextNow()
     else:
         QueueFile(nn)
 t.JoinThreads()
