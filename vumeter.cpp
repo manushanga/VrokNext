@@ -2,6 +2,7 @@
 #include <tuple>
 
 #include "vumeter.h"
+#define VIS_BUF_COUNT 64
 
 Vrok::VUMeter::VUMeter(std::string name) :
     _name(name),
@@ -14,6 +15,9 @@ Vrok::VUMeter::VUMeter(std::string name) :
         _value[i] = 0;
         _clip[i] = 0;
         _count_over[i] = 0;
+    }
+    for (int i=0;i<VIS_BUF_COUNT;i++)
+    {
     }
 }
 

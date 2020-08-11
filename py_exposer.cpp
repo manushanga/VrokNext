@@ -8,6 +8,7 @@
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include <boost/python/numpy.hpp>
 
+#include "component.h"
 #include "common.h"
 #include "player.h"
 #include "effect.h"
@@ -174,7 +175,6 @@ BOOST_PYTHON_MODULE(vrok)
     class_<Vrok::Decoder, boost::noncopyable>("Decoder",boost::python::no_init);
     class_<PlayerEventsImpl, boost::noncopyable>("PlayerEvents" ,boost::python::init<>())
             .def("QueueNext", pure_virtual(&Vrok::Player::Events::QueueNext));
-
     class_<DriverPyOutImpl, boost::noncopyable>("DriverPyOut" ,boost::python::init<>())
             .def("OnBuffer", pure_virtual(&Vrok::DriverJBufferOut::Events::OnBuffer))
             .def("OnBufferConfigChange", pure_virtual(&Vrok::DriverJBufferOut::Events::OnBufferConfigChange));
@@ -182,7 +182,11 @@ BOOST_PYTHON_MODULE(vrok)
     class_<Vrok::Component,  boost::noncopyable>("Component" ,boost::python::no_init);
     class_<Vrok::PropertyBase,boost::noncopyable>("PropertyBase" ,boost::python::no_init);
 
-    class_<Vrok::Property<float>,bases<Vrok::PropertyBase>, boost::noncopyable>("PropertyFloat",boost::python::init<>());
+    float (Vrok::Property<float>::*get_float_func)(void);
+    get_float_func = &Vrok::Property<float>::Get;
+
+    class_<Vrok::Property<float>,bases<Vrok::PropertyBase>, boost::noncopyable>("PropertyFloat",boost::python::no_init)
+        .def("Get", get_float_func);
     class_<Vrok::Property<double>,bases<Vrok::PropertyBase>, boost::noncopyable>("PropertyDouble",boost::python::init<>());
     class_<Vrok::Property<int>,bases<Vrok::PropertyBase>, boost::noncopyable>("PropertyInteger",boost::python::init<>());
 
@@ -191,10 +195,10 @@ BOOST_PYTHON_MODULE(vrok)
 
     class_<std::vector<Vrok::Driver::DeviceInfo>>("DeviceInfoList")
             .def(vector_indexing_suite<std::vector<Vrok::Driver::DeviceInfo>>());
-    Vrok::PropertyBase* (Vrok::ComponentManager::*get_property_func)(Vrok::Component*, std::string);
+    Vrok::PropertyBase* (Vrok::ComponentManager::*get_property_func)(std::string, std::string);
     get_property_func = &Vrok::ComponentManager::GetProperty;
     //    void SetProperty(Component *component, PropertyBase *property, std::string value);
-    void (Vrok::ComponentManager::*set_property_func)(Vrok::Component*, Vrok::PropertyBase*, std::string);
+    void (Vrok::ComponentManager::*set_property_func)(std::string, std::string, std::string);
     set_property_func = &Vrok::ComponentManager::SetProperty;
 
 

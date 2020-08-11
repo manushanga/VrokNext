@@ -3,8 +3,8 @@
 #include "eq.h"
 
 #define CLIP(__x) ((__x>1.0f)?1.0f:(__x<-1.0f?-1.0f:__x))
-#define DB_TO_A(__db) (std::pow(10,(__db/-20.0)))
-#define A_TO_DB(__a) (-20.0 * std::log(__a))
+#define DB_TO_A(__db) (std::pow(10,(__db/20.0)))
+#define A_TO_DB(__a) (20.0 * std::log(__a))
 const char* g_eq_desc_temp =
         "cpu: %s\n"
         "fft hw accel: %s\n"
@@ -31,9 +31,9 @@ Vrok::EffectSSEQ::EffectSSEQ() :
 
     for (int i=0;i<EQ_BAND_COUNT;i++)
     {
-        _bands[i].Set(1.0);
+        _bands[i].Set(0.0);
     }
-    _preamp.Set(1.0);
+    _preamp.Set(0.0);
     _desc_buffer.resize(DESC_BUF_LEN);
     _eq_amp = nullptr;
     _shm = sharedmem_create("vrok.eq.band.values", EQ_BAND_COUNT * sizeof(float));
@@ -73,7 +73,7 @@ void Vrok::EffectSSEQ::PropertyChanged(PropertyBase *property)
     float sb_bands_copy[EQ_BAND_COUNT];
     
     for (int i=0;i<EQ_BAND_COUNT;i++){
-        sb_bands_copy[i]=DB_TO_A(_bands[i].Get())* DB_TO_A(_preamp.Get());
+        sb_bands_copy[i]=DB_TO_A(_bands[i].Get() + _preamp.Get() );
     }
 
     DBG(0, "eq sr "<<bc->samplerate)
@@ -96,7 +96,7 @@ bool Vrok::EffectSSEQ::BufferConfigChange(BufferConfig *config)
     float sb_bands_copy[EQ_BAND_COUNT];
 
     for (int i=0;i<EQ_BAND_COUNT;i++){
-        sb_bands_copy[i]=DB_TO_A(_bands[i].Get())* DB_TO_A(_preamp.Get());
+        sb_bands_copy[i]=DB_TO_A(_bands[i].Get() + _preamp.Get());
     }
 
     //equ_quit();

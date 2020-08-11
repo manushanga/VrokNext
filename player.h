@@ -69,6 +69,7 @@ namespace Vrok {
         atomic<bool> _work;
         bool _decoder_work;
         bool _queue_next;
+        bool _resume_from_pause;
         Events *_events;
         // _play_queue: queue tracks needed to be played
         // one after other here

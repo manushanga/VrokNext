@@ -33,7 +33,7 @@ namespace Vrok {
     private:
         std::atomic<bool> _play;
         std::atomic<real_t> _volume;
-        uint32_t _multiplier;
+        int _multiplier;
         snd_pcm_t *_handle;
         snd_pcm_hw_params_t *_params;
         char *_buffer;

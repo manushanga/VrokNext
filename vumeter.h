@@ -14,6 +14,7 @@ class VUMeter
     int _count_over[MAX_CHANNELS];
     double _falloff, _clip_falloff;
     std::atomic<bool> _active;
+    std::vector<Buffer*> _free_bufs;
     std::string _name;
 public:
     VUMeter(std::string name);

@@ -30,8 +30,8 @@ PY_OBJECTS= \
 CC=gcc
 CXX=g++
 INCLUDE= -I/usr/include/python3.8 -I/usr/include/x86_64-linux-gnu/python3.8
-CFLAGS= -g -O2 -fPIC  -DUSE_OOURA $(INCLUDE)
-CXXFLAGS= -g -O2 -fPIC -std=c++11 -DUSE_OOURA $(INCLUDE) 
+CFLAGS= -g -O2 -fPIC  -DUSE_OOURA $(INCLUDE) -DDEBUG
+CXXFLAGS= -g -O2 -fPIC -std=c++11 -DUSE_OOURA $(INCLUDE) -DDEBUG 
 LDFLAGS= -shared -lavformat -lavcodec -lavutil -lao -lasound -lboost_python38 -lboost_numpy38 -lm -lpthread 
 LIBNAME_PY = vrok.so
 

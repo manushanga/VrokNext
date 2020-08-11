@@ -27,8 +27,10 @@ public:
     enum class Type : int
     {
         StreamEnd = 0,
-        StreamStart,
+        StreamStart, // only for new stream starts: not at gapless resume or resume after pause
         StreamStop,
+        StreamPause,
+        StreamResume,
         StreamBuffer
     };
 private:

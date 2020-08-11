@@ -229,4 +229,6 @@ bool Vrok::EffectFIR::BufferConfigChange(BufferConfig *config)
 {
     DBG(0, "bufferchange fot vu");
     _meter.SetBufferConfig(config);
+
+    return true;
 }

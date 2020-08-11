@@ -25,6 +25,7 @@ bool Vrok::ComponentManager::RegisterComponent(Component *component)
         name<<"0";
 
     }
+    INFO("register:"<<name.str());
     _component_map.insert(pair<string, Component*>(name.str(),component));
     return true;
 }
@@ -81,7 +82,6 @@ void Vrok::ComponentManager::SetProperty(Vrok::Component *component, PropertyBas
 
 Vrok::PropertyBase *Vrok::ComponentManager::GetProperty(Vrok::Component *component, string prop_name)
 {
-
     auto it=_property_map.find(component);
     if (it != _property_map.end())
     {
@@ -118,7 +118,7 @@ Vrok::PropertyBase *Vrok::ComponentManager::GetProperty(std::string component,
 {
 
     Component* comp = GetComponent(component);
-
+    INFO("cc"<<component);
     if (comp)
     {
         return GetProperty(comp, prop_name);
@@ -131,7 +131,7 @@ void Vrok::ComponentManager::SetProperty(std::string component,
                                          std::string prop_name,
                                          std::string value)
 {
-
+    INFO(component <<" "<<prop_name<<" "<<value);
     Component* comp = GetComponent(component);
     if (comp == nullptr)
         return;

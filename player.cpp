@@ -1,7 +1,7 @@
 
 #include "player.h"
 #include "ffmpeg.h"
-
+#include <unistd.h>
 #define INIT_GAPLESS_SECS 2
 
 Vrok::Player::Player() :
@@ -12,7 +12,8 @@ Vrok::Player::Player() :
     _decoder_work(false),
     _events(nullptr),
     _decoder(nullptr),
-    _state(PlayerState::START)
+    _state(PlayerState::START),
+    _resume_from_pause(false)
 {
 }
 
@@ -88,12 +89,24 @@ void Vrok::Player::Run()
             got = _command_now_queue->Pop(cmd);
 
             Buffer::Type bType = Buffer::Type::StreamBuffer;
+            Buffer *b = nullptr;
 
             if (got) {
+                // guarantee buffer for StreamStart otherwise,
+                // this state would not propagate
+                do 
+                {
+                    b = AcquireBuffer();
+                    if (b == nullptr)
+                    {
+                        DBG(0,"waiting for free buffer");
+                        usleep(50000);
+                    }
+                } while (b == nullptr);
+
                 if (cmd.type == CommandType::OPEN) {
                     ResetDecoder();
                     bType = Buffer::Type::StreamStart;
-
                     _decoder = (Vrok::Decoder *) cmd.data;
                     BufferConfig config;
                     _decoder->GetBufferConfig(&config);
@@ -106,6 +119,7 @@ void Vrok::Player::Run()
 
                     _state = PlayerState::STOPPED;
                 } else if (cmd.type == CommandType::PAUSE) {
+                    bType = Buffer::Type::StreamPause;
                     _state = PlayerState::PAUSED;
                 } else if (cmd.type == CommandType::SKIP) {
 
@@ -113,13 +127,28 @@ void Vrok::Player::Run()
                         _events->QueueNext();
                     }
                     _state = PlayerState::START;
+                    bType = Buffer::Type::StreamStop;
                 }
             }
 
-            auto b = AcquireBuffer();
             if (b == nullptr)
-                break;
-
+            {
+                usleep(5000);
+                b = AcquireBuffer();
+                if (b == nullptr)
+                {
+                    break;
+                }
+                else
+                {
+                    /* hack for sending StreamResume on first buffer after pause */
+                    if (_resume_from_pause)
+                    {
+                        b->SetBufferType(Buffer::Type::StreamResume);
+                        _resume_from_pause = false;
+                    }
+                }
+            }
             b->SetBufferType(bType);
             /* _decoder might be not set if the track ends before next track is quequed */
             if (_decoder != nullptr) {
@@ -205,6 +234,7 @@ void Vrok::Player::Run()
             got = _command_now_queue->Pop(cmd);
             if (got) {
                 if (cmd.type == CommandType::RESUME) {
+                    _resume_from_pause = true;
                     _state = PlayerState::PLAYING;
                 }
             }

@@ -1,6 +1,7 @@
 #include "alsa.h"
 #include "debug.h"
 
+#include <alsa/pcm.h>
 #include <cmath>
 
 #define PERIOD_SIZE 128
@@ -12,7 +13,7 @@
 
 #define X24_GETI(buffer, i) ( (char*) buffer )[i*3]
 #define X24_WRITE(buffer, i, X32) memcpy( &(X24_GETI(buffer, i)), &(X32), 3 )
-
+#define FLT_TO_INT(__flt, __scale, __T) ( __T((__flt+0.5)*(__scale)) - (__scale/2) )
 Vrok::DriverAlsa::DriverAlsa() :
     _handle(nullptr),
     _params(nullptr),
@@ -165,7 +166,21 @@ bool Vrok::DriverAlsa::DriverRun(Buffer *buffer)
     assert(_buffer);
     int ret;
     int frames = buffer->GetBufferConfig()->frames * buffer->GetBufferConfig()->channels;
-
+    if (buffer->getBufferType() == Buffer::Type::StreamStart 
+            || buffer->getBufferType() == Buffer::Type::StreamStop)
+    {
+        snd_pcm_drop(_handle);
+        snd_pcm_prepare(_handle);
+    }
+    else if (buffer->getBufferType() == Buffer::Type::StreamPause)
+    {
+        snd_pcm_drop(_handle);
+        snd_pcm_prepare(_handle);
+        return true;
+    }
+    else if (buffer->getBufferType() == Buffer::Type::StreamResume)
+    {
+    }
     switch (_multiplier)
     {
     case X32MUL:
@@ -175,7 +190,7 @@ bool Vrok::DriverAlsa::DriverRun(Buffer *buffer)
         {
             real_t val = buffer->GetData()[i];
             Vrok::Clip<real_t>(val,-1.0,1.0);
-            ibuffer[i] = val * _multiplier;
+            ibuffer[i] = FLT_TO_INT(val, _multiplier, int32_t);
         }
         break;
     }
@@ -186,7 +201,7 @@ bool Vrok::DriverAlsa::DriverRun(Buffer *buffer)
         {
             real_t val = buffer->GetData()[i];
             Vrok::Clip<real_t>(val,-1.0,1.0);
-            int ival = val * _multiplier;
+            int ival = FLT_TO_INT(val, _multiplier, int);
             X24_WRITE(_buffer, i, ival);
         }
         break;
@@ -198,7 +213,7 @@ bool Vrok::DriverAlsa::DriverRun(Buffer *buffer)
         {
             real_t val = buffer->GetData()[i];
             Vrok::Clip<real_t >(val,-1.0,1.0);
-            ibuffer[i] = val * _multiplier;
+            ibuffer[i] = FLT_TO_INT(val, _multiplier, int16_t);
         }
         break;
     }
@@ -209,12 +224,13 @@ bool Vrok::DriverAlsa::DriverRun(Buffer *buffer)
         {
             real_t val = buffer->GetData()[i];
             Vrok::Clip<real_t>(val,-1.0,1.0);
-            ibuffer[i] = val * _multiplier;
+            ibuffer[i] = FLT_TO_INT(val, _multiplier, int8_t);
         }
         break;
     }
-    default: WARN(0, "invalid hardware format");
-		return false;
+    default: 
+        WARN(0, "invalid hardware format");
+        return false;
     }
 
     ret = snd_pcm_writei(_handle, _buffer, buffer->GetBufferConfig()->frames);
@@ -233,5 +249,3 @@ bool Vrok::DriverAlsa::DriverRun(Buffer *buffer)
 
     return true;
 }
-
-

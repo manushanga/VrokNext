@@ -31,7 +31,6 @@ out = vrok.DriverAlsa()
 outJ = vrok.DriverJBufferOut();
 outPy = vrok.DriverPyOut();
 dec = vrok.DecoderFFMPEG.Create()
-ff = open('test','bw+')
 def PyOutOnBuffer(ndarray):
     data = ndarray[0].astype(numpy.float32)
 
@@ -56,10 +55,10 @@ outJ.SetEvents(outPy)
 for device in out.GetDeviceInfo():
     print(device.name)
 
-for device in outJ.GetDeviceInfo():
-    print(device.name)
+#for device in outJ.GetDeviceInfo():
+#    print(device.name)
 
-out.SetDevice(out.GetDeviceInfo()[2].name)
+out.SetDevice(out.GetDeviceInfo()[0].name)
 
 #def worker(fir):
 #    meter = fir.GetMeters().__getitem__(0)
@@ -80,6 +79,18 @@ def QueueNext():
     print(r.filename)
     print(dec.Open(r))
     pl.SubmitForPlayback(dec)
+
+
+def QueueFile(ffile):
+    
+    r = vrok.Resource()
+    r.filename = ffile
+    dec = vrok.DecoderFFMPEG.Create()
+    print(r.filename)
+    print(dec.Open(r))
+    pl.SubmitForPlayback(dec)
+
+
     
 events.QueueNext = QueueNext
 pl.SetQueueNext(True)
@@ -92,7 +103,7 @@ if (comp != None):
     
 print(dec.Open(r))
 
-outX = outJ
+outX = out
 pl.RegisterSink(outX)
 fir.RegisterSource(pl)
 fir.RegisterSink(outX)
@@ -115,11 +126,27 @@ pl.SubmitForPlayback(dec)
 t.CreateThreads()
 
 while True:
-    nn = input("next?").strip()
-    if nn == 'q':
+    nn = sys.stdin.readline().strip()
+    if nn == 'q':        
         t.StopThreads()
         break
-    QueueNext()
+    elif nn == 'pp':
+        pl.Resume()
+    elif nn == 'p':
+        pl.Pause()
+    elif nn == 'listeq':
+        for i in range(0, 17):
+            xx = "Band%02d"%(i)
+            print(compman.GetProperty("ShibatchSuperEQ:0", xx).Get())
+    elif len(nn.split())==3 and nn.split()[0] == 'setb':
+        print("ss")        
+        xx = "Band%02d"%(int(nn.split()[1]))
+        print(xx)
+        compman.SetProperty("ShibatchSuperEQ:0", xx, nn.split()[2])
+    elif nn == '':
+        QueueNext()
+    else:
+        QueueFile(nn)
 t.JoinThreads()
 
 

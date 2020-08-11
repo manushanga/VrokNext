@@ -47,6 +47,7 @@ uint32_t PropertyBase::Size()
         case PropertyType::FLT:
             return sizeof(float);
     }
+    return 0;
 }
 
 }
