@@ -1,25 +1,31 @@
 #include "alsa.h"
+#include "common.h"
 #include "debug.h"
 
+#include <bits/stdint-intn.h>
+#include <fenv.h>
 #include <alsa/pcm.h>
 #include <cmath>
 
 #define PERIOD_SIZE 128
 
-#define X32MUL ( (1U<<31) -1 )
-#define X24MUL ( (1U<<23) -1 )
-#define X16MUL ( (1U<<15) -1 )
-#define X8MUL ( (1U<<7) -1 )
+#define X32MUL ((int32_t)( (1U<<31) -1 ))
+#define X24MUL ((int32_t)( (1U<<23) -1 ))
+#define X16MUL ((int16_t)( (1U<<15) -1 ))
+#define X8MUL ((int8_t)( (1U<<7) -1 ))
 
 #define X24_GETI(buffer, i) ( (char*) buffer )[i*3]
 #define X24_WRITE(buffer, i, X32) memcpy( &(X24_GETI(buffer, i)), &(X32), 3 )
-#define FLT_TO_INT(__flt, __scale, __T) ( __T((__flt+0.5)*(__scale)) - (__scale/2) )
+#define FLT_TO_INT(__flt, __scale, __T) ( __T( ((__flt)*(__scale)) ) )
+
 Vrok::DriverAlsa::DriverAlsa() :
     _handle(nullptr),
     _params(nullptr),
     _buffer(nullptr),
     _device("default")
 {
+    fesetround(0);
+    DBG(0,"32mul "<< X32MUL);
 }
 
 bool Vrok::DriverAlsa::SetDevice(std::string device)
@@ -182,6 +188,7 @@ bool Vrok::DriverAlsa::DriverRun(Buffer *buffer)
     else if (buffer->getBufferType() == Buffer::Type::StreamResume)
     {
     }
+    
     switch (_multiplier)
     {
     case X32MUL:
@@ -189,9 +196,10 @@ bool Vrok::DriverAlsa::DriverRun(Buffer *buffer)
         int32_t *ibuffer = (int32_t *) _buffer;
         for (int i=0;i< frames;i++)
         {
-            real_t val = buffer->GetData()[i];
-            Vrok::Clip<real_t>(val,-1.0,1.0);
-            ibuffer[i] = FLT_TO_INT(val, _multiplier, int32_t);
+            real_t input = buffer->GetData()[i];
+            int64_t lval = (input * X32MUL);
+            Vrok::Clip<int64_t>(lval, -X32MUL, X32MUL);
+            ibuffer[i] = (int32_t)lval; 
         }
         break;
     }
@@ -200,9 +208,9 @@ bool Vrok::DriverAlsa::DriverRun(Buffer *buffer)
 
         for (int i=0;i< frames;i++)
         {
-            real_t val = buffer->GetData()[i];
-            Vrok::Clip<real_t>(val,-1.0,1.0);
-            int ival = FLT_TO_INT(val, _multiplier, int);
+            real_t input = buffer->GetData()[i];
+            int32_t ival = (input * X24MUL);
+            Vrok::Clip<int32_t>(ival, -X24MUL, X24MUL);
             X24_WRITE(_buffer, i, ival);
         }
         break;
@@ -212,9 +220,10 @@ bool Vrok::DriverAlsa::DriverRun(Buffer *buffer)
         int16_t *ibuffer = (int16_t *) _buffer;
         for (int i=0;i< frames;i++)
         {
-            real_t val = buffer->GetData()[i];
-            Vrok::Clip<real_t >(val,-1.0,1.0);
-            ibuffer[i] = FLT_TO_INT(val, _multiplier, int16_t);
+            real_t input = buffer->GetData()[i];
+            int32_t ival = (input * X16MUL); 
+            Vrok::Clip<int32_t>(ival, -X16MUL, X16MUL);
+            ibuffer[i] = (int16_t) ival;
         }
         break;
     }
@@ -223,9 +232,10 @@ bool Vrok::DriverAlsa::DriverRun(Buffer *buffer)
         int8_t *ibuffer = (int8_t *) _buffer;
         for (int i=0;i< frames;i++)
         {
-            real_t val = buffer->GetData()[i];
-            Vrok::Clip<real_t>(val,-1.0,1.0);
-            ibuffer[i] = FLT_TO_INT(val, _multiplier, int8_t);
+            real_t input = buffer->GetData()[i];
+            int32_t ival = (input * X8MUL);
+            Vrok::Clip<int32_t>(ival, -X8MUL, X8MUL);
+            ibuffer[i] = (int8_t) ival;
         }
         break;
     }

@@ -2,9 +2,9 @@
 
 #include "eq.h"
 
-#define CLIP(__x) ((__x>1.0f)?1.0f:(__x<-1.0f?-1.0f:__x))
-#define DB_TO_A(__db) (std::pow(10,(__db/20.0)))
-#define A_TO_DB(__a) (20.0 * std::log(__a))
+#define CLIP(__x) (((__x)>1.0f)?1.0f:((__x)<-1.0f?-1.0f:(__x)))
+#define DB_TO_A(__db) (std::pow(10.0,((__db)/20.0)))
+#define A_TO_DB(__a) (20.0 * std::log((__a)))
 const char* g_eq_desc_temp =
         "cpu: %s\n"
         "fft hw accel: %s\n"
@@ -97,6 +97,7 @@ bool Vrok::EffectSSEQ::BufferConfigChange(BufferConfig *config)
 
     for (int i=0;i<EQ_BAND_COUNT;i++){
         sb_bands_copy[i]=DB_TO_A(_bands[i].Get() + _preamp.Get());
+        DBG(0, "band_"<<i<<" "<<sb_bands_copy[i]<<" "<<_bands[i].Get() + _preamp.Get());
     }
 
     //equ_quit();

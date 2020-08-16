@@ -6,6 +6,7 @@ import time
 import threading
 import numpy
 import pyaudio as pa
+import mpris_server as ms
 
 def get_file_list(path):
     list = []
@@ -13,7 +14,7 @@ def get_file_list(path):
         for f in fn:
             filepath = os.path.join(dp, f)
             #print(filepath)
-            if os.path.isfile(filepath) and (f.endswith("mp3") or f.endswith("MP3") or f.endswith("flac")):
+            if os.path.isfile(filepath) and (f.endswith("mp3") or f.endswith("MP3") or f.endswith("flac") or f.endswith('webm')):
                 list.append(filepath)
     return list
 p = pa.PyAudio()

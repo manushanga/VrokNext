@@ -35,6 +35,21 @@ typedef float real_t;
 
 namespace Vrok {
     const int MAX_CHANNELS=8;
+    template<typename T>
+    T Round(T value)
+    {
+        return value;
+    }
+    template <>
+    inline float Round<float>(float value)
+    {
+        return rintf(value);
+    }
+    template <>
+    inline double Round<double>(double value)
+    {
+        return rint(value);
+    }
 
     template<typename T>
     void Clip(T& value, T low, T high)
