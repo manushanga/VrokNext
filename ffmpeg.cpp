@@ -171,15 +171,18 @@ bool Vrok::DecoderFFMPEG::DecoderRun(Buffer *buffer, BufferConfig *config)
         int used = _ringbuffer->Used();
         int bufsize = config->channels * config->frames;
         DBG(1, "used ringbuffer "<<used);     
-
-        if (used < bufsize)
+        if (used == 0)
+        {
+            return false;
+        }
+        else if (used < bufsize)
         {
             _ringbuffer->Read(buffer->GetData(), used);
             for (int i=used;i<bufsize;i++)
             {
                 buffer->GetData()[i] = 0.0;
             }
-            return false;
+            return true;
         }
         else
         {
