@@ -12,6 +12,7 @@
 
 */
 #include <limits>
+#include "buffer.h"
 #include "ffmpeg.h"
 #include "util/backtrace.h"
 #define DIE_ON_ERR(ret) \
@@ -32,7 +33,8 @@ Vrok::DecoderFFMPEG::DecoderFFMPEG() :
     container(nullptr)
 {
     static long s=0;
-    if (s==0) {
+    if (s == 0) 
+    {
         avformat_network_init();
         av_register_all();
     }
@@ -41,21 +43,7 @@ Vrok::DecoderFFMPEG::DecoderFFMPEG() :
     _ringbuffer = new Ringbuffer<real_t>(
                 2*FFMPEG_MAX_BUF_SIZE +
                 2*AV_INPUT_BUFFER_PADDING_SIZE);
-    //container->interrupt_callback.callback = FFMPEGDecoder::ff_avio_interrupt;
-    //container->interrupt_callback.opaque = this;
-    //last_read = time(NULL);
-/*
-    ao_initialize();
-    ao_sample_format sformat;
-
-    sformat.channels=2;
-    sformat.rate=44100;
-    sformat.bits=16;
-    sformat.byte_format=AO_FMT_NATIVE;
-    sformat.matrix=0;
-
-    _ao_device=ao_open_live(ao_default_driver_id(),&sformat,NULL);
-*/
+    _done = false;
 }
 
 Vrok::DecoderFFMPEG::~DecoderFFMPEG()
@@ -132,7 +120,7 @@ bool Vrok::DecoderFFMPEG::Open(Vrok::Resource *resource)
 
     current_in_seconds=0;
     DBG(1, "opend");
-
+    _done = false;
     return true;
 }
 
@@ -175,9 +163,31 @@ bool Vrok::DecoderFFMPEG::Close()
  * eat up other types of packets and only decode audio.
  *
 */
-bool Vrok::DecoderFFMPEG::DecoderRun(Buffer *buffer,  BufferConfig *config)
+bool Vrok::DecoderFFMPEG::DecoderRun(Buffer *buffer, BufferConfig *config)
 {
-    while (!_ringbuffer->Read(buffer->GetData(),config->channels*config->frames))
+    /* when done drain the ring buffer */
+    if (_done)
+    {
+        int used = _ringbuffer->Used();
+        int bufsize = config->channels * config->frames;
+        DBG(1, "used ringbuffer "<<used);     
+
+        if (used < bufsize)
+        {
+            _ringbuffer->Read(buffer->GetData(), used);
+            for (int i=used;i<bufsize;i++)
+            {
+                buffer->GetData()[i] = 0.0;
+            }
+            return false;
+        }
+        else
+        {
+            _ringbuffer->Read(buffer->GetData(), bufsize);
+            return true;
+        }
+    }
+    while (!_ringbuffer->Read(buffer->GetData(), config->channels*config->frames))
     {
         int ret=0, read_ok=0;
         got_frame = 0;
@@ -185,7 +195,12 @@ bool Vrok::DecoderFFMPEG::DecoderRun(Buffer *buffer,  BufferConfig *config)
         while (got_frame == 0)
         {
             read_ok = av_read_frame(container,&packet);
-            DIE_ON_ERR(read_ok);
+            if (read_ok < 0)
+            {
+                _done = true;
+                return true;
+            }
+
             // eat up video packets!
             while (packet.stream_index!=audio_stream_id)
             {
@@ -193,7 +208,11 @@ bool Vrok::DecoderFFMPEG::DecoderRun(Buffer *buffer,  BufferConfig *config)
                 ret = av_read_frame(container,&packet);
             }
 
-            DIE_ON_ERR(ret);
+            if (ret < 0)
+            {
+                _done = true;
+                return true;
+            }
 
             // process audio packets
             ret = avcodec_decode_audio4(ctx,frame,&got_frame,&packet);

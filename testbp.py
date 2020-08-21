@@ -146,6 +146,8 @@ while True:
         for i in range(0, 17):
             xx = "Band%02d"%(i)
             print(compman.GetProperty("ShibatchSuperEQ:0", xx).Get())
+    elif len(nn.split())==2 and nn.split()[0] == 'setp':
+        compman.SetProperty("ShibatchSuperEQ:0", "Preamp", nn.split()[1])
     elif len(nn.split())==3 and nn.split()[0] == 'setb':
         print("ss")        
         xx = "Band%02d"%(int(nn.split()[1]))

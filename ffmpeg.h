@@ -75,6 +75,7 @@ public:
 
 private:
     static int ff_avio_interrupt(void *user);
+    bool _done;
     Ringbuffer<real_t> *_ringbuffer;
     time_t last_read;
     AVFormatContext* container;
