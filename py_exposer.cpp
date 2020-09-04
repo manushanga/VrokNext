@@ -14,6 +14,7 @@
 #include "effect.h"
 #include "audioout.h"
 #include "alsa.h"
+#include "pulse.h"
 #include "preamp.h"
 #include "eq.h"
 #include "fir.h"
@@ -260,6 +261,16 @@ BOOST_PYTHON_MODULE(vrok)
             .def("SetDevice", &Vrok::DriverAlsa::SetDevice)
             .def("GetDeviceInfo", &Vrok::DriverAlsa::GetDeviceInfo)
             .def("GetDefaultDevice", &Vrok::DriverAlsa::GetDefaultDevice);
+    class_<Vrok::DriverPulse, bases<BufferGraph::Point, Vrok::Component, Runnable>, boost::noncopyable>("DriverPulse",boost::python::init<>())
+            .def("Flush", &Vrok::DriverPulse::Flush)
+            .def("GetMeters", &Vrok::DriverPulse::GetMeters)
+            .def("Preallocate",&Vrok::DriverPulse::Preallocate)
+            .def("SetVolume",&Vrok::DriverPulse::SetVolume)
+            .def("RegisterSource", &Vrok::DriverPulse::RegisterSource)
+            .def("SetDevice", &Vrok::DriverPulse::SetDevice)
+            .def("GetDeviceInfo", &Vrok::DriverPulse::GetDeviceInfo)
+            .def("GetDefaultDevice", &Vrok::DriverPulse::GetDefaultDevice);
+
 
     class_<Vrok::DriverJBufferOut, bases<BufferGraph::Point, Vrok::Component, Runnable>, boost::noncopyable>("DriverJBufferOut",boost::python::init<>())
             .def("Flush", &Vrok::DriverJBufferOut::Flush)

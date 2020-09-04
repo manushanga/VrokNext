@@ -20,6 +20,7 @@ OBJECTS= \
     util/sharedmem.o \
     util/backtrace.o \
     alsa.o \
+    pulse.o \
     notify.o \
     notifier_impl.o \
     vumeter.o \
@@ -33,7 +34,7 @@ CXX=g++
 INCLUDE= -I/usr/include/python3.8 -I/usr/include/x86_64-linux-gnu/python3.8
 CFLAGS= -g -O2 -fPIC  -DUSE_OOURA $(INCLUDE) -DDEBUG
 CXXFLAGS= -g -O2 -fPIC -std=c++11 -DUSE_OOURA $(INCLUDE) -DDEBUG 
-LDFLAGS= -shared -lavformat -lavcodec -lavutil -lao -lasound -lboost_python38 -lboost_numpy38 -lm -lpthread 
+LDFLAGS= -shared -lavformat -lavcodec -lavutil -lao -lasound -lboost_python38 -lboost_numpy38 -lm -lpthread -lpulse-simple
 LIBNAME_PY = vrok.so
 
 $(LIBNAME_PY): $(OBJECTS)  $(PY_OBJECTS)

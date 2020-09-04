@@ -14,7 +14,7 @@ def get_file_list(path):
         for f in fn:
             filepath = os.path.join(dp, f)
             #print(filepath)
-            if os.path.isfile(filepath) and (f.endswith("mp3") or f.endswith("MP3") or f.endswith("flac") or f.endswith('webm')):
+            if os.path.isfile(filepath) and (f.endswith("mp3") or f.endswith("MP3") or f.endswith("flac") or f.endswith('opus') or f.endswith('m4a')):
                 list.append(filepath)
     return list
 p = pa.PyAudio()
@@ -28,7 +28,8 @@ for path in sys.argv:
 
 pl = vrok.Player()
 fir = vrok.EffectSSEQ()
-out = vrok.DriverAlsa()
+#out = vrok.DriverAlsa()
+out = vrok.DriverPulse()
 outJ = vrok.DriverJBufferOut();
 outPy = vrok.DriverPyOut();
 dec = vrok.DecoderFFMPEG.Create()
