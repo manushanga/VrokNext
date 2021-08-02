@@ -153,10 +153,10 @@ void Vrok::Player::Run()
 
             if (b == nullptr)
             {
-                usleep(5000);
                 b = AcquireBuffer();
                 if (b == nullptr)
                 {
+                    usleep(500);
                     break;
                 }
                 else

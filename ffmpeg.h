@@ -76,6 +76,8 @@ public:
 private:
     static int ff_avio_interrupt(void *user);
     bool _done;
+    std::atomic<bool> _seek_req;
+    int64_t _seek_to;
     Ringbuffer<real_t> *_ringbuffer;
     time_t last_read;
     AVFormatContext* container;
@@ -88,7 +90,6 @@ private:
     AVStream *audio_st;
     real_t temp[2*FFMPEG_MAX_BUF_SIZE + AV_INPUT_BUFFER_PADDING_SIZE];
     uint64_t current_in_seconds;
-    uint64_t seek_to;
     uint64_t duration_in_seconds;
 
     int got_frame,packetFinished;

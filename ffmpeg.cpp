@@ -11,6 +11,8 @@
   http://dranger.com/ffmpeg/tutorial04.html
 
 */
+#include <cstdint>
+#include <libavutil/avutil.h>
 #include <limits>
 #include "buffer.h"
 #include "ffmpeg.h"
@@ -121,6 +123,7 @@ bool Vrok::DecoderFFMPEG::Open(Vrok::Resource *resource)
     current_in_seconds=0;
     DBG(1, "opend");
     _done = false;
+    _seek_req = false;
     return true;
 }
 
@@ -190,6 +193,17 @@ bool Vrok::DecoderFFMPEG::DecoderRun(Buffer *buffer, BufferConfig *config)
             return true;
         }
     }
+    if (_seek_req)
+    {
+        DBG(1,"do seek");
+        int ret = avformat_seek_file(container, -1, INT64_MIN, _seek_to, INT64_MAX, 0);
+        if (ret < 0)
+        {
+            WARN(0, "seek failed");
+            return false;
+        }
+        _seek_req = false;
+    }
     while (!_ringbuffer->Read(buffer->GetData(), config->channels*config->frames))
     {
         int ret=0, read_ok=0;
@@ -239,7 +253,6 @@ bool Vrok::DecoderFFMPEG::DecoderRun(Buffer *buffer, BufferConfig *config)
 
         if(got_frame){
             current_in_seconds = ( audio_st->time_base.num * frame->pts )/ audio_st->time_base.den * audio_st->time_base.num;
-
             switch (sfmt){
 
                 case AV_SAMPLE_FMT_S16P:
@@ -374,5 +387,6 @@ uint64_t Vrok::DecoderFFMPEG::GetPositionInSeconds()
 
 void Vrok::DecoderFFMPEG::SetPositionInSeconds(uint64_t seconds)
 {
-
+    _seek_req = true;
+    _seek_to = (int64_t) AV_TIME_BASE * seconds;
 }

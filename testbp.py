@@ -7,6 +7,13 @@ import threading
 import numpy
 import pyaudio as pa
 import mpris_server as ms
+import cuesheet as cs
+from mpris_server.adapters import MprisAdapter
+from mpris_server.events import EventAdapter
+from mpris_server.server import Server
+from mpris_server.base import PlayState
+from mpris_server.base import Metadata
+from gi.repository import GLib as glib
 
 def get_file_list(path):
     list = []
@@ -14,45 +21,58 @@ def get_file_list(path):
         for f in fn:
             filepath = os.path.join(dp, f)
             #print(filepath)
-            if os.path.isfile(filepath) and (f.endswith("mp3") or f.endswith("MP3") or f.endswith("flac") or f.endswith('opus') or f.endswith('m4a')):
-                list.append(filepath)
+            if os.path.isfile(filepath):
+                if (f.endswith("mp3") or f.endswith("MP3") or f.endswith("flac") or f.endswith('opus') or f.endswith('m4a')):
+                    list.append(filepath)
     return list
-p = pa.PyAudio()
-s = p.open(format=pa.paFloat32, channels=1, rate=48000, output=True)
+#p = pa.PyAudio()
+#s = p.open(format=pa.paFloat32, channels=1, rate=48000, output=True)
 
 print("sasss")
 r = vrok.Resource()
 files = []
-for path in sys.argv:
-    files.extend(get_file_list(path))
+cue_sheet = None
+cue_file = None
+if sys.argv[1].endswith(".cue"):
+    cue = cs.CueSheet()
+    cue.setOutputFormat("%file%", "%title%")
+    cue.setData(open(sys.argv[1], "r").read())
+    cue.parse()
+    cue_sheet = []
+    cue_file = os.path.dirname(sys.argv[1]) + "/" + cue.file
+    for d in cue.tracks:
+        cue_sheet.append(int(cs.offsetToTimedelta(d.offset).total_seconds()))
+else:
+    for path in sys.argv:
+        files.extend(get_file_list(path))
 
 pl = vrok.Player()
 fir = vrok.EffectSSEQ()
 #out = vrok.DriverAlsa()
 out = vrok.DriverPulse()
-outJ = vrok.DriverJBufferOut();
-outPy = vrok.DriverPyOut();
+#outJ = vrok.DriverJBufferOut();
+#outPy = vrok.DriverPyOut();
 dec = vrok.DecoderFFMPEG.Create()
-def PyOutOnBuffer(ndarray):
-    data = ndarray[0].astype(numpy.float32)
+#def PyOutOnBuffer(ndarray):
+#    data = ndarray[0].astype(numpy.float32)
 
     
     #ff.write(data.copy().tobytes())
-    s.write(data.tobytes())
+#    s.write(data.tobytes())
     
 
-def PyOutOnBufferConfigChange(frames, samplerate, channels):
-    global s
+#def PyOutOnBufferConfigChange(frames, samplerate, channels):
+#    global s
     
-    print(frames, samplerate, channels)
-    s.close()
+#    print(frames, samplerate, channels)
+#    s.close()
     
-    s = p.open(format=pa.paFloat32, channels=1, rate=samplerate, output=True)
+#    s = p.open(format=pa.paFloat32, channels=1, rate=samplerate, output=True)
     
-outPy.OnBuffer = PyOutOnBuffer
-outPy.OnBufferConfigChange = PyOutOnBufferConfigChange
+#outPy.OnBuffer = PyOutOnBuffer
+#outPy.OnBufferConfigChange = PyOutOnBufferConfigChange
 
-outJ.SetEvents(outPy)
+#outJ.SetEvents(outPy)
 
 for device in out.GetDeviceInfo():
     print(device.name)
@@ -75,11 +95,34 @@ out.SetDevice(out.GetDeviceInfo()[0].name)
 #th.start()
 
 events = vrok.PlayerEvents()
+
+def QueueNextCueSheet():
+    r.filename = cue_file
+    offset = random.choice(cue_sheet)
+    dec = vrok.DecoderFFMPEG.Create()
+    print(r.filename)
+    print(dec.Open(r))
+    print("00000ss")
+    dec.SetPositionInSeconds(offset)
+    pl.SubmitForPlayback(dec)
+def QueueNextCueSheetNow():
+    r.filename = cue_file
+    offset = random.choice(cue_sheet)
+    dec = vrok.DecoderFFMPEG.Create()
+    print(r.filename)
+    print(dec.Open(r))
+    print("00000ss")
+    dec.SetPositionInSeconds(offset)
+    pl.SubmitForPlaybackNow(dec)
+
+
 def QueueNext():
     r.filename = random.choice(files)
     dec = vrok.DecoderFFMPEG.Create()
     print(r.filename)
     print(dec.Open(r))
+    print("00000ss")
+    dec.SetPositionInSeconds(100)
     pl.SubmitForPlayback(dec)
 def QueueNextNow():
     r.filename = random.choice(files)
@@ -99,11 +142,14 @@ def QueueFile(ffile):
     print(dec.Open(r))
     pl.SubmitForPlaybackNow(dec)
 
+if not cue_sheet is None:
+    events.QueueNext = QueueNextCueSheet
+    r.filename = cue_file
+else:
+    events.QueueNext = QueueNext
+    r.filename = random.choice(files)
 
-    
-events.QueueNext = QueueNext
 pl.SetQueueNext(True)
-r.filename = random.choice(files)
 print(r.filename)
 compman = vrok.ComponentManager.GetSingleton()
 comp = compman.GetComponent("SSEQ:0");
@@ -130,11 +176,44 @@ t.RegisterWork(1, pl)
 t.RegisterWork(0, fir)
 t.RegisterWork(0, outX)
 
+dec.SetPositionInSeconds(100)
 pl.SubmitForPlayback(dec)
 
-t.CreateThreads()
 
+class MyAppAdapter(MprisAdapter):
+    # Make sure to implement all methods on MprisAdapter, not just metadata()
+    def metadata(self) -> Metadata :
+        return dict()
+    def get_playstate(self):
+        return PlayState.PLAYING
+    # and so on
+
+
+class MyAppEventHandler(EventAdapter):
+    # EventAdapter has good default implementations for its methods.
+    # Only override the default methods if it suits your app.
+
+    def on_app_event(self, event: str):
+        # trigger DBus updates based on events in your app
+        if event == 'pause':
+            self.on_playpause()
+        pass
+    # and so on
+
+# create mpris adapter and initialize mpris server
+my_adapter = MyAppAdapter()
+mpris = Server('MyApp', adapter=my_adapter)
+#mpris.publish()
+#mpris.loop()
+# initialize app integration with mpris
+#event_handler = MyAppEventHandler(root=mpris.root, player=mpris.player)
+#ml = glib.MainLoop()
+#mc = ml.get_context()
+#ml.run()
+t.CreateThreads()
+# publish and serve
 while True:
+    #mc.iteration(False)
     nn = sys.stdin.readline().strip()
     if nn == 'q':        
         t.StopThreads()
@@ -155,7 +234,10 @@ while True:
         print(xx)
         compman.SetProperty("ShibatchSuperEQ:0", xx, nn.split()[2])
     elif nn == '':
-        QueueNextNow()
+        if not cue_sheet is None:
+            QueueNextCueSheetNow()
+        else:
+            QueueNextNow()
     else:
         QueueFile(nn)
 t.JoinThreads()

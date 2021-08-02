@@ -215,6 +215,7 @@ BOOST_PYTHON_MODULE(vrok)
     class_<Vrok::DecoderFFMPEG, bases<Vrok::Decoder>, boost::noncopyable>("DecoderFFMPEG", boost::python::init<>())
             .def("Open",&Vrok::DecoderFFMPEG::Open)
             .def("Close",&Vrok::DecoderFFMPEG::Close)
+            .def("SetPositionInSeconds",&Vrok::DecoderFFMPEG::SetPositionInSeconds)
             .def("Create",&Vrok::DecoderFFMPEG::Create, return_value_policy<reference_existing_object>())
             .staticmethod("Create");
 

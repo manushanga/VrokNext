@@ -84,8 +84,7 @@ bool Vrok::DriverPulse::DriverRun(Buffer *buffer)
 {
     int ret;
     int frames = buffer->GetBufferConfig()->frames * buffer->GetBufferConfig()->channels;
-    if (buffer->getBufferType() == Buffer::Type::StreamStart 
-            || buffer->getBufferType() == Buffer::Type::StreamStop)
+    if (buffer->getBufferType() == Buffer::Type::StreamStart)
     {
         DBG(0,"btype:start/end");
         //snd_pcm_drop(_handle);
