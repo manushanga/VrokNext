@@ -133,6 +133,8 @@ playercontext* plctx_create()
 {
     Vrok::Notify::GetInstance()->SetNotifier(new CNotifier);
     playercontext* ctx = new playercontext();
+    ctx->player.SetQueueNext(true);
+    ctx->player.SetEvents(new playerevents(ctx, &mainpl));
     ctx->player.Preallocate();
     ctx->out.Preallocate();
 
@@ -148,6 +150,7 @@ void randomplay(playercontext* ctx, playlist* pl)
     Vrok::DecoderFFMPEG* dec = new Vrok::DecoderFFMPEG();
     int index = rand() % pl->list.size(); 
     Vrok::Resource* res = new Vrok::Resource { pl->list[index].url };
+    printf("Playing: %s %lu\n", pl->list[index].title.c_str(), pl->list[index].seekto);
     dec->Open(res);
     dec->SetPositionInSeconds(pl->list[index].seekto);
     ctx->player.SubmitForPlayback(dec);

@@ -74,7 +74,7 @@ void read_title(FILE* fl, bool* iseof, cuesh_track* track)
 {
     char atombuf[256];
     char* atomtitl = read_atom(fl, atombuf, 256, iseof);
-    if (!iseof && atomtitl)
+    if (!*iseof && atomtitl)
     {
         track->title = std::string(atomtitl);
     }
