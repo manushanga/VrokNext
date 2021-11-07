@@ -26,19 +26,17 @@ OBJECTS= \
     vumeter.o \
     jbufferout.o \
     common.o 
-PY_OBJECTS= \
-    py_exposer.o
 
 CC=gcc
 CXX=g++
 INCLUDE= -I/usr/include/python3.9 -I/usr/include/x86_64-linux-gnu/python3.9
 CFLAGS= -g -O2 -fPIC  -DUSE_OOURA $(INCLUDE) -DDEBUG
 CXXFLAGS= -g -O2 -fPIC -std=c++11 -DUSE_OOURA $(INCLUDE) -DDEBUG 
-LDFLAGS= -shared -lavformat -lavcodec -lavutil -lao -lasound -lboost_python39 -lboost_numpy39 -lm -lpthread -lpulse-simple
+LDFLAGS= -shared -lavformat -lavcodec -lavutil -lao -lasound -lm -lpthread -lpulse-simple
 LIBNAME_PY = vrok.so
 
-$(LIBNAME_PY): $(OBJECTS)  $(PY_OBJECTS)
-	$(CC) $(OBJECTS) $(PY_OBJECTS)  -o $@  $(LDFLAGS)
+$(LIBNAME_PY): $(OBJECTS)  
+	$(CC) $(OBJECTS)   -o $@  $(LDFLAGS)
 	
 all: $(EXECUTABLE)
 

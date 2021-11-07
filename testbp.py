@@ -8,11 +8,12 @@ import numpy
 import pyaudio as pa
 import mpris_server as ms
 import cuesheet as cs
+from datetime import datetime
+
 from mpris_server.adapters import MprisAdapter
 from mpris_server.events import EventAdapter
 from mpris_server.server import Server
 from mpris_server.base import PlayState
-from mpris_server.base import Metadata
 from gi.repository import GLib as glib
 
 def get_file_list(path):
@@ -22,12 +23,12 @@ def get_file_list(path):
             filepath = os.path.join(dp, f)
             #print(filepath)
             if os.path.isfile(filepath):
-                if (f.endswith("mp3") or f.endswith("MP3") or f.endswith("flac") or f.endswith('opus') or f.endswith('m4a')):
+                if (f.endswith("mp3") or f.endswith("MP3") or f.endswith("flac") or f.endswith('opus') or f.endswith('m4a') or f.endswith('webm')):
                     list.append(filepath)
     return list
 #p = pa.PyAudio()
 #s = p.open(format=pa.paFloat32, channels=1, rate=48000, output=True)
-
+random.seed(datetime.now())
 print("sasss")
 r = vrok.Resource()
 files = []
@@ -179,37 +180,6 @@ t.RegisterWork(0, outX)
 dec.SetPositionInSeconds(100)
 pl.SubmitForPlayback(dec)
 
-
-class MyAppAdapter(MprisAdapter):
-    # Make sure to implement all methods on MprisAdapter, not just metadata()
-    def metadata(self) -> Metadata :
-        return dict()
-    def get_playstate(self):
-        return PlayState.PLAYING
-    # and so on
-
-
-class MyAppEventHandler(EventAdapter):
-    # EventAdapter has good default implementations for its methods.
-    # Only override the default methods if it suits your app.
-
-    def on_app_event(self, event: str):
-        # trigger DBus updates based on events in your app
-        if event == 'pause':
-            self.on_playpause()
-        pass
-    # and so on
-
-# create mpris adapter and initialize mpris server
-my_adapter = MyAppAdapter()
-mpris = Server('MyApp', adapter=my_adapter)
-#mpris.publish()
-#mpris.loop()
-# initialize app integration with mpris
-#event_handler = MyAppEventHandler(root=mpris.root, player=mpris.player)
-#ml = glib.MainLoop()
-#mc = ml.get_context()
-#ml.run()
 t.CreateThreads()
 # publish and serve
 while True:
