@@ -2,21 +2,17 @@
 
 #include "driver.h"
 
-namespace Vrok {
+namespace vrok {
 
-class DriverJBufferOut : public Driver
-{
+class DriverJBufferOut : public Driver {
 private:
-
-
 protected:
 public:
-    class Events
-    {
+    class Events {
     public:
         typedef Buffer::Type StreamType;
 
-        virtual void OnBuffer(double* buffer, int frames, StreamType type) = 0;
+        virtual void OnBuffer(double *buffer, int frames, StreamType type) = 0;
         virtual void OnBufferConfigChange(int frames, int samplerate, int channels) = 0;
         virtual void OnThreadStart();
         virtual void OnThreadEnd();
@@ -24,7 +20,7 @@ public:
 
     std::vector<DeviceInfo> GetDeviceInfo();
     std::string GetDefaultDevice();
-    void SetEvents(Events* events);
+    void SetEvents(Events *events);
     bool SetDevice(std::string device);
     void ThreadStart();
     void ThreadEnd();
@@ -32,32 +28,15 @@ public:
     bool BufferConfigChange(BufferConfig *config);
     bool DriverRun(Buffer *buffer);
 
-    Vrok::ComponentType ComponentType()
-    {
-        return Vrok::ComponentType::Driver;
-    }
-    Component *CreateSelf()
-    {
-        return new DriverJBufferOut();
-    }
-    const char *ComponentName()
-    {
-        return "JavaBuffer Driver";
-    }
-    const char *Description()
-    {
-        return "Android AudioTrack";
-    }
-    const char *Author()
-    {
-        return "Madura A.";
-    }
-    const char *License()
-    {
-        return "GPL v2";
-    }
+    vrok::ComponentType ComponentType() { return vrok::ComponentType::Driver; }
+    Component *CreateSelf() { return new DriverJBufferOut(); }
+    const char *ComponentName() { return "JavaBuffer Driver"; }
+    const char *Description() { return "Android AudioTrack"; }
+    const char *Author() { return "Madura A."; }
+    const char *License() { return "GPL v2"; }
+
 private:
-    Events* m_events;
+    Events *m_events;
     std::vector<double> m_tempBuffer;
 };
 

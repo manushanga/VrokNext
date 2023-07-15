@@ -23,27 +23,22 @@
 #include "bgpoint.h"
 #include "vumeter.h"
 
-namespace Vrok {
-class Effect : public BufferGraph::Point, public Component
-{
+namespace vrok {
+class Effect : public BufferGraph::Point, public Component {
 private:
     BufferConfig _input_bc;
     bool _first_run;
+
 protected:
     std::atomic<bool> _work;
-public:
 
+public:
     Effect();
-    virtual ~Effect() {}
-    virtual bool EffectRun(Buffer *out_buffer,
-                           Buffer **in_buffer_set,
-                           int buffer_count)=0;
+    virtual ~Effect() { }
+    virtual bool EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int buffer_count) = 0;
     virtual bool BufferConfigChange(BufferConfig *config) { return true; }
     void Run();
-    const BufferConfig& GetOldBufferConfig() { return _input_bc; }
-    std::vector<VUMeter *> GetMeters()
-    {
-        return std::vector<VUMeter *>();
-    }
+    const BufferConfig &GetOldBufferConfig() { return _input_bc; }
+    std::vector<VUMeter *> GetMeters() { return std::vector<VUMeter *>(); }
 };
 }

@@ -19,27 +19,14 @@
 #pragma once
 #include "common.h"
 
-struct BufferConfig
-{
-    int frames,channels,samplerate;
+struct BufferConfig {
+    int frames, channels, samplerate;
 
-    BufferConfig(int frames_=2048, int channels_=2, int samplerate_=44100) :
-        frames(frames_),
-        channels(channels_),
-        samplerate(samplerate_)
-    {
+    BufferConfig(int frames_ = 2048, int channels_ = 2, int samplerate_ = 44100)
+        : frames(frames_), channels(channels_), samplerate(samplerate_) { }
 
+    inline bool operator!=(const BufferConfig &lhs) {
+        return !((lhs.channels == channels) && (lhs.frames == frames) && (lhs.samplerate == samplerate));
     }
-
-    inline bool operator!=(const BufferConfig& lhs)
-    {
-        return !((lhs.channels == channels) &&
-                (lhs.frames == frames) &&
-                (lhs.samplerate == samplerate));
-    }
-    void Print()
-    {
-        DBG(1, frames << " " << channels << " " << samplerate);
-    }
+    void Print() { DBG(1, frames << " " << channels << " " << samplerate); }
 };
-

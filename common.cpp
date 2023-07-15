@@ -1,11 +1,9 @@
 #include <thread>
-#include <unistd.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "common.h"
 
-void Vrok::Sleep(int microseconds)
-{
+void vrok::Sleep(int microseconds) {
     std::this_thread::sleep_for(std::chrono::microseconds(microseconds));
 }
-

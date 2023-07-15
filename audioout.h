@@ -18,53 +18,35 @@
  */
 #pragma once
 
-#include <atomic>
 #include <ao/ao.h>
+#include <atomic>
 
 #include "driver.h"
 
-namespace Vrok {
+namespace vrok {
 
-    class DriverAudioOut : public Driver
-    {
-    private:
-        std::atomic<bool> _new_resource;
-        std::atomic<double> _volume;
-        ao_device *_ao_device;
-        int _device_id;
-    protected:
-    public:
-        DriverAudioOut();
-        virtual ~DriverAudioOut() {}
-        std::vector<DeviceInfo> GetDeviceInfo();
-        std::string GetDefaultDevice();
-        bool SetDevice(std::string device);
-        bool BufferConfigChange(BufferConfig *config);
-        bool DriverRun(Buffer *buffer);
-        void SetVolume(double volume);
-        Vrok::ComponentType ComponentType()
-        {
-            return Vrok::ComponentType::Driver;
-        }
-        Component *CreateSelf()
-        {
-            return new DriverAudioOut();
-        }
-        const char *ComponentName()
-        {
-            return "AudioOut Driver";
-        }
-        const char *Description()
-        {
-            return "libao wrapper";
-        }
-        const char *Author()
-        {
-            return "Madura A.";
-        }
-        const char *License()
-        {
-            return "GPL v2";
-        }
-    };
+class DriverAudioOut : public Driver {
+private:
+    std::atomic<bool> _new_resource;
+    std::atomic<double> _volume;
+    ao_device *_ao_device;
+    int _device_id;
+
+protected:
+public:
+    DriverAudioOut();
+    virtual ~DriverAudioOut() { }
+    std::vector<DeviceInfo> GetDeviceInfo();
+    std::string GetDefaultDevice();
+    bool SetDevice(std::string device);
+    bool BufferConfigChange(BufferConfig *config);
+    bool DriverRun(Buffer *buffer);
+    void SetVolume(double volume);
+    vrok::ComponentType ComponentType() { return vrok::ComponentType::Driver; }
+    Component *CreateSelf() { return new DriverAudioOut(); }
+    const char *ComponentName() { return "AudioOut Driver"; }
+    const char *Description() { return "libao wrapper"; }
+    const char *Author() { return "Madura A."; }
+    const char *License() { return "GPL v2"; }
+};
 }

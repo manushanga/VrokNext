@@ -21,27 +21,29 @@
 #pragma once
 
 #include <ctime>
-
-
+#include <deque>
 #include <iostream>
 extern "C" {
 
 #ifndef __STDC_CONSTANT_MACROS
 #define __STDC_CONSTANT_MACROS
 #endif
-    
+
 #ifdef __cplusplus
- #ifdef _STDINT_H
-  #undef _STDINT_H
- #endif
- #include <stdint.h>
+#ifdef _STDINT_H
+#undef _STDINT_H
+#endif
+#include <stdint.h>
 #endif
 
-#include <libavutil/mathematics.h>
-#include <libavutil/samplefmt.h>
-#include <libavutil/opt.h>
 #include <libavformat/avformat.h>
 #include <libavformat/avio.h>
+#include <libavutil/mathematics.h>
+#include <libavutil/opt.h>
+#include <libavutil/samplefmt.h>
+
+#include <libavcodec/avcodec.h>
+#include <libavutil/avutil.h>
 }
 #define FFMPEG_MAX_BUF_SIZE 192000
 
@@ -50,13 +52,10 @@ extern "C" {
 #include "decoder.h"
 #include "ringbuffer.h"
 
-
-namespace Vrok
-{
-class DecoderFFMPEG : public Decoder
-{
+namespace vrok {
+class DecoderFFMPEG : public Decoder {
 public:
-    static DecoderFFMPEG* Create() { return new DecoderFFMPEG(); }
+    static DecoderFFMPEG *Create() { return new DecoderFFMPEG(); }
     DecoderFFMPEG();
     ~DecoderFFMPEG();
     bool Open(Resource *resource);
@@ -73,56 +72,39 @@ public:
 
     void SetPositionInSeconds(uint64_t seconds) override;
 
+    Metadata *PopMetadataEvent() override;
+
 private:
-    static int ff_avio_interrupt(void *user);
+    std::deque<Metadata *> _metadata;
     bool _done;
     std::atomic<bool> _seek_req;
     int64_t _seek_to;
     Ringbuffer<real_t> *_ringbuffer;
+
     time_t last_read;
-    AVFormatContext* container;
+    int metadata_stream_id;
     int audio_stream_id;
+
+    AVFormatContext *fmt_ctx;
     AVCodecContext *ctx;
-    AVCodec *codec;
+    const AVCodec *codec;
     AVSampleFormat sfmt;
     AVFrame *frame;
-    AVPacket packet;
+    AVPacket *packet;
     AVStream *audio_st;
-    real_t temp[2*FFMPEG_MAX_BUF_SIZE + AV_INPUT_BUFFER_PADDING_SIZE];
+    real_t temp[2 * FFMPEG_MAX_BUF_SIZE + AV_INPUT_BUFFER_PADDING_SIZE];
     uint64_t current_in_seconds;
     uint64_t duration_in_seconds;
 
-    int got_frame,packetFinished;
+    int got_frame;
     int plane_size;
-    int vpbuffer_write;
-    int vpbuffer_samples;
     int temp_write;
-    int remainder_read;
-    int remainder_counter;
 
-    Vrok::ComponentType ComponentType()
-    {
-        return Vrok::ComponentType::Decoder;
-    }
-    Component *CreateSelf()
-    {
-        return new DecoderFFMPEG();
-    }
-    const char *ComponentName()
-    {
-        return "FFmpeg Decoder";
-    }
-    const char *Description()
-    {
-        return "FFmpeg wrapper";
-    }
-    const char *Author()
-    {
-        return "Madura A.";
-    }
-    const char *License()
-    {
-        return "GPL v2";
-    }
+    vrok::ComponentType ComponentType() { return vrok::ComponentType::Decoder; }
+    Component *CreateSelf() { return new DecoderFFMPEG(); }
+    const char *ComponentName() { return "FFmpeg Decoder"; }
+    const char *Description() { return "FFmpeg wrapper"; }
+    const char *Author() { return "Madura A."; }
+    const char *License() { return "GPL v2"; }
 };
 }

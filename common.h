@@ -18,10 +18,10 @@
  */
 #pragma once
 
+#include <cassert>
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
-#include <cmath>
-#include <cassert>
 
 #include "debug.h"
 
@@ -33,80 +33,72 @@
 
 typedef float real_t;
 
-namespace Vrok {
-    const int MAX_CHANNELS=8;
-    template<typename T>
-    T Round(T value)
-    {
-        return value;
-    }
-    template <>
-    inline float Round<float>(float value)
-    {
-        return rintf(value);
-    }
-    template <>
-    inline double Round<double>(double value)
-    {
-        return rint(value);
-    }
+namespace vrok {
+const int MAX_CHANNELS = 8;
+template <typename T>
+T Round(T value) {
+    return value;
+}
+template <>
+inline float Round<float>(float value) {
+    return rintf(value);
+}
+template <>
+inline double Round<double>(double value) {
+    return rint(value);
+}
 
-    template<typename T>
-    void Clip(T& value, T low, T high)
-    {
-        value = std::max(low, std::min(value, high));
-    }
+template <typename T>
+void Clip(T &value, T low, T high) {
+    value = std::max(low, std::min(value, high));
+}
 
-    template <>
-    inline void Clip<float>(float& value, float low, float high)
-    {
-        value = FM_clampf(value, low, high);
-    }
-    template <>
-    inline void Clip<double>(double& value, double low, double high)
-    {
-        value = FM_clampd(value, low, high);
-    }
-    template<typename T>
-    inline T SmallValue() {
-        return 0;
-    }
+template <>
+inline void Clip<float>(float &value, float low, float high) {
+    value = FM_clampf(value, low, high);
+}
+template <>
+inline void Clip<double>(double &value, double low, double high) {
+    value = FM_clampd(value, low, high);
+}
+template <typename T>
+inline T SmallValue() {
+    return 0;
+}
 
-    void Sleep(int microseconds);
+void Sleep(int microseconds);
 
-    /// 'Small value' for floats (2^-24) - used for primitive underrun prevention. The value is pretty much arbitrary (allowing for 24-bit signals normalized to 1.0).
-    template<>
-    inline float SmallValue<float>() {
-        return (1.0/16777216.0); // allows for 2^-24, should be enough for 24-bit DACs at least :)
-    }
+/// 'Small value' for floats (2^-24) - used for primitive underrun prevention. The value is pretty much
+/// arbitrary (allowing for 24-bit signals normalized to 1.0).
+template <>
+inline float SmallValue<float>() {
+    return (1.0 / 16777216.0); // allows for 2^-24, should be enough for 24-bit DACs at least :)
+}
 
-    /// 'Small value' for doubles (2^-24) - used for primitive underrun prevention. The value is pretty much arbitrary.
-    template<>
-    inline double SmallValue<double>() {
-        return (1.0/16777216.0);
-    }
+/// 'Small value' for doubles (2^-24) - used for primitive underrun prevention. The value is pretty much
+/// arbitrary.
+template <>
+inline double SmallValue<double>() {
+    return (1.0 / 16777216.0);
+}
 
-    /**
-     * Force "small enough" float value to zero
-     */
-    inline void Sanitize(float &value)
-    {
-        // real number?
-        if (fabs(value) < SmallValue<float>())
-            value = 0.f;
-        // close to 0?
-        const int val = *reinterpret_cast <const int *> (&value);
-        if ((val & 0x7F800000) == 0 && (val & 0x007FFFFF) != 0)
-            value = 0.f;
-    }
-    inline void Sanitize(double &value)
-    {
-        if (std::abs(value) < SmallValue<double>())
-            value = 0.0;
-    }
+/**
+ * Force "small enough" float value to zero
+ */
+inline void Sanitize(float &value) {
+    // real number?
+    if (fabs(value) < SmallValue<float>())
+        value = 0.f;
+    // close to 0?
+    const int val = *reinterpret_cast<const int *>(&value);
+    if ((val & 0x7F800000) == 0 && (val & 0x007FFFFF) != 0)
+        value = 0.f;
+}
+inline void Sanitize(double &value) {
+    if (std::abs(value) < SmallValue<double>())
+        value = 0.0;
+}
 
 }
 
 extern std::mutex lockxx;
-
-

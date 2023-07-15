@@ -23,55 +23,34 @@
 #include "tapdistortion.h"
 #include "vumeter.h"
 
-namespace Vrok {
-class EffectFIR : public Effect
-{
+namespace vrok {
+class EffectFIR : public Effect {
 private:
     float *_buffer;
-    Property<float> _blend,_drive,_dry_vol,_wet_vol;
-    Property<float> _lp_freq,_hp_freq;
-    float _f32_dry_vol,_f32_wet_vol;
+    Property<float> _blend, _drive, _dry_vol, _wet_vol;
+    Property<float> _lp_freq, _hp_freq;
+    float _f32_dry_vol, _f32_wet_vol;
     TapDistortion tap;
     biquad_d2 _lp[2][4];
     biquad_d2 _hp[2][2];
     TapDistortion _dist[2];
     VUMeter _meter;
+
 public:
     EffectFIR();
-    bool EffectRun(Buffer *out_buffer,
-                   Buffer **in_buffer_set,
-                   int buffer_count);
+    bool EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int buffer_count);
     void PropertyChanged(PropertyBase *property);
     bool BufferConfigChange(BufferConfig *config);
-    Vrok::ComponentType ComponentType()
-    {
-        return Vrok::ComponentType::Effect;
-    }
-    std::vector<VUMeter *> GetMeters()
-    {
+    vrok::ComponentType ComponentType() { return vrok::ComponentType::Effect; }
+    std::vector<VUMeter *> GetMeters() {
         std::vector<VUMeter *> meters;
         meters.push_back(&_meter);
         return meters;
     }
-    Component *CreateSelf()
-    {
-        return new EffectFIR();
-    }
-    const char *ComponentName()
-    {
-        return "FIR filter";
-    }
-    const char *Description()
-    {
-        return "FIR filter";
-    }
-    const char *Author()
-    {
-        return "Madura A.";
-    }
-    const char *License()
-    {
-        return "GPL v2";
-    }
+    Component *CreateSelf() { return new EffectFIR(); }
+    const char *ComponentName() { return "FIR filter"; }
+    const char *Description() { return "FIR filter"; }
+    const char *Author() { return "Madura A."; }
+    const char *License() { return "GPL v2"; }
 };
 }

@@ -23,25 +23,20 @@
 #include <string>
 #include <vector>
 
-namespace Vrok {
+namespace vrok {
 
-enum class ComponentType{Decoder, Effect, Driver, Player, None};
-enum class PropertyType{INT,FLT,DBL};
+enum class ComponentType { Decoder, Effect, Driver, Player, None };
+enum class PropertyType { INT, FLT, DBL };
 
-struct PropertyInfo
-{
+struct PropertyInfo {
     double range_from = 0.0;
     double range_to = 0.0;
     double increment = 0.0; // 0.0 means any
     double default_value = 0.0;
     std::vector<std::string> enum_names;
     PropertyInfo() = default;
-    PropertyInfo(double range_from_,
-                 double range_to_,
-                 double increment_,
-                 double default_value_,
-                 std::initializer_list<std::string> enum_names_)
-    {
+    PropertyInfo(double range_from_, double range_to_, double increment_, double default_value_,
+                 std::initializer_list<std::string> enum_names_) {
         range_from = range_from_;
         range_to = range_to_;
         increment = increment_;
@@ -50,61 +45,44 @@ struct PropertyInfo
     }
 };
 
-class PropertyBase
-{
+class PropertyBase {
 protected:
     std::string _name;
     PropertyInfo _info;
+
 public:
     void SetName(std::string name);
     std::string GetName();
-    virtual PropertyType GetType()=0;
-    virtual void Get(void *ptr)=0;
-    virtual void Set(void *ptr)=0;
+    virtual PropertyType GetType() = 0;
+    virtual void Get(void *ptr) = 0;
+    virtual void Set(void *ptr) = 0;
 
     uint32_t Size();
-    void SetPropertyInfo(const PropertyInfo& info);
-    const PropertyInfo& GetPropertyInfo();
+    void SetPropertyInfo(const PropertyInfo &info);
+    const PropertyInfo &GetPropertyInfo();
 };
 
-template<typename T>
-class Property : public PropertyBase
-{
+template <typename T>
+class Property : public PropertyBase {
 private:
     PropertyType _type;
     std::atomic<T> _data;
     T _default;
+
 public:
     Property();
 
-    PropertyType GetType()
-    {
-        return _type;
-    }
-    void Get(void *ptr)
-    {
-        *((T*)ptr)=_data.load(std::memory_order_relaxed);
-    }
-    T Get()
-    {
-        return _data.load(std::memory_order_relaxed);
-    }
-    void Set(T val)
-    {
-        _data.store(val,std::memory_order_relaxed);
-    }
-    void Set(void *ptr)
-    {
-        _data.store(*((T*)ptr),std::memory_order_relaxed);
-    }
-
+    PropertyType GetType() { return _type; }
+    void Get(void *ptr) { *((T *)ptr) = _data.load(std::memory_order_relaxed); }
+    T Get() { return _data.load(std::memory_order_relaxed); }
+    void Set(T val) { _data.store(val, std::memory_order_relaxed); }
+    void Set(void *ptr) { _data.store(*((T *)ptr), std::memory_order_relaxed); }
 };
 
-class Component
-{
+class Component {
 public:
     Component();
-    virtual Vrok::ComponentType ComponentType() = 0;
+    virtual vrok::ComponentType ComponentType() = 0;
     virtual Component *CreateSelf() = 0;
     virtual const char *ComponentName() = 0;
     virtual const char *Description() { return ""; }
@@ -115,4 +93,3 @@ public:
 };
 
 }
-

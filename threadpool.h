@@ -18,39 +18,37 @@
 
 #pragma once
 
-#include <vector>
-#include <thread>
 #include <atomic>
 #include <functional>
+#include <thread>
+#include <vector>
 
 #include "runnable.h"
 
 using namespace std;
 
-namespace Vrok
-{
-class ThreadPool
-{
+namespace vrok {
+class ThreadPool {
 private:
-    struct ThreadData
-    {
+    struct ThreadData {
         int thread_id;
-        vector< vector<Runnable*> > *runnables;
+        vector<vector<Runnable *>> *runnables;
         atomic<bool> work;
     };
-    vector< thread * > _threads;
-    vector< vector<Runnable*> > _runnables;
-    vector< ThreadData *> _thread_data;
+    vector<thread *> _threads;
+    vector<vector<Runnable *>> _runnables;
+    vector<ThreadData *> _thread_data;
+
 public:
     // the container type,
     // Dedicated - only work on a dedicated thread
     // Any - work on any idling thread
-    enum SchedMode{Dedicated, Any};
+    enum SchedMode { Dedicated, Any };
     // Best - wake up as soon as possible
     // Lazy - schedule in to a free thread, if not run
     // for along time (>5 sec) schedule in to a new
     // thread
-    enum WakeUpMode{Best, Lazy};
+    enum WakeUpMode { Best, Lazy };
     ThreadPool(size_t thread_count);
     bool RegisterWork(size_t thread_id, Runnable *runnable);
     void StopThreads();

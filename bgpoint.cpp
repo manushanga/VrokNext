@@ -1,45 +1,40 @@
-#include <thread>
 #include <cstring>
+#include <thread>
 
 #include "bgpoint.h"
 
-Buffer *BufferGraph::Point::AcquireBuffer()
-{
+Buffer *BufferGraph::Point::AcquireBuffer() {
 
-    Buffer *b=nullptr;
+    Buffer *b = nullptr;
 
     _free_buffers->PopBlocking(b);
     return b;
 }
 
-void BufferGraph::Point::ReleaseBuffer(Buffer *buffer)
-{
+void BufferGraph::Point::ReleaseBuffer(Buffer *buffer) {
     _lock.lock();
 
     _buffer_refs[buffer->GetId()]++;
-    if (_buffer_refs[buffer->GetId()] == _sinks.size())
-    {
-        Buffer *xbuffer=nullptr;
+    if (_buffer_refs[buffer->GetId()] == _sinks.size()) {
+        Buffer *xbuffer = nullptr;
         _used_buffers->PopBlocking(xbuffer);
         assert(xbuffer == buffer);
-        //atomic_thread_fence(memory_order_seq_cst);
+        // atomic_thread_fence(memory_order_seq_cst);
         _free_buffers->PushBlocking(buffer);
 
-        _buffer_refs[buffer->GetId()]=0;
+        _buffer_refs[buffer->GetId()] = 0;
     }
 
     _lock.unlock();
 }
 
-void BufferGraph::Point::PushBuffer(Buffer *buffer)
-{
-    //lock.lock();
+void BufferGraph::Point::PushBuffer(Buffer *buffer) {
+    // lock.lock();
     _used_buffers->PushBlocking(buffer);
-   // lock.unlock();
+    // lock.unlock();
 }
 
-Buffer *BufferGraph::Point::PeakBuffer()
-{
+Buffer *BufferGraph::Point::PeakBuffer() {
     // multiple reads from more than one thread
     // since this is only a read operation
     // it is assumed to be reentrant
@@ -49,7 +44,7 @@ Buffer *BufferGraph::Point::PeakBuffer()
     // be releasing a buffer while another peaks
     // therefore a lock is used
     _lock.lock();
-    Buffer *b=nullptr;
+    Buffer *b = nullptr;
     _used_buffers->PeakBlocking(b);
     _lock.unlock();
 
@@ -57,34 +52,29 @@ Buffer *BufferGraph::Point::PeakBuffer()
     return b;
 }
 
-Buffer **BufferGraph::Point::PeakAllSources()
-{
-    //cout<<this_thread::get_id()<<" "<<this<<"peak"<<endl;
+Buffer **BufferGraph::Point::PeakAllSources() {
+    // cout<<this_thread::get_id()<<" "<<this<<"peak"<<endl;
     //_buffer_peak_update = 0;
 
-    Buffer* buffers_on_peak[_sources.size()];
-    size_t buffer_peak_update=0;
+    Buffer *buffers_on_peak[_sources.size()];
+    size_t buffer_peak_update = 0;
 
-    memcpy(&buffers_on_peak[0],_buffers_on_peak,sizeof(Buffer*)*_sources.size());
+    memcpy(&buffers_on_peak[0], _buffers_on_peak, sizeof(Buffer *) * _sources.size());
 
-    int j=0;
-    while (buffer_peak_update < _sources.size() && j < _max_retries){
-        for (size_t i=0;i<_sources.size();i++)
-        {
-            auto b=_sources[i]->PeakBuffer();
+    int j = 0;
+    while (buffer_peak_update < _sources.size() && j < _max_retries) {
+        for (size_t i = 0; i < _sources.size(); i++) {
+            auto b = _sources[i]->PeakBuffer();
 
-            if (b == nullptr)
-            {
-                j=_max_retries;
+            if (b == nullptr) {
+                j = _max_retries;
                 break;
-            } else if ((b && b->GetStreamId() < _cur_stream_id))
-            {
-                WARN(0,"drop"<<b->GetStreamId() <<" "<<_cur_stream_id);
+            } else if ((b && b->GetStreamId() < _cur_stream_id)) {
+                WARN(0, "drop" << b->GetStreamId() << " " << _cur_stream_id);
                 _sources[i]->ReleaseBuffer(b);
-            } else if (buffers_on_peak[i] != b)
-            {
+            } else if (buffers_on_peak[i] != b) {
                 buffer_peak_update++;
-                buffers_on_peak[i]=b;
+                buffers_on_peak[i] = b;
             } else {
                 // we got the same buffer back
                 // give the readers another turn
@@ -95,49 +85,36 @@ Buffer **BufferGraph::Point::PeakAllSources()
         }
         j++;
     }
-    if (j < _max_retries)
-    {
-        memcpy(_buffers_on_peak,&buffers_on_peak[0],sizeof(Buffer*)*_sources.size());
+    if (j < _max_retries) {
+        memcpy(_buffers_on_peak, &buffers_on_peak[0], sizeof(Buffer *) * _sources.size());
         return _buffers_on_peak;
-    } else
-    {
+    } else {
         return nullptr;
     }
-
 }
 
-void BufferGraph::Point::ReleaseAllSources(Buffer **buffers_on_peak)
-{
-    for (size_t i=0;i<_sources.size();i++)
-    {
+void BufferGraph::Point::ReleaseAllSources(Buffer **buffers_on_peak) {
+    for (size_t i = 0; i < _sources.size(); i++) {
         _sources[i]->ReleaseBuffer(buffers_on_peak[i]);
     }
 }
 
-
-
-void BufferGraph::Point::RegisterSink(Point *p)
-{
+void BufferGraph::Point::RegisterSink(Point *p) {
     _sinks.push_back(p);
 }
 
-void BufferGraph::Point::RegisterSource(Point *p)
-{
+void BufferGraph::Point::RegisterSource(Point *p) {
     _sources.push_back(p);
-
 }
 
-void BufferGraph::Point::Preallocate()
-{
-    _buffers_on_peak = new Buffer*[_sources.size()];
+void BufferGraph::Point::Preallocate() {
+    _buffers_on_peak = new Buffer *[_sources.size()];
 
-    for (size_t i=0;i<_sources.size();i++)
-    {
-        _buffers_on_peak[i]=nullptr;
+    for (size_t i = 0; i < _sources.size(); i++) {
+        _buffers_on_peak[i] = nullptr;
     }
 }
 
-void BufferGraph::Point::Flush()
-{
+void BufferGraph::Point::Flush() {
     _cur_stream_id++;
 }

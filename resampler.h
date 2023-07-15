@@ -1,4 +1,4 @@
- 
+
 /** FIR Filter
  * Copyright (C) Madura A.
  *
@@ -25,16 +25,15 @@
 
 #include "resampler/resampler.h"
 
-namespace Vrok {
-class Resampler : public Effect
-{
+namespace vrok {
+class Resampler : public Effect {
 private:
-    static const int INTERNAL_BUFFER_SIZE = 8192*4;
+    static const int INTERNAL_BUFFER_SIZE = 8192 * 4;
 
     Property<int> _out_samplerate;
     Property<int> _mode;
 
-    void** _resamplers;
+    void **_resamplers;
     int _resamplers_count;
     std::mutex _property_mutex;
 
@@ -44,39 +43,18 @@ private:
 public:
     Resampler();
     virtual ~Resampler();
-    bool EffectRun(Buffer *out_buffer,
-                   Buffer **in_buffer_set,
-                   int buffer_count);
+    bool EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int buffer_count);
     void PropertyChanged(PropertyBase *property);
     bool BufferConfigChange(BufferConfig *config);
-    Vrok::ComponentType ComponentType()
-    {
-        return Vrok::ComponentType::Effect;
-    }
-    std::vector<VUMeter *> GetMeters()
-    {
+    vrok::ComponentType ComponentType() { return vrok::ComponentType::Effect; }
+    std::vector<VUMeter *> GetMeters() {
         std::vector<VUMeter *> meters;
         return meters;
     }
-    Component *CreateSelf()
-    {
-        return new Resampler();
-    }
-    const char *ComponentName()
-    {
-        return "Resampler";
-    }
-    const char *Description()
-    {
-        return "FIR filter";
-    }
-    const char *Author()
-    {
-        return "Madura A.";
-    }
-    const char *License()
-    {
-        return "GPL v2";
-    }
+    Component *CreateSelf() { return new Resampler(); }
+    const char *ComponentName() { return "Resampler"; }
+    const char *Description() { return "FIR filter"; }
+    const char *Author() { return "Madura A."; }
+    const char *License() { return "GPL v2"; }
 };
 }

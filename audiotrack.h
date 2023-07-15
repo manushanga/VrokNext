@@ -21,48 +21,30 @@
 
 #include "driver.h"
 
-namespace Vrok {
+namespace vrok {
 
-    class DriverAudioTrack : public Driver
-    {
-    private:
-        atomic<bool> _new_resource;
-        void initAudioTrack(BufferConfig *config);
-        void finiAudioTrack(BufferConfig *config);
-        bool _init;
-    protected:
-    public:
-        DriverAudioTrack();
-        void ThreadStart();
-        void ThreadEnd();
-        virtual ~DriverAudioTrack();
-        bool BufferConfigChange(BufferConfig *config);
-        bool DriverRun(Buffer *buffer);
-        
-        Vrok::ComponentType ComponentType()
-        {
-            return Vrok::ComponentType::Driver;
-        }
-        Component *CreateSelf()
-        {
-            return new DriverAudioTrack();
-        }
-        const char *ComponentName()
-        {
-            return "AudioTrack  Driver";
-        }
-        const char *Description()
-        {
-            return "Android AudioTrack";
-        }
-        const char *Author()
-        {
-            return "Madura A.";
-        }
-        const char *License()
-        {
-            return "GPL v2";
-        }
-    };
+class DriverAudioTrack : public Driver {
+private:
+    atomic<bool> _new_resource;
+    void initAudioTrack(BufferConfig *config);
+    void finiAudioTrack(BufferConfig *config);
+    bool _init;
+
+protected:
+public:
+    DriverAudioTrack();
+    void ThreadStart();
+    void ThreadEnd();
+    virtual ~DriverAudioTrack();
+    bool BufferConfigChange(BufferConfig *config);
+    bool DriverRun(Buffer *buffer);
+
+    vrok::ComponentType ComponentType() { return vrok::ComponentType::Driver; }
+    Component *CreateSelf() { return new DriverAudioTrack(); }
+    const char *ComponentName() { return "AudioTrack  Driver"; }
+    const char *Description() { return "Android AudioTrack"; }
+    const char *Author() { return "Madura A."; }
+    const char *License() { return "GPL v2"; }
+};
 }
 #endif // AUDIOOUT_H

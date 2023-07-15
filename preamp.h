@@ -20,23 +20,20 @@
 
 #include <atomic>
 
-#include "effect.h"
 #include "delaybuffer.h"
+#include "effect.h"
 
-namespace Vrok {
-class EffectPreamp : public Effect
-{
+namespace vrok {
+class EffectPreamp : public Effect {
 private:
-    DelayBuffer<double> delay,delay1;
+    DelayBuffer<double> delay, delay1;
 
 protected:
     std::atomic<bool> _work;
+
 public:
     EffectPreamp();
-    virtual ~EffectPreamp() {}
-    bool EffectRun(Buffer *out_buffer,
-                   Buffer **in_buffer_set,
-                   int buffer_count);
+    virtual ~EffectPreamp() { }
+    bool EffectRun(Buffer *out_buffer, Buffer **in_buffer_set, int buffer_count);
 };
 }
-

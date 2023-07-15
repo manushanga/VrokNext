@@ -21,49 +21,44 @@
 #include "bgpoint.h"
 #include "vumeter.h"
 
-namespace Vrok {
+namespace vrok {
 
-    class Driver : public BufferGraph::Point, public Component
-    {
-    private:
-        std::atomic<bool> _new_resource;
-    protected:
-        std::atomic<bool> _work;
-        std::atomic<real_t> _volume;
-        VUMeter _meter;
-        BufferConfig _input_bc;
-        bool _first_run;
+class Driver : public BufferGraph::Point, public Component {
+private:
+    std::atomic<bool> _new_resource;
 
-        const BufferConfig& GetOldBufferConfig() { return _input_bc; }
+protected:
+    std::atomic<bool> _work;
+    std::atomic<real_t> _volume;
+    VUMeter _meter;
+    BufferConfig _input_bc;
+    bool _first_run;
+
+    const BufferConfig &GetOldBufferConfig() { return _input_bc; }
+
+public:
+    class DeviceInfo {
     public:
-        class DeviceInfo
-        {
-        public:
-            std::string name;
-            void *user_data;
-            bool operator==(const DeviceInfo& device_info)
-            {
-                return name == device_info.name && user_data == device_info.user_data;
-            }
-            bool operator==(DeviceInfo& device_info)
-            {
-                return name == device_info.name && user_data == device_info.user_data;
-            }
-
-        };
-        Driver();
-        virtual ~Driver() {}
-        virtual std::vector<DeviceInfo> GetDeviceInfo() = 0;
-        virtual std::string GetDefaultDevice() = 0;
-        virtual bool SetDevice(std::string device) = 0;
-        virtual bool BufferConfigChange(BufferConfig *config)=0;
-        virtual bool DriverRun(Buffer *buffer) = 0;
-        virtual void SetVolume(real_t volume);
-        virtual std::vector<VUMeter *> GetMeters();
-        void Run();
-
-        // volume in decibels
-
+        std::string name;
+        void *user_data;
+        bool operator==(const DeviceInfo &device_info) {
+            return name == device_info.name && user_data == device_info.user_data;
+        }
+        bool operator==(DeviceInfo &device_info) {
+            return name == device_info.name && user_data == device_info.user_data;
+        }
     };
-}
+    Driver();
+    virtual ~Driver() { }
+    virtual std::vector<DeviceInfo> GetDeviceInfo() = 0;
+    virtual std::string GetDefaultDevice() = 0;
+    virtual bool SetDevice(std::string device) = 0;
+    virtual bool BufferConfigChange(BufferConfig *config) = 0;
+    virtual bool DriverRun(Buffer *buffer) = 0;
+    virtual void SetVolume(real_t volume);
+    virtual std::vector<VUMeter *> GetMeters();
+    void Run();
 
+    // volume in decibels
+};
+}

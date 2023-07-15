@@ -23,32 +23,29 @@
 #ifndef QUEUE_H
 #define QUEUE_H
 #include <atomic>
-#include <vector>
 #include <condition_variable>
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
+#include <vector>
 
-#include <thread>
 #include <chrono>
+#include <thread>
 
-#include "debug.h"
 #include "common.h"
+#include "debug.h"
 
+void wait_for(bool &condition, bool wait_while, std::unique_lock<std::mutex> &lock,
+              std::condition_variable &cv, unsigned int microseconds);
 
-void wait_for(bool &condition, bool wait_while,
-              std::unique_lock<std::mutex> &lock, std::condition_variable &cv,
-              unsigned int microseconds);
-
-template<typename T>
-class Queue
-{
+template <typename T>
+class Queue {
 private:
-    std::atomic<int> _front,_rear;
+    std::atomic<int> _front, _rear;
     int _g_front, _g_rear;
     int _size;
     T *_container;
     std::mutex _guard;
-    std::atomic<bool> _bpop,_bpush;
+    std::atomic<bool> _bpop, _bpush;
 
     std::mutex _lock_on_empty;
     std::mutex _lock_on_full;
@@ -57,103 +54,80 @@ private:
 
     bool _is_empty;
     bool _is_full;
+
 public:
-    Queue(int size) :
-        _size(size),
-        _bpop(false),
-        _bpush(false)
-    {
+    Queue(int size) : _size(size), _bpop(false), _bpush(false) {
         _g_front = _front = 0;
         _g_rear = _rear = 0;
 
-        _container = static_cast<T *>( malloc(sizeof(T)*size) );
-
+        _container = static_cast<T *>(malloc(sizeof(T) * size));
     }
-    int GetSize() const
-    {
-        return _size;
-    }
-    bool PopLocked(T& t)
-    {
+    int GetSize() const { return _size; }
+    bool PopLocked(T &t) {
         std::lock_guard<std::mutex> ll(_guard);
-        if (_g_rear == _g_front)
-        {
+        if (_g_rear == _g_front) {
             return false;
         } else {
-            t= _container[_g_rear];
-            _g_rear=(_g_rear+1)%_size;
-            return true;
-        }
-
-    }
-    bool PeakLocked(T& t)
-    {
-        std::lock_guard<std::mutex> ll(_guard);
-        if (_g_rear == _g_front)
-        {
-            return false;
-        } else {
-            t= _container[_g_rear];
-            return true;
-        }
-
-    }
-    bool PushLocked(T t)
-    {
-        std::lock_guard<std::mutex> ll(_guard);
-        int nfront=(_g_front + 1)%_size;
-        if (nfront == _g_rear)
-        {
-            return false;
-        } else {
-            _container[_g_front]=t;
-            _g_front=nfront;
+            t = _container[_g_rear];
+            _g_rear = (_g_rear + 1) % _size;
             return true;
         }
     }
-    bool Peak(T& t)
-    {
-        int cr=_rear.load(std::memory_order_relaxed);
-        if (cr == _front.load(std::memory_order_acquire))
-        {
+    bool PeakLocked(T &t) {
+        std::lock_guard<std::mutex> ll(_guard);
+        if (_g_rear == _g_front) {
+            return false;
+        } else {
+            t = _container[_g_rear];
+            return true;
+        }
+    }
+    bool PushLocked(T t) {
+        std::lock_guard<std::mutex> ll(_guard);
+        int nfront = (_g_front + 1) % _size;
+        if (nfront == _g_rear) {
+            return false;
+        } else {
+            _container[_g_front] = t;
+            _g_front = nfront;
+            return true;
+        }
+    }
+    bool Peak(T &t) {
+        int cr = _rear.load(std::memory_order_relaxed);
+        if (cr == _front.load(std::memory_order_acquire)) {
             return false;
         }
 
-        t=_container[cr];
+        t = _container[cr];
         return true;
-
     }
-    bool Pop(T& t)
-    {
-        int cr=_rear.load(std::memory_order_relaxed);
+    bool Pop(T &t) {
+        int cr = _rear.load(std::memory_order_relaxed);
 
-        if (cr == _front.load(std::memory_order_acquire))
-        {
+        if (cr == _front.load(std::memory_order_acquire)) {
             return false;
         }
         t = _container[cr];
-        _rear.store((cr+1)%_size,std::memory_order_release);
+        _rear.store((cr + 1) % _size, std::memory_order_release);
         return true;
     }
-    bool Push(T t)
-    {
-        int cf=_front.load(std::memory_order_relaxed);
+    bool Push(T t) {
+        int cf = _front.load(std::memory_order_relaxed);
 
-        int new_cf=(cf+1) % _size;
+        int new_cf = (cf + 1) % _size;
         if (new_cf == _rear.load(std::memory_order_acquire)) {
 
             return false;
         }
 
-        _container[cf]=t;
-        _front.store(new_cf,std::memory_order_release);
+        _container[cf] = t;
+        _front.store(new_cf, std::memory_order_release);
 
         return true;
     }
-    bool PeakBlocking(T& t)
-    {
-        if (Peak(t) == false)
-        {
+    bool PeakBlocking(T &t) {
+        if (Peak(t) == false) {
             std::unique_lock<std::mutex> lk(_lock_on_empty);
             _is_empty = false;
             wait_for(_is_empty, false, lk, _cv_empty, 100);
@@ -161,41 +135,33 @@ public:
 
         return true;
     }
-    bool PopBlocking(T& t)
-    {
+    bool PopBlocking(T &t) {
         bool ret = Pop(t);
 
-        if (ret)
-        {
+        if (ret) {
             {
                 std::unique_lock<std::mutex> lk(_lock_on_full);
                 _is_full = false;
             }
             _cv_full.notify_all();
-        } else
-        {
+        } else {
             std::unique_lock<std::mutex> lk(_lock_on_empty);
             _is_empty = false;
             wait_for(_is_empty, false, lk, _cv_empty, 100);
         }
 
         return true;
- 
     }
-    bool PushBlocking(T t)
-    {
+    bool PushBlocking(T t) {
         bool ret = Push(t);
 
-        if (ret)
-        {
+        if (ret) {
             {
                 std::unique_lock<std::mutex> lk(_lock_on_empty);
                 _is_empty = true;
             }
             _cv_empty.notify_all();
-        }
-        else
-        {
+        } else {
             std::unique_lock<std::mutex> lk(_lock_on_full);
             _is_full = true;
             wait_for(_is_full, true, lk, _cv_full, 100);
@@ -204,22 +170,16 @@ public:
         return true;
     }
 
-
-    void PrintQueue()
-    {
-        for (int i=0;i<_size;i++)
-        {
-            std::cout<<_container[i]<<" ";
+    void PrintQueue() {
+        for (int i = 0; i < _size; i++) {
+            std::cout << _container[i] << " ";
         }
-        std::cout<<std::endl;
+        std::cout << std::endl;
     }
 
-    ~Queue()
-    {
-        free(_container);
-    }
+    ~Queue() { free(_container); }
+
 private:
-
 };
 
 #endif // QUEUE_H

@@ -18,117 +18,80 @@
  */
 #pragma once
 
-#include "common.h"
 #include "bgpoint.h"
-#include "queue.h"
+#include "common.h"
 #include "decoder.h"
+#include "queue.h"
 #include "resource.h"
 
-#include <string>
 #include <atomic>
+#include <string>
 
 using namespace std;
 
-namespace Vrok {
+namespace vrok {
 
-    class Player : public BufferGraph::Point, public Component
-    {
+class Player : public BufferGraph::Point, public Component {
+public:
+    class Events {
     public:
-        class Events
-        {
-        public:
-            virtual void QueueNext() = 0;
-        };
-
-    private:
-        enum class CommandType
-        {
-            OPEN,
-            OPEN_NOW,
-            PAUSE,
-            RESUME,
-            STOP,
-            SEEK,
-            SKIP
-        };
-        enum class PlayerState
-        {
-            START,
-            PLAYING,
-            PLAYING_GAPLESS_DONE,
-            PAUSED,
-            STOPPED
-        };
-        struct Command
-        {
-            CommandType type;
-            void *data;
-        };
-        PlayerState _state;
-    protected:
-
-        atomic<bool> _work;
-        bool _decoder_work;
-        bool _queue_next;
-        bool _resume_from_pause;
-        Events *_events;
-        // _play_queue: queue tracks needed to be played
-        // one after other here
-        // _play_now_queue: queue tracks will interrupt
-        // the playback here
-
-        Queue<Command> *_command_now_queue;
-
-        Decoder *_decoder;
-
-        void ResetDecoder();
-
-
-    public:
-        Player();
-
-        virtual ~Player() {}
-
-        // before submission to a decoder instance the track
-        // must be checked for compatibility with the decoder
-        // if a track that can not be played by the decoder
-        // has been submitted, decoder will stop or goto the
-        // next playable file
-
-        bool SubmitForPlayback(Decoder* decoder);
-        bool SubmitForPlaybackNow(Decoder *decoder);
-        bool Resume();
-        bool Pause();
-        bool Stop();
-        bool Skip();
-        void SetQueueNext(bool queue_next);
-        void SetEvents(Events *events);
-
-        void Run();
-
-        Vrok::ComponentType ComponentType()
-        {
-            return Vrok::ComponentType::Player;
-        }
-        Component *CreateSelf()
-        {
-            return new Player();
-        }
-        const char *ComponentName()
-        {
-            return "Player";
-        }
-        const char *Description()
-        {
-            return "Player";
-        }
-        const char *Author()
-        {
-            return "Madura A.";
-        }
-        const char *License()
-        {
-            return "GPL v2";
-        }
+        virtual void OnMetadataUpdate(Metadata *metadata) { }
+        virtual void QueueNext() = 0;
     };
+
+private:
+    enum class CommandType { OPEN, OPEN_NOW, PAUSE, RESUME, STOP, SEEK, SKIP };
+    enum class PlayerState { START, PLAYING, PLAYING_GAPLESS_DONE, PAUSED, STOPPED };
+    struct Command {
+        CommandType type;
+        void *data;
+    };
+    PlayerState _state;
+
+protected:
+    atomic<bool> _work;
+    bool _decoder_work;
+    bool _queue_next;
+    bool _resume_from_pause;
+    Events *_events;
+    // _play_queue: queue tracks needed to be played
+    // one after other here
+    // _play_now_queue: queue tracks will interrupt
+    // the playback here
+
+    Queue<Command> *_command_now_queue;
+
+    Decoder *_decoder;
+
+    void ResetDecoder();
+
+public:
+    Player();
+
+    virtual ~Player() { }
+
+    // before submission to a decoder instance the track
+    // must be checked for compatibility with the decoder
+    // if a track that can not be played by the decoder
+    // has been submitted, decoder will stop or goto the
+    // next playable file
+
+    bool SubmitForPlayback(Decoder *decoder);
+    bool SubmitForPlaybackNow(Decoder *decoder);
+    bool Resume();
+    bool Pause();
+    bool Stop();
+    bool Skip();
+    void SetQueueNext(bool queue_next);
+    void SetEvents(Events *events);
+
+    void Run();
+
+    vrok::ComponentType ComponentType() { return vrok::ComponentType::Player; }
+    Component *CreateSelf() { return new Player(); }
+    const char *ComponentName() { return "Player"; }
+    const char *Description() { return "Player"; }
+    const char *Author() { return "Madura A."; }
+    const char *License() { return "GPL v2"; }
+};
 }

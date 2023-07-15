@@ -1,16 +1,15 @@
 #ifndef DISP_H
 #define DISP_H
 
-#include <QWidget>
-#include <QTimer>
 #include "vumeter.h"
+#include <QTimer>
+#include <QWidget>
 
 namespace Ui {
 class Disp;
 }
 
-class Disp : public QWidget
-{
+class Disp : public QWidget {
     Q_OBJECT
 
 public:
@@ -23,7 +22,7 @@ public slots:
 
 private:
     Ui::Disp *ui;
-    Vrok::VUMeter *_meter;
+    vrok::VUMeter *_meter;
     QTimer timer;
 };
 

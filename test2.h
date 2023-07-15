@@ -2,74 +2,51 @@
 #define TEST2_H
 #include <thread>
 
-#include "common.h"
 #include "bgpoint.h"
+#include "common.h"
 #include "stopwatch.h"
 
 using namespace std;
 
-class NodeAT2 : public BufferGraph::Point
-{
+class NodeAT2 : public BufferGraph::Point {
 private:
     StopWatch *_stop_watch;
-public:
-    NodeAT2() :
-        BufferGraph::Point()
-    {
 
-    }
+public:
+    NodeAT2() : BufferGraph::Point() { }
 
     void Run();
-    void SetStopWatch(StopWatch *stop_watch)
-    {
-        _stop_watch=stop_watch;
-    }
+    void SetStopWatch(StopWatch *stop_watch) { _stop_watch = stop_watch; }
 };
 
-class NodeBT2 : public BufferGraph::Point
-{
+class NodeBT2 : public BufferGraph::Point {
 private:
     StopWatch *_stop_watch;
-public:
-    NodeBT2() :
-        BufferGraph::Point()
-    {
 
-    }
+public:
+    NodeBT2() : BufferGraph::Point() { }
 
     void Run();
-    void SetStopWatch(StopWatch *stop_watch)
-    {
-        _stop_watch=stop_watch;
-    }
+    void SetStopWatch(StopWatch *stop_watch) { _stop_watch = stop_watch; }
 };
 
-class NodeCT2 : public BufferGraph::Point
-{
+class NodeCT2 : public BufferGraph::Point {
 private:
     StopWatch *_stop_watch;
-public:
-    NodeCT2() :
-        BufferGraph::Point()
-    {
 
-    }
+public:
+    NodeCT2() : BufferGraph::Point() { }
 
     void Run();
-    void SetStopWatch(StopWatch *stop_watch)
-    {
-        _stop_watch=stop_watch;
-    }
+    void SetStopWatch(StopWatch *stop_watch) { _stop_watch = stop_watch; }
 };
 
-
-
-class Test2
-{
+class Test2 {
 private:
     NodeAT2 a;
     NodeBT2 b;
     NodeCT2 c;
+
 public:
     Test2();
     ~Test2();

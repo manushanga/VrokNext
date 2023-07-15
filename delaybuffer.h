@@ -18,52 +18,37 @@
  */
 #pragma once
 
-#include <stdlib.h>
 #include <cstring>
-template<typename T>
-class DelayBuffer
-{
+#include <stdlib.h>
+template <typename T>
+class DelayBuffer {
 private:
     T *_buffer;
     int _buffer_size;
+
 public:
-    DelayBuffer(int buffer_size)  :
-        _buffer(new T[buffer_size * sizeof(T)]),
-        _buffer_size(buffer_size)
-    {
-        memset(_buffer,0,buffer_size *sizeof(T));
+    DelayBuffer(int buffer_size) : _buffer(new T[buffer_size * sizeof(T)]), _buffer_size(buffer_size) {
+        memset(_buffer, 0, buffer_size * sizeof(T));
     }
-    void FillDelayed(T *in_buffer, T *out_buffer, int delay)
-    {
-        for (int i=0;i<delay;i++)
-        {
-            out_buffer[i]=_buffer[i];
-            _buffer[i]=in_buffer[_buffer_size - delay + i];
-
+    void FillDelayed(T *in_buffer, T *out_buffer, int delay) {
+        for (int i = 0; i < delay; i++) {
+            out_buffer[i] = _buffer[i];
+            _buffer[i] = in_buffer[_buffer_size - delay + i];
         }
-        for (int i=delay;i<_buffer_size;i++)
-        {
-            out_buffer[i]=in_buffer[i-delay];
+        for (int i = delay; i < _buffer_size; i++) {
+            out_buffer[i] = in_buffer[i - delay];
         }
     }
-    void MixDelayed(T *in_buffer, T *out_buffer, int delay, float gain)
-    {
-        for (int i=0;i<delay;i++)
-        {
-            out_buffer[i]+=_buffer[i]*gain;
-            out_buffer[i]*=0.5;
-            _buffer[i]=in_buffer[_buffer_size - delay + i];
-
+    void MixDelayed(T *in_buffer, T *out_buffer, int delay, float gain) {
+        for (int i = 0; i < delay; i++) {
+            out_buffer[i] += _buffer[i] * gain;
+            out_buffer[i] *= 0.5;
+            _buffer[i] = in_buffer[_buffer_size - delay + i];
         }
-        for (int i=delay;i<_buffer_size;i++)
-        {
-            out_buffer[i]+=in_buffer[i-delay]*gain;
-            out_buffer[i]*=0.5;
+        for (int i = delay; i < _buffer_size; i++) {
+            out_buffer[i] += in_buffer[i - delay] * gain;
+            out_buffer[i] *= 0.5;
         }
     }
-    ~DelayBuffer()
-    {
-        delete [] _buffer;
-    }
+    ~DelayBuffer() { delete[] _buffer; }
 };
-
