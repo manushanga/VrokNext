@@ -26,51 +26,32 @@
 
 #include "driver.h"
 
-namespace Vrok {
+namespace vrok {
 
-    class DriverAlsa : public Driver
-    {
-    private:
-        std::atomic<bool> _play;
-        std::atomic<real_t> _volume;
-        int _multiplier;
-        snd_pcm_t *_handle;
-        snd_pcm_hw_params_t *_params;
-        char *_buffer;
-        std::string _device;
-    protected:
-    public:
-        DriverAlsa();
-        virtual ~DriverAlsa() {}
-        bool SetDevice(std::string device);
-        std::vector<DeviceInfo> GetDeviceInfo();
-        std::string GetDefaultDevice();
-        bool BufferConfigChange(BufferConfig *config);
-        bool DriverRun(Buffer *buffer);
-        Vrok::ComponentType ComponentType()
-        {
-            return Vrok::ComponentType::Driver;
-        }
-        Component *CreateSelf()
-        {
-            return new DriverAlsa();
-        }
-        const char *ComponentName()
-        {
-            return "ALSA Driver";
-        }
-        const char *Description()
-        {
-            return "ALSA wrapper";
-        }
-        const char *Author()
-        {
-            return "Madura A.";
-        }
-        const char *License()
-        {
-            return "GPL v2";
-        }
-    };
+class DriverAlsa : public Driver {
+private:
+    std::atomic<bool> _play;
+    std::atomic<real_t> _volume;
+    int _multiplier;
+    snd_pcm_t *_handle;
+    snd_pcm_hw_params_t *_params;
+    char *_buffer;
+    std::string _device;
+
+protected:
+public:
+    DriverAlsa();
+    virtual ~DriverAlsa() { }
+    bool SetDevice(std::string device);
+    std::vector<DeviceInfo> GetDeviceInfo();
+    std::string GetDefaultDevice();
+    bool BufferConfigChange(BufferConfig *config);
+    bool DriverRun(Buffer *buffer);
+    vrok::ComponentType ComponentType() { return vrok::ComponentType::Driver; }
+    Component *CreateSelf() { return new DriverAlsa(); }
+    const char *ComponentName() { return "ALSA Driver"; }
+    const char *Description() { return "ALSA wrapper"; }
+    const char *Author() { return "Madura A."; }
+    const char *License() { return "GPL v2"; }
+};
 }
-

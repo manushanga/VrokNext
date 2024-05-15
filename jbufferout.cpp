@@ -1,12 +1,10 @@
 #include "jbufferout.h"
 
-void Vrok::DriverJBufferOut::SetEvents(Vrok::DriverJBufferOut::Events *events)
-{
+void vrok::DriverJBufferOut::SetEvents(vrok::DriverJBufferOut::Events *events) {
     m_events = events;
 }
 
-std::vector<Vrok::Driver::DeviceInfo> Vrok::DriverJBufferOut::GetDeviceInfo()
-{
+std::vector<vrok::Driver::DeviceInfo> vrok::DriverJBufferOut::GetDeviceInfo() {
     DeviceInfo devInfo;
     devInfo.name = "JNI";
     devInfo.user_data = nullptr;
@@ -15,33 +13,25 @@ std::vector<Vrok::Driver::DeviceInfo> Vrok::DriverJBufferOut::GetDeviceInfo()
     return devList;
 }
 
-std::string Vrok::DriverJBufferOut::GetDefaultDevice()
-{
+std::string vrok::DriverJBufferOut::GetDefaultDevice() {
     return "JNI";
 }
 
-bool Vrok::DriverJBufferOut::SetDevice(std::string device)
-{
+bool vrok::DriverJBufferOut::SetDevice(std::string device) {
     return true;
 }
 
-void Vrok::DriverJBufferOut::ThreadStart()
-{
+void vrok::DriverJBufferOut::ThreadStart() {
     m_events->OnThreadStart();
 }
 
-void Vrok::DriverJBufferOut::ThreadEnd()
-{
+void vrok::DriverJBufferOut::ThreadEnd() {
     m_events->OnThreadEnd();
 }
 
-Vrok::DriverJBufferOut::~DriverJBufferOut()
-{
+vrok::DriverJBufferOut::~DriverJBufferOut() { }
 
-}
-
-bool Vrok::DriverJBufferOut::BufferConfigChange(BufferConfig *config)
-{
+bool vrok::DriverJBufferOut::BufferConfigChange(BufferConfig *config) {
     m_events->OnBufferConfigChange(config->frames, config->samplerate, config->channels);
     int len = config->frames * config->channels;
     if (m_tempBuffer.size() < len)
@@ -52,27 +42,18 @@ bool Vrok::DriverJBufferOut::BufferConfigChange(BufferConfig *config)
     return true;
 }
 
-bool Vrok::DriverJBufferOut::DriverRun(Buffer *buffer)
-{
-    if (buffer->getBufferType() == Buffer::Type::StreamEnd)
-    {
-        DBG(0,"stream end received");
+bool vrok::DriverJBufferOut::DriverRun(Buffer *buffer) {
+    if (buffer->GetBufferType() == Buffer::Type::StreamEnd) {
+        DBG(0, "stream end received");
     }
     int len = buffer->GetBufferConfig()->frames * buffer->GetBufferConfig()->channels;
-    for (int i=0;i<len;i++)
-    {
-        m_tempBuffer[i] = double( buffer->GetData()[i] );
+    for (int i = 0; i < len; i++) {
+        m_tempBuffer[i] = double(buffer->GetData()[i]);
     }
-    m_events->OnBuffer(m_tempBuffer.data(), buffer->GetBufferConfig()->frames, buffer->getBufferType());
+    m_events->OnBuffer(m_tempBuffer.data(), buffer->GetBufferConfig()->frames, buffer->GetBufferType());
     return true;
 }
 
-void Vrok::DriverJBufferOut::Events::OnThreadStart()
-{
+void vrok::DriverJBufferOut::Events::OnThreadStart() { }
 
-}
-
-void Vrok::DriverJBufferOut::Events::OnThreadEnd()
-{
-
-}
+void vrok::DriverJBufferOut::Events::OnThreadEnd() { }

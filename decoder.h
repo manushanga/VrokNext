@@ -19,25 +19,26 @@
 
 #pragma once
 
-#include "common.h"
 #include "buffer.h"
-#include "resource.h"
 #include "bufferconfig.h"
+#include "common.h"
+#include "resource.h"
 
-namespace Vrok {
+namespace vrok {
+class Metadata;
 class Decoder : public Component {
 public:
-    virtual ~Decoder() {}
-    virtual bool Open(Resource* resource)=0;
-    virtual bool GetBufferConfig(BufferConfig *config)=0;
-    virtual bool Close()=0;
-    virtual bool Play()=0;
-    virtual bool Pause()=0;
-    virtual bool Stop()=0;
-    virtual bool DecoderRun(Buffer *buffer, BufferConfig *config)=0;
+    virtual ~Decoder() { }
+    virtual Metadata *PopMetadataEvent() { return nullptr; }
+    virtual bool Open(Resource *resource) = 0;
+    virtual bool GetBufferConfig(BufferConfig *config) = 0;
+    virtual bool Close() = 0;
+    virtual bool Play() = 0;
+    virtual bool Pause() = 0;
+    virtual bool Stop() = 0;
+    virtual bool DecoderRun(Buffer *buffer, BufferConfig *config) = 0;
     virtual uint64_t GetDurationInSeconds() = 0;
     virtual uint64_t GetPositionInSeconds() = 0;
     virtual void SetPositionInSeconds(uint64_t seconds) = 0;
 };
 }
-

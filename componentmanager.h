@@ -20,32 +20,28 @@
 #pragma once
 
 #include <map>
+#include <mutex>
 #include <sstream>
 
 #include "component.h"
 
-namespace Vrok {
-class ComponentManager
-{
+namespace vrok {
+class ComponentManager {
 public:
-    class ConfigIO
-    {
+    class ConfigIO {
     public:
-        virtual ~ConfigIO() {}
+        virtual ~ConfigIO() { }
         virtual void ReadOpen() = 0;
         virtual void WriteOpen() = 0;
         virtual void Close() = 0;
-        virtual bool ReadLine(std::vector<std::string>& line) = 0;
-        virtual bool WriteLine(const std::vector<std::string>& line) = 0;
-
+        virtual bool ReadLine(std::vector<std::string> &line) = 0;
+        virtual bool WriteLine(const std::vector<std::string> &line) = 0;
     };
     ComponentManager();
-    void SetConfigIO(ConfigIO* configIO);
+    void SetConfigIO(ConfigIO *configIO);
     static ComponentManager *GetSingleton();
     bool RegisterComponent(Component *component);
-    bool RegisterProperty(Component *component,
-                          std::string propertyname,
-                          PropertyBase *property);
+    bool RegisterProperty(Component *component, std::string propertyname, PropertyBase *property);
     Component *GetComponent(std::string component);
     void SetProperty(std::string component, std::string prop_name, std::string value);
     void SetProperty(Component *component, PropertyBase *property, std::string value);
@@ -57,15 +53,12 @@ public:
     void Deserialize();
 
     ~ComponentManager();
+
 private:
     std::mutex _lock_write;
     std::map<std::string, int> _used_names;
     std::map<std::string, Component *> _component_map;
-    std::map<Component *, std::map<std::string, PropertyBase *> > _property_map;
+    std::map<Component *, std::map<std::string, PropertyBase *>> _property_map;
     ConfigIO *_configIO;
-
-
-
 };
 }
-

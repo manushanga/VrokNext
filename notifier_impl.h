@@ -3,8 +3,7 @@
 
 #include "notify.h"
 
-class CNotifier : public Vrok::Notify::Notifier
-{
+class CNotifier : public vrok::Notify::Notifier {
 public:
     void OnError(int level, std::string msg);
 
@@ -13,6 +12,7 @@ public:
     void OnDebug(int level, std::string msg);
 
     void OnInformation(std::string msg);
+
 private:
     std::mutex _guard;
 };

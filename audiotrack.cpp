@@ -9,7 +9,7 @@
 #define AT_ENCODING_PCM_16BIT 2
 #define AT_MODE_STREAM 1
 
-JavaVM* javaVM = NULL;
+JavaVM *javaVM = NULL;
 
 static jclass cAudioTrack = NULL;
 
@@ -24,111 +24,91 @@ static jmethodID mFlush;
 static jmethodID mSetStereoVolume;
 static jarray jbuffer;
 static jobject jtrack;
-static JNIEnv* jenv;
+static JNIEnv *jenv;
 
-static JNIEnv* GetEnv()
-{   
-	JNIEnv* jenv = NULL;
-	int err = javaVM->GetEnv((void**)&jenv, JNI_VERSION_1_6);
-	if (err ==  JNI_EDETACHED)
-	{
-		int err = javaVM->AttachCurrentThread( &jenv, NULL);
-		if (err != 0)
-		{
+static JNIEnv *GetEnv() {
+    JNIEnv *jenv = NULL;
+    int err = javaVM->GetEnv((void **)&jenv, JNI_VERSION_1_6);
+    if (err == JNI_EDETACHED) {
+        int err = javaVM->AttachCurrentThread(&jenv, NULL);
+        if (err != 0) {
             DBG("Attach failed");
-		}
-	}
-	else if (err != JNI_OK)
-	{
+        }
+    } else if (err != JNI_OK) {
         DBG("Can't get JNI env");
-	}
-	return jenv;
+    }
+    return jenv;
 }
 
-void Vrok::DriverAudioTrack::initAudioTrack(BufferConfig *config)
-{
-    jenv=GetEnv();
-     
-    if (!cAudioTrack)
-    {
+void vrok::DriverAudioTrack::initAudioTrack(BufferConfig *config) {
+    jenv = GetEnv();
+
+    if (!cAudioTrack) {
         /* Cache AudioTrack class and it's method id's
-        * And do this only once!
-        */
+         * And do this only once!
+         */
 
         cAudioTrack = jenv->FindClass("android/media/AudioTrack");
-        if (!cAudioTrack)
-        {
+        if (!cAudioTrack) {
             DBG("can't get AudioTrack class");
-            return ;
+            return;
         }
-        
-        cAudioTrack = (jclass) jenv->NewGlobalRef(cAudioTrack);
 
-        mAudioTrack = jenv->GetMethodID( cAudioTrack, "<init>", "(IIIIII)V");
-        mGetMinBufferSize = jenv->GetStaticMethodID( cAudioTrack, "getMinBufferSize", "(III)I");
-        mPlay = jenv->GetMethodID( cAudioTrack, "play", "()V");
-        mPause = jenv->GetMethodID( cAudioTrack, "pause", "()V");
-        mStop = jenv->GetMethodID( cAudioTrack, "stop", "()V");
-        mRelease = jenv->GetMethodID( cAudioTrack, "release", "()V");
-        mWrite = jenv->GetMethodID( cAudioTrack, "write", "([BII)I");
-        mFlush = jenv->GetMethodID( cAudioTrack, "flush","()V");
-        mSetStereoVolume = jenv->GetMethodID( cAudioTrack, "setStereoVolume","(FF)I");
+        cAudioTrack = (jclass)jenv->NewGlobalRef(cAudioTrack);
+
+        mAudioTrack = jenv->GetMethodID(cAudioTrack, "<init>", "(IIIIII)V");
+        mGetMinBufferSize = jenv->GetStaticMethodID(cAudioTrack, "getMinBufferSize", "(III)I");
+        mPlay = jenv->GetMethodID(cAudioTrack, "play", "()V");
+        mPause = jenv->GetMethodID(cAudioTrack, "pause", "()V");
+        mStop = jenv->GetMethodID(cAudioTrack, "stop", "()V");
+        mRelease = jenv->GetMethodID(cAudioTrack, "release", "()V");
+        mWrite = jenv->GetMethodID(cAudioTrack, "write", "([BII)I");
+        mFlush = jenv->GetMethodID(cAudioTrack, "flush", "()V");
+        mSetStereoVolume = jenv->GetMethodID(cAudioTrack, "setStereoVolume", "(FF)I");
     }
-    
-    int channelConfig=(config->channels == 1) ? AT_CHANNEL_CONFIGURATION_MONO : AT_CHANNEL_CONFIGURATION_STEREO;
-    int bufferSize = config->frames*sizeof(short)*config->channels;
-    
-    
-    int bufferSizeInBytes = jenv->CallStaticIntMethod( cAudioTrack, 
-            mGetMinBufferSize, config->samplerate, channelConfig, AT_ENCODING_PCM_16BIT);
-    
-//     if (bufferSizeInBytes > 2*bufferSize) {
-//             DBG("Buffer too small");
-//             exit(0);
-//     }
-    
-    jtrack = jenv->NewObject( cAudioTrack, mAudioTrack,
-                                                                    AT_STREAM_MUSIC, 
-                                                                    config->samplerate, 
-                                                                    channelConfig, 
-                                                                    AT_ENCODING_PCM_16BIT,
-                                                                    4*bufferSizeInBytes,
-                                                                    AT_MODE_STREAM);
+
+    int channelConfig =
+            (config->channels == 1) ? AT_CHANNEL_CONFIGURATION_MONO : AT_CHANNEL_CONFIGURATION_STEREO;
+    int bufferSize = config->frames * sizeof(short) * config->channels;
+
+    int bufferSizeInBytes = jenv->CallStaticIntMethod(cAudioTrack, mGetMinBufferSize, config->samplerate,
+                                                      channelConfig, AT_ENCODING_PCM_16BIT);
+
+    //     if (bufferSizeInBytes > 2*bufferSize) {
+    //             DBG("Buffer too small");
+    //             exit(0);
+    //     }
+
+    jtrack = jenv->NewObject(cAudioTrack, mAudioTrack, AT_STREAM_MUSIC, config->samplerate, channelConfig,
+                             AT_ENCODING_PCM_16BIT, 4 * bufferSizeInBytes, AT_MODE_STREAM);
     jtrack = jenv->NewGlobalRef(jtrack);
 
-    jenv->CallNonvirtualVoidMethod( jtrack, cAudioTrack, mPlay);
+    jenv->CallNonvirtualVoidMethod(jtrack, cAudioTrack, mPlay);
 
     jbuffer = jenv->NewByteArray(bufferSize);
-    
-    jbuffer = (jarray) jenv->NewGlobalRef((jobject)jbuffer );
 
-    _init=true;
+    jbuffer = (jarray)jenv->NewGlobalRef((jobject)jbuffer);
+
+    _init = true;
     javaVM->DetachCurrentThread();
 }
-Vrok::DriverAudioTrack::~DriverAudioTrack()
-{
-}
-void Vrok::DriverAudioTrack::finiAudioTrack(BufferConfig *config)
-{
-    jenv=GetEnv();
-    if (_init)
-    {
-	
-        jenv->CallNonvirtualVoidMethod( jtrack, cAudioTrack, mPause);
-        
-        jenv->CallNonvirtualVoidMethod( jtrack, cAudioTrack, mFlush);
-        jenv->CallNonvirtualVoidMethod( jtrack, cAudioTrack, mRelease);
-        
+vrok::DriverAudioTrack::~DriverAudioTrack() { }
+void vrok::DriverAudioTrack::finiAudioTrack(BufferConfig *config) {
+    jenv = GetEnv();
+    if (_init) {
+
+        jenv->CallNonvirtualVoidMethod(jtrack, cAudioTrack, mPause);
+
+        jenv->CallNonvirtualVoidMethod(jtrack, cAudioTrack, mFlush);
+        jenv->CallNonvirtualVoidMethod(jtrack, cAudioTrack, mRelease);
+
         jenv->DeleteGlobalRef(jtrack);
         jenv->DeleteGlobalRef((jobject)jbuffer);
-        
     }
     javaVM->DetachCurrentThread();
 }
-Vrok::DriverAudioTrack::DriverAudioTrack() :
-    _init(false)
-{
-    
+vrok::DriverAudioTrack::DriverAudioTrack() : _init(false) {
+
     /*ao_initialize();
 
     ao_sample_format sformat;jenv = GetEnv();
@@ -143,22 +123,18 @@ atteempt to use stale local reference
     _ao_device=ao_open_live(ao_default_driver_id(),&sformat,NULL);*/
 }
 
-void Vrok::DriverAudioTrack::ThreadStart()
-{
+void vrok::DriverAudioTrack::ThreadStart() {
     DBG("attaching");
-    //javaVM->AttachCurrentThread(&jenv, NULL);
+    // javaVM->AttachCurrentThread(&jenv, NULL);
 }
 
-void Vrok::DriverAudioTrack::ThreadEnd()
-{
-    //javaVM->DetachCurrentThread();
+void vrok::DriverAudioTrack::ThreadEnd() {
+    // javaVM->DetachCurrentThread();
     DBG("detaching");
-    
-    //javaVM->DetachCurrentThread();
-    
+
+    // javaVM->DetachCurrentThread();
 }
-bool Vrok::DriverAudioTrack::BufferConfigChange(BufferConfig *config)
-{
+bool vrok::DriverAudioTrack::BufferConfigChange(BufferConfig *config) {
     if (*GetBufferConfig() != *config) {
         finiAudioTrack(config);
         initAudioTrack(config);
@@ -168,16 +144,15 @@ bool Vrok::DriverAudioTrack::BufferConfigChange(BufferConfig *config)
     }
     return true;
 }
-bool Vrok::DriverAudioTrack::DriverRun(Buffer *buffer)
-{
-    int samples=GetBufferConfig()->channels * GetBufferConfig()->frames;
-    
+bool vrok::DriverAudioTrack::DriverRun(Buffer *buffer) {
+    int samples = GetBufferConfig()->channels * GetBufferConfig()->frames;
+
     jenv = GetEnv();
-    
-    short* pBuffer = (short*) jenv->GetPrimitiveArrayCritical( jbuffer, NULL);
+
+    short *pBuffer = (short *)jenv->GetPrimitiveArrayCritical(jbuffer, NULL);
     if (pBuffer) {
-        for (int i=0;i< samples  ;i++){
-            pBuffer[i]=(short)(buffer->GetData()[i]*32765.0f);
+        for (int i = 0; i < samples; i++) {
+            pBuffer[i] = (short)(buffer->GetData()[i] * 32765.0f);
         }
         jenv->ReleasePrimitiveArrayCritical(jbuffer, pBuffer, 0);
         jenv->CallNonvirtualIntMethod(jtrack, cAudioTrack, mWrite, jbuffer, 0, samples * sizeof(short));

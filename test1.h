@@ -2,45 +2,33 @@
 #define TEST1_H
 #include <thread>
 
-#include "common.h"
 #include "bgpoint.h"
+#include "common.h"
 #include "stopwatch.h"
 
 using namespace std;
 
-class NodeA : public BufferGraph::Point
-{
+class NodeA : public BufferGraph::Point {
 private:
 public:
-    NodeA() :
-        BufferGraph::Point()
-    {
-
-    }
+    NodeA() : BufferGraph::Point() { }
 
     void Run();
 };
 
-class NodeB : public BufferGraph::Point
-{
+class NodeB : public BufferGraph::Point {
 private:
 public:
-    NodeB() :
-        BufferGraph::Point()
-    {
-
-    }
+    NodeB() : BufferGraph::Point() { }
 
     void Run();
 };
 
-
-
-class Test1
-{
+class Test1 {
 private:
     NodeA a;
     NodeB b;
+
 public:
     Test1();
     ~Test1();

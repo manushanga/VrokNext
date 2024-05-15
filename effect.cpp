@@ -1,32 +1,20 @@
 #include "effect.h"
 #include <cstring>
 
-Vrok::Effect::Effect() :
-    BufferGraph::Point(),
-    _input_bc(0,0,0),
-    _first_run(true),
-    _work(true)
-{
+vrok::Effect::Effect() : BufferGraph::Point(), _input_bc(0, 0, 0), _first_run(true), _work(true) { }
 
-}
+void vrok::Effect::Run() {
 
-void Vrok::Effect::Run()
-{
+    auto buffers = PeakAllSources();
+    if (buffers) {
+        auto buffer = AcquireBuffer();
+        if (buffer) {
+            BufferConfig *c = buffers[0]->GetBufferConfig();
 
-    auto buffers=PeakAllSources();
-    if (buffers)
-    {
-        auto buffer=AcquireBuffer();
-        if (buffer)
-        {
-            BufferConfig *c=buffers[0]->GetBufferConfig();
-
-            if ( _first_run || (_input_bc != *c))
-            {
-                if (BufferConfigChange(c) == false)
-                {
+            if (_first_run || (_input_bc != *c)) {
+                if (BufferConfigChange(c) == false) {
                     WARN(0, "BufferConfig failed");
-                    return ;
+                    return;
                 }
                 SetBufferConfig(c);
                 _first_run = false;
@@ -37,9 +25,9 @@ void Vrok::Effect::Run()
 
             buffer->GetWatch() = buffers[0]->GetWatch();
 
-            _work=EffectRun(buffer, buffers, _sources.size());
+            _work = EffectRun(buffer, buffers, _sources.size());
 
-            buffer->SetBufferType(buffers[0]->getBufferType());
+            buffer->SetBufferType(buffers[0]->GetBufferType());
 
             PushBuffer(buffer);
         }

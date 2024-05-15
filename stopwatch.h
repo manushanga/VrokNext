@@ -21,32 +21,22 @@
 #include <chrono>
 #include <mutex>
 
-using std::chrono::duration_cast;
 using std::chrono::duration;
+using std::chrono::duration_cast;
 using std::chrono::steady_clock;
 
-class StopWatch
-{
+class StopWatch {
 private:
-    steady_clock::time_point _time,_end_time;
-    float TimeDiff(steady_clock::time_point& tp1,
-                   steady_clock::time_point& tp2)
-    {
+    steady_clock::time_point _time, _end_time;
+    float TimeDiff(steady_clock::time_point &tp1, steady_clock::time_point &tp2) {
         return (duration_cast<duration<float>>(tp1 - tp2)).count();
     }
+
 public:
-    StopWatch()
-    {
-        _time = std::chrono::steady_clock::now();
-    }
-    void Reset()
-    {
-        _time = std::chrono::steady_clock::now();
-    }
-    float Stop()
-    {
-        _end_time=std::chrono::steady_clock::now();
-        return TimeDiff(_end_time,_time);
+    StopWatch() { _time = std::chrono::steady_clock::now(); }
+    void Reset() { _time = std::chrono::steady_clock::now(); }
+    float Stop() {
+        _end_time = std::chrono::steady_clock::now();
+        return TimeDiff(_end_time, _time);
     }
 };
-

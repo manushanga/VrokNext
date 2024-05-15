@@ -4,44 +4,32 @@
 #include "vumeter.h"
 #define VIS_BUF_COUNT 64
 
-Vrok::VUMeter::VUMeter(std::string name) :
-    _name(name),
-    _falloff(0),
-    _clip_falloff(0),
-    _active(true)
-{
-    for (int i=0;i<MAX_CHANNELS;++i)
-    {
+vrok::VUMeter::VUMeter(std::string name) : _name(name), _falloff(0), _clip_falloff(0), _active(true) {
+    for (int i = 0; i < MAX_CHANNELS; ++i) {
         _value[i] = 0;
         _clip[i] = 0;
         _count_over[i] = 0;
     }
-    for (int i=0;i<VIS_BUF_COUNT;i++)
-    {
+    for (int i = 0; i < VIS_BUF_COUNT; i++) {
     }
 }
 
-void Vrok::VUMeter::GetValues(int channel, double &value, double &clip)
-{
+void vrok::VUMeter::GetValues(int channel, double &value, double &clip) {
     value = _value[channel];
     clip = _clip[channel];
 }
 
-double Vrok::VUMeter::GetValue(int channel)
-{
+double vrok::VUMeter::GetValue(int channel) {
     return _value[channel].load();
 }
 
-double Vrok::VUMeter::GetClip(int channel)
-{
+double vrok::VUMeter::GetClip(int channel) {
     return _clip[channel].load();
 }
 
-void Vrok::VUMeter::Process(Buffer *buffer)
-{
+void vrok::VUMeter::Process(Buffer *buffer) {
     auto bc = buffer->GetBufferConfig();
-    for (int ch=0;ch<bc->channels;++ch)
-    {
+    for (int ch = 0; ch < bc->channels; ++ch) {
         auto val = _value[ch].load();
         val *= std::pow(_falloff, bc->frames);
         Sanitize(val);
@@ -56,9 +44,8 @@ void Vrok::VUMeter::Process(Buffer *buffer)
         if (!_active)
             continue;
 
-        for (int i=0;i<bc->frames;++i)
-        {
-            double val = std::max<double>(_value[ch].load(), fabs(buffer->GetData()[bc->channels * i+ch]));
+        for (int i = 0; i < bc->frames; ++i) {
+            double val = std::max<double>(_value[ch].load(), fabs(buffer->GetData()[bc->channels * i + ch]));
             _value[ch] = val;
             if (val > 1.0)
                 ++_count_over[ch];
@@ -67,13 +54,11 @@ void Vrok::VUMeter::Process(Buffer *buffer)
 
             if (_count_over[ch] >= 3)
                 _clip[ch] = 1.0;
-
         }
     }
 }
 
-void Vrok::VUMeter::SetBufferConfig(BufferConfig *bc)
-{
+void vrok::VUMeter::SetBufferConfig(BufferConfig *bc) {
     const double time_20dB = 0.3;
     // 20dB = 10x +/- --> 0.1 = pow(falloff, sample_rate * time_20dB) = exp(sample_rate * ln(falloff))
     // ln(0.1) = sample_rate * ln(falloff)

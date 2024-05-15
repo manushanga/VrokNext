@@ -2,27 +2,18 @@
 
 #include <string>
 
-namespace Vrok
-{
-class Notify
-{
+namespace vrok {
+class Notify {
 public:
-    class Notifier
-    {
+    class Notifier {
     public:
-        virtual void OnError(int level, std::string msg) {}
-        virtual void OnWarning(int level, std::string msg) {}
-        virtual void OnInformation(std::string msg) {}
-        virtual void OnDebug(int level, std::string msg) {}
+        virtual void OnError(int level, std::string msg) { }
+        virtual void OnWarning(int level, std::string msg) { }
+        virtual void OnInformation(std::string msg) { }
+        virtual void OnDebug(int level, std::string msg) { }
     };
-    Notify() :
-        _notifier(nullptr),
-        _elevel(0),
-        _dlevel(0),
-        _wlevel(0)
-    {}
-    static Notify *GetInstance()
-    {
+    Notify() : _notifier(nullptr), _elevel(0), _dlevel(0), _wlevel(0) { }
+    static Notify *GetInstance() {
         static Notify notify;
         return &notify;
     }
@@ -41,4 +32,3 @@ private:
 };
 
 }
-

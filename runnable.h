@@ -1,12 +1,9 @@
 #pragma once
 
-class Runnable
-{
+class Runnable {
 public:
-    virtual ~Runnable() {}
-    virtual void ThreadStart() {}
+    virtual ~Runnable() { }
+    virtual void ThreadStart() { }
     virtual void Run() = 0;
-    virtual void ThreadEnd() {}
+    virtual void ThreadEnd() { }
 };
-
-

@@ -18,52 +18,33 @@
  */
 #pragma once
 
-#include <unistd.h>
 #include <atomic>
 #include <pulse/simple.h>
+#include <unistd.h>
 
 #include "driver.h"
 
-namespace Vrok {
+namespace vrok {
 
-    class DriverPulse : public Driver
-    {
-    private:
-        pa_simple* _p;
-        std::string _device;
-    protected:
-    public:
-        DriverPulse();
-        virtual ~DriverPulse() {}
-        bool SetDevice(std::string device);
-        std::vector<DeviceInfo> GetDeviceInfo();
-        std::string GetDefaultDevice();
-        bool BufferConfigChange(BufferConfig *config);
-        bool DriverRun(Buffer *buffer);
-        Vrok::ComponentType ComponentType()
-        {
-            return Vrok::ComponentType::Driver;
-        }
-        Component *CreateSelf()
-        {
-            return new DriverPulse();
-        }
-        const char *ComponentName()
-        {
-            return "PulseAudio Driver";
-        }
-        const char *Description()
-        {
-            return "";
-        }
-        const char *Author()
-        {
-            return "Madura A.";
-        }
-        const char *License()
-        {
-            return "GPL v2";
-        }
-    };
+class DriverPulse : public Driver {
+private:
+    pa_simple *_p;
+    std::string _device;
+
+protected:
+public:
+    DriverPulse();
+    virtual ~DriverPulse() { }
+    bool SetDevice(std::string device);
+    std::vector<DeviceInfo> GetDeviceInfo();
+    std::string GetDefaultDevice();
+    bool BufferConfigChange(BufferConfig *config);
+    bool DriverRun(Buffer *buffer);
+    vrok::ComponentType ComponentType() { return vrok::ComponentType::Driver; }
+    Component *CreateSelf() { return new DriverPulse(); }
+    const char *ComponentName() { return "PulseAudio Driver"; }
+    const char *Description() { return ""; }
+    const char *Author() { return "Madura A."; }
+    const char *License() { return "GPL v2"; }
+};
 }
-

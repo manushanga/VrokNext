@@ -1,34 +1,35 @@
-#include "threadpool.h"
-#include "player.h"
-#include "alsa.h"
-#include "resampler.h"
 #include "eq.h"
 #include "ffmpeg.h"
+#include "metadata.h"
 #include "notifier_impl.h"
-using namespace Vrok;
+#include "player.h"
+#include "pulse.h"
+#include "resampler.h"
+#include "threadpool.h"
+using namespace vrok;
 
 Player player;
 Resampler resampler;
 EffectSSEQ eq;
-DriverAlsa out;
+DriverPulse out;
 ThreadPool pool(2);
 
 std::string filename;
 
-void Play(const std::string& filename);
+void Play(const std::string &filename);
 
-class PlayerEv : public Player::Events
-{
+class PlayerEv : public Player::Events {
 public:
-    void QueueNext()
-    {
-        Play(filename);
+    void QueueNext() { Play(filename); }
+    void OnMetadataUpdate(Metadata *metadata) {
+        for (auto m : *metadata) {
+            std::cout << m.first << ":" << m.second << std::endl;
+        }
+        Metadata::Destory(metadata);
     }
-
 };
 PlayerEv playerEv;
-void Setup()
-{
+void Setup() {
     Notify::GetInstance()->SetNotifier(new CNotifier);
     player.SetEvents(&playerEv);
     player.SetQueueNext(true);
@@ -51,20 +52,16 @@ void Setup()
     pool.RegisterWork(1, &out);
 
     pool.CreateThreads();
-
 }
 
-void Play(const std::string& filename)
-{
-    DecoderFFMPEG* dec = new DecoderFFMPEG();
+void Play(const std::string &filename) {
+    DecoderFFMPEG *dec = new DecoderFFMPEG();
     Resource res;
     res._filename = filename;
     if (dec->Open(&res))
         player.SubmitForPlayback(dec);
-
 }
-int main(int argc, char** argv)
-{
+int main(int argc, char **argv) {
     Setup();
     filename = argv[1];
     Play(filename);

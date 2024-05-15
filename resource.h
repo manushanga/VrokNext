@@ -21,10 +21,9 @@
 
 using namespace std;
 
-namespace Vrok {
+namespace vrok {
 
-class Resource
-{
+class Resource {
 public:
     string _filename;
 };

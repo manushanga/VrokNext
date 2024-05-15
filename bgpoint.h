@@ -22,24 +22,24 @@
 #include <atomic>
 #include <thread>
 
+#include "buffer.h"
+#include "bufferconfig.h"
 #include "common.h"
 #include "queue.h"
-#include "buffer.h"
 #include "runnable.h"
-#include "bufferconfig.h"
 
 #define BUFFERS 3
 
 namespace BufferGraph {
 
-class Point : public Runnable
-{
+class Point : public Runnable {
 private:
     std::atomic<int> _ref_counter;
     std::vector<Buffer *> _buffers;
     Queue<Buffer *> *_free_buffers;
     std::mutex _lock;
-    const int _max_retries=50;
+    const int _max_retries = 50;
+
 protected:
     std::vector<Point *> _sinks, _sources;
     size_t _buffer_refs[BUFFERS];
@@ -47,34 +47,26 @@ protected:
     Buffer **_buffers_on_peak;
     BufferConfig _config;
     std::atomic<uint64_t> _cur_stream_id;
+
 public:
-    Point()
-    {
-        _cur_stream_id=0UL;
+    Point() {
+        _cur_stream_id = 0UL;
 
-        auto _config=BufferConfig();
+        auto _config = BufferConfig();
 
-        _free_buffers = new Queue<Buffer *>(BUFFERS+1);
-        _used_buffers = new Queue<Buffer *>(BUFFERS+1);
+        _free_buffers = new Queue<Buffer *>(BUFFERS + 1);
+        _used_buffers = new Queue<Buffer *>(BUFFERS + 1);
 
-        for (int i=0;i<BUFFERS;i++)
-        {
-            _buffer_refs[i]=0;
-            auto b=new Buffer(_config,i);
+        for (int i = 0; i < BUFFERS; i++) {
+            _buffer_refs[i] = 0;
+            auto b = new Buffer(_config, i);
             _free_buffers->PushBlocking(b);
             _buffers.push_back(b);
         }
-
     }
 
-    void SetBufferConfig(const BufferConfig *config)
-    {
-        _config = *config;
-    }
-    BufferConfig *GetBufferConfig()
-    {
-        return &_config;
-    }
+    void SetBufferConfig(const BufferConfig *config) { _config = *config; }
+    BufferConfig *GetBufferConfig() { return &_config; }
     // reentrant
     // releases a buffer owned by self when called by
     // another Point object (do not call manually, use
@@ -103,6 +95,7 @@ public:
     // Runnable::Run()
 
     void Flush();
+
 protected:
     // non reentrant
     // retrieves a buffer from the released buffer
@@ -121,9 +114,6 @@ protected:
     // non reentrant
     // never call other objects' version
     void ReleaseAllSources(Buffer **buffers_on_peak);
-
 };
 
 }
-
-

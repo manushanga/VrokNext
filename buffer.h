@@ -21,11 +21,9 @@
 #include "bufferconfig.h"
 #include "stopwatch.h"
 
-class Buffer
-{
+class Buffer {
 public:
-    enum class Type : int
-    {
+    enum class Type : int {
         StreamEnd = 0,
         StreamStart, // only for new stream starts: not at gapless resume or resume after pause
         StreamStop,
@@ -33,6 +31,7 @@ public:
         StreamResume,
         StreamBuffer
     };
+
 private:
     BufferConfig _config;
     real_t *_buffer;
@@ -41,56 +40,30 @@ private:
     Type _type;
     StopWatch _watch;
     uint64_t _stream_id;
+
 public:
-    Buffer(BufferConfig& config, int id);
+    Buffer(BufferConfig &config, int id);
 
     ~Buffer();
 
-    inline void SetBufferType(Type type)
-    {
-        _type = type;
-    }
+    inline void SetBufferType(Type type) { _type = type; }
 
-    inline Type getBufferType() const
-    {
-        return _type;
-    }
-    inline BufferConfig *GetBufferConfig()
-    {
-        return &_config;
-    }
+    inline Type GetBufferType() const { return _type; }
+    inline BufferConfig *GetBufferConfig() { return &_config; }
 
-    void Reset(BufferConfig* config);
+    void Reset(BufferConfig *config);
 
-    inline int GetId() const
-    {
-        return _id;
-    }
-    inline real_t *GetData()
-    {
-        return _buffer;
-    }
-    inline StopWatch& GetWatch()
-    {
-        return _watch;
-    }
+    inline int GetId() const { return _id; }
+    inline real_t *GetData() { return _buffer; }
+    inline StopWatch &GetWatch() { return _watch; }
 
-    inline void SetStreamId(uint64_t stream_id)
-    {
-        _stream_id = stream_id;
-    }
+    inline void SetStreamId(uint64_t stream_id) { _stream_id = stream_id; }
 
-    inline uint64_t GetStreamId() const
-    {
-        return _stream_id;
-    }
+    inline uint64_t GetStreamId() const { return _stream_id; }
 
-    inline void Silence()
-    {
-        for (int i=0;i<_size;i++)
-        {
+    inline void Silence() {
+        for (int i = 0; i < _size; i++) {
             _buffer[i] = (real_t)0.0;
         }
     }
-
 };
