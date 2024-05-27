@@ -10,17 +10,16 @@ set(FFMPEG_LIBRARIES avformat avcodec avutil)
 set(ALSA_LIBRARIES asound)
 set(SYSTEM_LIBRARIES -pthread -lm)
 
-
-find_path(AVCODEC_INCLUDE_DIR libavcodec/avcodec.h)
+find_path(AVCODEC_INCLUDE_DIR NAMES libavcodec/avcodec.h PATH_SUFFIXES ffmpeg)
 find_library(AVCODEC_LIBRARY avcodec)
 
-find_path(AVFORMAT_INCLUDE_DIR libavformat/avformat.h)
+find_path(AVFORMAT_INCLUDE_DIR NAMES libavformat/avformat.h PATH_SUFFIXES ffmpeg)
 find_library(AVFORMAT_LIBRARY avformat)
 
-find_path(AVUTIL_INCLUDE_DIR libavutil/avutil.h)
+find_path(AVUTIL_INCLUDE_DIR NAMES libavutil/avutil.h PATH_SUFFIXES ffmpeg)
 find_library(AVUTIL_LIBRARY avutil)
 
-find_path(AVDEVICE_INCLUDE_DIR libavdevice/avdevice.h)
+find_path(AVDEVICE_INCLUDE_DIR NAMES libavdevice/avdevice.h PATH_SUFFIXES ffmpeg)
 find_library(AVDEVICE_LIBRARY avdevice)
 
 add_definitions(-DDEBUG)
