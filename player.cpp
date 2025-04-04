@@ -2,6 +2,9 @@
 #include "player.h"
 #include "ffmpeg.h"
 #include <unistd.h>
+
+using namespace std;
+
 #define INIT_GAPLESS_SECS 2
 
 vrok::Player::Player()

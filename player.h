@@ -27,8 +27,6 @@
 #include <atomic>
 #include <string>
 
-using namespace std;
-
 namespace vrok {
 
 class Player : public BufferGraph::Point, public Component {
@@ -49,16 +47,12 @@ private:
     PlayerState _state;
 
 protected:
-    atomic<bool> _work;
+    std::atomic<bool> _work;
     bool _decoder_work;
     bool _queue_next;
     bool _resume_from_pause;
     Events *_events;
-    // _play_queue: queue tracks needed to be played
-    // one after other here
-    // _play_now_queue: queue tracks will interrupt
-    // the playback here
-
+    
     Queue<Command> *_command_now_queue;
 
     Decoder *_decoder;

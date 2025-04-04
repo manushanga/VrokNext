@@ -25,19 +25,17 @@
 
 #include "runnable.h"
 
-using namespace std;
-
 namespace vrok {
 class ThreadPool {
 private:
     struct ThreadData {
         int thread_id;
-        vector<vector<Runnable *>> *runnables;
-        atomic<bool> work;
+        std::vector<std::vector<Runnable *>> *runnables;
+        std::atomic<bool> work;
     };
-    vector<thread *> _threads;
-    vector<vector<Runnable *>> _runnables;
-    vector<ThreadData *> _thread_data;
+    std::vector<std::thread *> _threads;
+    std::vector<std::vector<Runnable *>> _runnables;
+    std::vector<ThreadData *> _thread_data;
 
 public:
     // the container type,
