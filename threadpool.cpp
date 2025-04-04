@@ -2,6 +2,9 @@
 #include "common.h"
 #include "debug.h"
 #include "util/mutil.h"
+
+using namespace std;
+
 // interval in usec
 #define TIMEOUT 10000
 vrok::ThreadPool::ThreadPool(size_t thread_count) {

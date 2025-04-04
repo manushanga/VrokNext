@@ -19,13 +19,11 @@
 #pragma once
 #include <string>
 
-using namespace std;
-
 namespace vrok {
 
 class Resource {
 public:
-    string _filename;
+    std::string _filename;
 };
 
 }

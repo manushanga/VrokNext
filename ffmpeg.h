@@ -23,29 +23,6 @@
 #include <ctime>
 #include <deque>
 #include <iostream>
-extern "C" {
-
-#ifndef __STDC_CONSTANT_MACROS
-#define __STDC_CONSTANT_MACROS
-#endif
-
-#ifdef __cplusplus
-#ifdef _STDINT_H
-#undef _STDINT_H
-#endif
-#include <stdint.h>
-#endif
-
-#include <libavformat/avformat.h>
-#include <libavformat/avio.h>
-#include <libavutil/mathematics.h>
-#include <libavutil/opt.h>
-#include <libavutil/samplefmt.h>
-
-#include <libavcodec/avcodec.h>
-#include <libavutil/avutil.h>
-}
-#define FFMPEG_MAX_BUF_SIZE 192000
 
 #include "debug.h"
 
@@ -53,6 +30,9 @@ extern "C" {
 #include "ringbuffer.h"
 
 namespace vrok {
+
+struct FFMPEGContext;
+
 class DecoderFFMPEG : public Decoder {
 public:
     static DecoderFFMPEG *Create() { return new DecoderFFMPEG(); }
@@ -85,14 +65,7 @@ private:
     int metadata_stream_id;
     int audio_stream_id;
 
-    AVFormatContext *fmt_ctx;
-    AVCodecContext *ctx;
-    const AVCodec *codec;
-    AVSampleFormat sfmt;
-    AVFrame *frame;
-    AVPacket *packet;
-    AVStream *audio_st;
-    real_t temp[2 * FFMPEG_MAX_BUF_SIZE + AV_INPUT_BUFFER_PADDING_SIZE];
+    FFMPEGContext *fctx;
     uint64_t current_in_seconds;
     uint64_t duration_in_seconds;
 

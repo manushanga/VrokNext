@@ -50,21 +50,24 @@ file(GLOB COMMON_SRC
     "common.*"
     "notifier_impl.*"
     "metadata.*"
+)
+
+set(SIMPLE_SRC 
     "simple_main.cpp"
 )
 
-
 add_definitions(-DUSE_OOURA)
 
-
-
-#add_library(vrok SHARED ${COMMON_SRC})
-add_executable(vrok ${COMMON_SRC})
+add_library(vrok SHARED ${COMMON_SRC})
 target_include_directories(vrok PRIVATE ${AVCODEC_INCLUDE_DIR} ${AVFORMAT_INCLUDE_DIR} ${AVUTIL_INCLUDE_DIR} ${AVDEVICE_INCLUDE_DIR})
-set_target_properties(vrok PROPERTIES PREFIX "" )
+
 target_link_libraries(vrok
     -lpulse-simple
     #${ASAN_LIBRARIES}
     ${FFMPEG_LIBRARIES}
-    ${SYSTEM_LIBRARIES}
-    ${ALSA_LIBRARIES})
+    ${SYSTEM_LIBRARIES})
+
+add_executable(simple_main ${SIMPLE_SRC})
+set_target_properties(simple_main PROPERTIES PREFIX "" )
+target_link_libraries(simple_main vrok)
+
