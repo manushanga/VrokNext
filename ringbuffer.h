@@ -20,6 +20,7 @@
 #pragma once
 
 #include "util/mutil.h"
+#include <atomic>
 #include <cstdlib>
 
 template <typename T>
