@@ -45,7 +45,7 @@ Buffer *BufferGraph::Point::PeakBuffer() {
     // therefore a lock is used
     _lock.lock();
     Buffer *b = nullptr;
-    _used_buffers->PeakBlocking(b);
+    _used_buffers->Peak(b);
     _lock.unlock();
 
     //   __sync_synchronize ();

@@ -7,7 +7,6 @@ void wait_for(bool &condition, bool wait_while, std::unique_lock<std::mutex> &lo
         auto start = std::chrono::steady_clock::now();
         cv.wait_for(lock, std::chrono::microseconds(to_be_spent));
         auto end = std::chrono::steady_clock::now();
-
         spent += (unsigned int)std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
     }
 }
