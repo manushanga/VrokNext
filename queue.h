@@ -126,15 +126,7 @@ public:
 
         return true;
     }
-    bool PeakBlocking(T &t) {
-        if (Peak(t) == false) {
-            std::unique_lock<std::mutex> lk(_lock_on_empty);
-            _is_empty = false;
-            wait_for(_is_empty, false, lk, _cv_empty, 100);
-        }
 
-        return true;
-    }
     bool PopBlocking(T &t) {
         bool ret = Pop(t);
 
@@ -147,7 +139,8 @@ public:
         } else {
             std::unique_lock<std::mutex> lk(_lock_on_empty);
             _is_empty = false;
-            wait_for(_is_empty, false, lk, _cv_empty, 100);
+            wait_for(_is_empty, false, lk, _cv_empty, 1000000000);
+            return Pop(t);
         }
 
         return true;
@@ -164,7 +157,8 @@ public:
         } else {
             std::unique_lock<std::mutex> lk(_lock_on_full);
             _is_full = true;
-            wait_for(_is_full, true, lk, _cv_full, 100);
+            wait_for(_is_full, true, lk, _cv_full, 1000000000);
+            return Push(t);
         }
 
         return true;
