@@ -37,6 +37,7 @@ void vrok::ThreadPool::CreateThreads() {
 void vrok::ThreadPool::StopThreads() {
     for (size_t i = 0; i < _threads.size(); i++) {
         _thread_data[i]->work = false;
+        _threads[i]->join();
     }
 }
 

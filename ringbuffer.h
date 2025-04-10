@@ -61,6 +61,21 @@ public:
             return false;
         }
     }
+    // Dest must be the same size as _size
+    inline size_t ReadAvailable(T *dest, size_t n) {
+        if (!Read(dest, n)) {
+            size_t nused = _used.load(std::memory_order_acquire);
+            
+            for (size_t i = 0; i < n; i++) {
+                dest[i] = _buffer[(_rear + i) % _size];
+            }
+            _rear = (_rear + n) % _size;
+            _used.fetch_add(-nused, std::memory_order_release);
+
+            return nused;
+        }
+        return n;
+    }
     void Clear() {
         _front = 0;
         _rear = 0;

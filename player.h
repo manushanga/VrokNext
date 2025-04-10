@@ -19,13 +19,10 @@
 #pragma once
 
 #include "bgpoint.h"
-#include "common.h"
 #include "decoder.h"
 #include "queue.h"
-#include "resource.h"
 
 #include <atomic>
-#include <string>
 
 namespace vrok {
 
