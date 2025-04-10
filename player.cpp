@@ -1,6 +1,5 @@
 
 #include "player.h"
-#include "ffmpeg.h"
 #include <unistd.h>
 
 using namespace std;
