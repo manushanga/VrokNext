@@ -59,7 +59,7 @@ protected:
 public:
     Player();
 
-    virtual ~Player() { }
+    virtual ~Player();
 
     // before submission to a decoder instance the track
     // must be checked for compatibility with the decoder

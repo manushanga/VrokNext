@@ -92,7 +92,6 @@ vrok::DecoderFFMPEG::DecoderFFMPEG() {
         // av_register_all();
     }
     s++;
-    fctx->fmt_ctx = avformat_alloc_context();
     _ringbuffer = new Ringbuffer<real_t>(2 * FFMPEG_MAX_BUF_SIZE + 2 * AV_INPUT_BUFFER_PADDING_SIZE);
     _done = false;
 }
@@ -104,8 +103,9 @@ vrok::DecoderFFMPEG::~DecoderFFMPEG() {
 }
 
 bool vrok::DecoderFFMPEG::Open(vrok::Resource *resource) {
-    fctx->fmt_ctx = nullptr;
-    fctx->ctx = nullptr;
+    DBG(1, "Opening FFmpeg" << this);
+    assert(fctx->fmt_ctx == nullptr && "Format context not cleared");
+    assert(fctx->ctx == nullptr && "Codec context not cleared");
     _ringbuffer->Clear();
 
     audio_stream_id = -1;
@@ -193,15 +193,26 @@ bool vrok::DecoderFFMPEG::GetBufferConfig(BufferConfig *config) {
 }
 
 bool vrok::DecoderFFMPEG::Close() {
-    if (fctx->ctx)
+    DBG(1, "Closing FFmpeg " << this);
+    if (fctx->packet) {
+    	av_packet_free(&fctx->packet);
+    }
+    
+    if (fctx->frame) {
+    	av_frame_free(&fctx->frame);
+    }
+
+    if (fctx->ctx) {
         avcodec_close(fctx->ctx);
+        avcodec_free_context(&fctx->ctx);
         fctx->ctx = nullptr;
+    }
 
     if (fctx->fmt_ctx) {
         avformat_close_input(&fctx->fmt_ctx);
         avformat_free_context(fctx->fmt_ctx);
+    	fctx->fmt_ctx = nullptr;
     }
-    fctx->fmt_ctx = nullptr;
 
     return true;
 }

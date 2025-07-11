@@ -264,3 +264,7 @@ void vrok::Player::ResetDecoder() {
     }
     _decoder = nullptr;
 }
+
+vrok::Player::~Player() {
+    ResetDecoder();
+}
