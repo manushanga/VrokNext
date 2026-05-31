@@ -202,7 +202,6 @@ bool vrok::DecoderFFMPEG::Close() {
     }
 
     if (fctx->ctx) {
-        avcodec_close(fctx->ctx);
         avcodec_free_context(&fctx->ctx);
         fctx->ctx = nullptr;
     }
