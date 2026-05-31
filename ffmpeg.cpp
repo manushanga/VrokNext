@@ -153,7 +153,6 @@ bool vrok::DecoderFFMPEG::Open(vrok::Resource *resource) {
 
     if (avcodec_parameters_to_context(fctx->ctx, fctx->get_stream(audio_stream_id)->codecpar) != 0) {
         // Something went wrong. Cleaning up...
-        avcodec_close(fctx->ctx);
         avcodec_free_context(&fctx->ctx);
         avformat_close_input(&fctx->fmt_ctx);
         return false;
