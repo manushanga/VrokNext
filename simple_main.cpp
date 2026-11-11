@@ -5,7 +5,11 @@
 #include "metadata.h"
 #include "notifier_impl.h"
 #include "player.h"
+#ifdef __APPLE__
+#include "audioout.h"
+#else
 #include "pulse.h"
+#endif
 #include "resampler.h"
 #include "threadpool.h"
 #include <cassert>
@@ -14,7 +18,11 @@ float BandValues[] = {5.0, 4.0, 3.0, 0.0, -0.2, -0.3, -0.5, -0.4, -0.3, -0.2, -0
 Player player;
 Resampler resampler;
 EffectSSEQ eq;
+#ifdef __APPLE__
+DriverAudioOut out;
+#else
 DriverPulse out;
+#endif
 ThreadPool pool(2);
 
 std::string filename;
@@ -73,8 +81,12 @@ void Play(const std::string &filename) {
         player.SubmitForPlayback(dec);
 }
 int main(int argc, char **argv) {
-    Setup();
+    if (argc != 2) {
+        std::cerr << "Usage: " << argv[0] << " <audio-file>\n";
+        return 1;
+    }
     filename = argv[1];
+    Setup();
     Play(filename);
     pool.JoinThreads();
 }

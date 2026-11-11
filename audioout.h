@@ -35,7 +35,7 @@ private:
 protected:
 public:
     DriverAudioOut();
-    virtual ~DriverAudioOut() { }
+    virtual ~DriverAudioOut();
     std::vector<DeviceInfo> GetDeviceInfo();
     std::string GetDefaultDevice();
     bool SetDevice(std::string device);

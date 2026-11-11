@@ -4,6 +4,43 @@ README
 Building
 ========
 
+macOS (CMake)
+-------------
+
+The CMake build produces `libvrok.dylib` and the `simple_main` player. It uses
+FFmpeg (`libavformat`, `libavcodec`, `libavutil`), libao's native macOS backend,
+and POSIX threads. Qt is not required. Install Xcode Command Line Tools and
+provide CMake, pkg-config, FFmpeg development headers/libraries and libao.
+
+With Nix installed, prepare the dependencies without changing your profile:
+
+```sh
+ffmpeg_dev=$(nix build --no-link --print-out-paths nixpkgs#ffmpeg.dev)
+ao_dev=$(nix build --no-link --print-out-paths nixpkgs#libao.dev)
+export PKG_CONFIG_PATH="$ffmpeg_dev/lib/pkgconfig:$ao_dev/lib/pkgconfig"
+nix shell nixpkgs#cmake nixpkgs#pkg-config -c cmake -S . -B build/macos \
+    -DCMAKE_BUILD_TYPE=Debug \
+    -DCMAKE_C_COMPILER=/usr/bin/clang \
+    -DCMAKE_CXX_COMPILER=/usr/bin/clang++
+nix shell nixpkgs#cmake -c cmake --build build/macos --parallel
+```
+
+With dependencies already visible to pkg-config, the equivalent build is:
+
+```sh
+cmake -S . -B build/macos -DCMAKE_BUILD_TYPE=Debug
+cmake --build build/macos --parallel
+./build/macos/simple_main /absolute/path/to/audio.wav
+```
+
+The sample player repeats the file; stop it with Ctrl-C. Audio playback needs
+access to the macOS audio service and may fail inside a restricted sandbox.
+Build dependencies must match the target architecture. Builds using Nix link
+to libraries in the Nix store and are not standalone redistributable bundles.
+
+Validated on Apple Silicon with Apple Clang 21, CMake 4.4.3, FFmpeg 9.0.2,
+and libao 1.2.2. Existing compiler warnings remain in the decoder and equalizer.
+
 Windows
 -------
 * Build libAO for Windows, FFmpeg, Qt, and link it with Vrok. It is easier if you use qmake

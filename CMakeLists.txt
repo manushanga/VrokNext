@@ -1,25 +1,22 @@
 cmake_minimum_required (VERSION 3.8)
 
 project (vrok)
-set (CMAKE_CXX_STANDARD 11)
-set (CMAKE_CXX_FLAGS -g)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+find_package(Threads REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET libavformat libavcodec libavutil)
 
-set(ASAN_LIBRARIES asan)
-set(FFMPEG_LIBRARIES avformat avcodec avutil)
-set(ALSA_LIBRARIES asound)
-set(SYSTEM_LIBRARIES -pthread -lm)
+if(APPLE)
+    pkg_check_modules(AO REQUIRED IMPORTED_TARGET ao)
+    set(AUDIO_SOURCE audioout.cpp)
+    set(AUDIO_LIBRARY PkgConfig::AO)
+else()
+    pkg_check_modules(PULSE REQUIRED IMPORTED_TARGET libpulse-simple)
+    set(AUDIO_SOURCE pulse.cpp)
+    set(AUDIO_LIBRARY PkgConfig::PULSE)
+endif()
 
-find_path(AVCODEC_INCLUDE_DIR NAMES libavcodec/avcodec.h PATH_SUFFIXES ffmpeg)
-find_library(AVCODEC_LIBRARY avcodec)
-
-find_path(AVFORMAT_INCLUDE_DIR NAMES libavformat/avformat.h PATH_SUFFIXES ffmpeg)
-find_library(AVFORMAT_LIBRARY avformat)
-
-find_path(AVUTIL_INCLUDE_DIR NAMES libavutil/avutil.h PATH_SUFFIXES ffmpeg)
-find_library(AVUTIL_LIBRARY avutil)
-
-add_definitions(-DDEBUG)
 file(GLOB COMMON_SRC
     "threadpool.*"
     "queue.*"
@@ -39,7 +36,6 @@ file(GLOB COMMON_SRC
     "util/mutil.*"
     "util/fastmath.*"
     "util/sharedmem.*"
-    "pulse.*"
     "notify.*"
     "notifier_impl.*"
     "vumeter.*"
@@ -49,22 +45,11 @@ file(GLOB COMMON_SRC
     "metadata.*"
 )
 
-set(SIMPLE_SRC 
-    "simple_main.cpp"
-)
+add_library(vrok SHARED ${COMMON_SRC} ${AUDIO_SOURCE})
+target_compile_definitions(vrok PRIVATE USE_OOURA $<$<CONFIG:Debug>:DEBUG>)
+target_link_libraries(vrok PRIVATE PkgConfig::FFMPEG Threads::Threads)
+# The selected driver's public header includes its backend's headers.
+target_link_libraries(vrok PUBLIC ${AUDIO_LIBRARY})
 
-add_definitions(-DUSE_OOURA)
-
-add_library(vrok SHARED ${COMMON_SRC})
-target_include_directories(vrok PRIVATE ${AVCODEC_INCLUDE_DIR} ${AVFORMAT_INCLUDE_DIR} ${AVUTIL_INCLUDE_DIR} ${AVDEVICE_INCLUDE_DIR})
-
-target_link_libraries(vrok
-    -lpulse-simple
-    #${ASAN_LIBRARIES}
-    ${FFMPEG_LIBRARIES}
-    ${SYSTEM_LIBRARIES})
-
-add_executable(simple_main ${SIMPLE_SRC})
-set_target_properties(simple_main PROPERTIES PREFIX "" )
-target_link_libraries(simple_main vrok)
-
+add_executable(simple_main simple_main.cpp)
+target_link_libraries(simple_main PRIVATE vrok)

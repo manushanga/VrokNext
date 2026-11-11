@@ -1,14 +1,37 @@
 #include "audioout.h"
+#include <algorithm>
+#include <cstdint>
+#include <mutex>
+#include <vector>
 
 using namespace std;
 
-vrok::DriverAudioOut::DriverAudioOut() : _ao_device(nullptr), _volume(0), _new_resource(false) {
-    _device_id = ao_default_driver_id();
+namespace {
+std::mutex &aoMutex() { static std::mutex mutex; return mutex; }
+unsigned &aoUsers() { static unsigned users = 0; return users; }
+}
+
+
+vrok::DriverAudioOut::DriverAudioOut() : _ao_device(nullptr), _volume(0), _new_resource(false), _device_id(-1) {
+    std::lock_guard<std::mutex> lock(aoMutex());
+    if (aoUsers()++ == 0) ao_initialize();
+    SetDevice("");
+}
+
+vrok::DriverAudioOut::~DriverAudioOut() {
+    std::lock_guard<std::mutex> lock(aoMutex());
+    if (_ao_device) ao_close(_ao_device);
+    if (--aoUsers() == 0) ao_shutdown();
 }
 
 std::string vrok::DriverAudioOut::GetDefaultDevice() {
+#ifdef __APPLE__
+    int def = ao_driver_id("macosx");
+#else
     int def = ao_default_driver_id();
-    return std::string(ao_driver_info(def)->short_name);
+#endif
+    ao_info *info = ao_driver_info(def);
+    return info ? std::string(info->short_name) : std::string();
 }
 
 bool vrok::DriverAudioOut::SetDevice(string device) {
@@ -43,11 +66,10 @@ std::vector<vrok::Driver::DeviceInfo> vrok::DriverAudioOut::GetDeviceInfo() {
     return interface_info;
 }
 bool vrok::DriverAudioOut::BufferConfigChange(BufferConfig *config) {
-    if (*GetBufferConfig() != *config) {
+    if (!_ao_device || *GetBufferConfig() != *config) {
         if (_ao_device) {
             ao_close(_ao_device);
-            ao_shutdown();
-            ao_initialize();
+            _ao_device = nullptr;
         }
         ao_sample_format sformat;
 
@@ -57,7 +79,9 @@ bool vrok::DriverAudioOut::BufferConfigChange(BufferConfig *config) {
         sformat.byte_format = AO_FMT_NATIVE;
         sformat.matrix = 0;
 
-        _ao_device = ao_open_live(ao_default_driver_id(), &sformat, NULL);
+        _ao_device = ao_open_live(_device_id, &sformat, NULL);
+
+        if (!_ao_device) return false;
 
         DBG(1, "o " << config->channels);
 
@@ -67,19 +91,16 @@ bool vrok::DriverAudioOut::BufferConfigChange(BufferConfig *config) {
 }
 bool vrok::DriverAudioOut::DriverRun(Buffer *buffer) {
     // DBG(buffer);
-    DBG(6, "arrival: " << buffer->GetWatch().Stop());
-
-    uint16_t cbuf[8192 * 4];
-
-    int samples = GetBufferConfig()->channels * GetBufferConfig()->frames;
-
-    for (int i = 0; i < samples; i++) {
-        cbuf[i] = (uint16_t)(buffer->GetData()[i] * 32767.0);
+    if (!_ao_device) return false;
+    const size_t samples = GetBufferConfig()->channels * GetBufferConfig()->frames;
+    std::vector<int16_t> cbuf(samples);
+    for (size_t i = 0; i < samples; i++) {
+        const float value = std::max(-1.0f, std::min(1.0f, buffer->GetData()[i]));
+        cbuf[i] = static_cast<int16_t>(value * 32767.0f);
     }
+    return ao_play(_ao_device, reinterpret_cast<char *>(cbuf.data()),
+                   cbuf.size() * sizeof(int16_t)) != 0;
 
-    ao_play(_ao_device, (char *)&cbuf[0], samples * sizeof(uint16_t));
-
-    return true;
 }
 
 void vrok::DriverAudioOut::SetVolume(double volume) { }

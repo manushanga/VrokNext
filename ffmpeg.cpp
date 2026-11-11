@@ -64,7 +64,8 @@ struct FFMPEGContext {
     AVStream *audio_st;
     real_t temp[2 * FFMPEG_MAX_BUF_SIZE + AV_INPUT_BUFFER_PADDING_SIZE];
 
-    FFMPEGContext() : ctx(nullptr), fmt_ctx(nullptr) { }
+    FFMPEGContext() : fmt_ctx(nullptr), ctx(nullptr), codec(nullptr),
+        frame(nullptr), packet(nullptr), audio_st(nullptr) { }
     
     void alloc_context3() {
         ctx = avcodec_alloc_context3(codec);

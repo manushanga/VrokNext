@@ -12,7 +12,7 @@
 
 #endif /* __ANDROID__ */
 
-#include <malloc.h>
+#include <stdlib.h>
 
 #include "../util/sharedmem.h"
 
@@ -45,7 +45,13 @@ struct shared_memory *sharedmem_create(const char *name, size_t size)
 
 void sharedmem_destroy(struct shared_memory *shm)
 {
+    if (!shm) return;
+#ifdef __ANDROID__
     munmap(shm->buffer, shm->size);
+    close(shm->fd);
+#else
+    free(shm->buffer);
+#endif
     free(shm);
 }
 
